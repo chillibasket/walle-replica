@@ -1,0 +1,110 @@
+/* 
+ * Robot Webinterface - CSS
+ * Simon B., https://wired.chillibasket.com
+ * V1.0, 7/6/19
+ */
+
+.wrapper {
+	padding-left: 0px;
+	padding-right: 0px;
+}
+
+.stream {
+	width: 100%;
+	height: auto;
+}
+
+.joystick {
+	width: 100%;
+	height: auto;
+}
+
+.joystick-text {
+	width: 100%;
+	text-align: center;
+	color: #444;
+}
+
+.limit {
+	width: 80%;
+	max-width: 500px;
+	margin: auto;
+	background: #2b2a2a;
+	position: relative;
+}
+
+.stick {
+	position: relative;
+	width: 80px;
+	height: 80px;
+	background: grey;
+}
+
+.base {
+	position: absolute;
+	width: 80px;
+	height: 80px;
+	background: #222;
+}
+
+@media screen and (min-width: 762px) {
+	.scroll-pane {
+		max-height: 90vh;
+	    padding-bottom: 0px;
+	    overflow: scroll;
+	    overflow-x: hidden;
+	    -ms-overflow-x: hidden;
+	    -webkit-overflow-scrolling: touch;
+	}
+}
+
+@media screen and (max-width: 761px) {
+	.scroll-pane {
+		max-height: none;
+	    padding-bottom: 0px;
+	    overflow: hidden;
+	    overflow-x: hidden;
+	    -ms-overflow-x: hidden;
+	    -webkit-overflow-scrolling: hidden;
+	}
+}
+
+.list-section {
+	font-style: italic;
+	font-weight: bold;
+}
+
+.set-text {
+	text-align: right;
+}
+
+.set-row {
+	margin-bottom: 10px;
+}
+
+.set-alert {
+	max-width: 330px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 20px;
+}
+
+.set-num {
+	max-width: 170px;
+}
+
+.set-slide {
+	max-width: 170px;
+}
+
+.entry-time {
+	color: gray;
+}
+
+.notransition {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  -ms-transition: none !important;
+  transition: none !important;
+}
