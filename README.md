@@ -1,5 +1,5 @@
 # walle-replica
-Robot and controller code for a Wall-E replica robot. For more information about the robot, visit https://wired.chillibasket.com
+Robot and controller code for a Wall-E replica robot. For more information about the robot, visit https://wired.chillibasket.com/3d-printed-wall-e/
 
 
 ## Arduino Code (wall-e)
@@ -17,3 +17,5 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. A list of movement animations which can be performed by the robot.
 1. Settings page, where motor parameters, sound volume, and video options can be modified.
 1. A simple login page to prevent everyone from having access to the controls (note: this is not a full access control system, please don't use this web interface on untrusted/public networks)
+
+![](/images/wall-e_webinterface1.jpg) *Image of the robot webinterface*
