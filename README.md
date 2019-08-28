@@ -26,53 +26,54 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 
 ### Arduino
 
-**Basic Installation**
+#### Basic Installation
 1. Ensure that the wiring of the electronics matches the diagram shown below.
 1. Download/clone the folder "wall-e" from the GitHub repository.
 1. Open *wall-e.ino* in the Arduino IDE; the files *MotorController.hpp*, *Queue.hpp* and *setupTimers.h* should automatically open on separate tabs of the IDE as well.
 1. Install the *Adafruit_PWMServoDriver.h* library
-	1.1 Go to Sketch -> Include Library -> Manage Libraries...
-	1.1 Search for  *Adafruit Servo*.
-	1.1 Install the latest version of the library.
+	1. Go to Sketch -> Include Library -> Manage Libraries...
+	1. Search for  *Adafruit Servo*.
+	1. Install the latest version of the library.
 1. Connect to the computer to the micro-controller with a USB cable. Ensure that the correct *Board* and *Port* are selected in the *Tools* menu.
 1. Upload the sketch to the micro-controller.
 
-**Testing the Main Program**
+#### Testing the Main Program
 1. Once the sketch has been uploaded to the Arduino, power on the 12V battery while the micro-controller is still connected to the computer.
 1. Open the *Serial Monitor* (button in top-right of Arduino IDE).
 1. To control the movement of the robot, send the characters 'w', 'a', 's' or 'd' to move forward, left, back or right respectively. Send 'q' to stop all movement.
 1. To move the head, send the characters 'j', 'l', 'i' or 'k' to tilt the head left or right and the eyes upwards or downwards. 
 1. Only move on to using the Raspberry Pi if all these functions are working correctly!
 
-**Servo Motor Calibration**
+#### Servo Motor Calibration
 Coming soon!
 
 ![](/images/wall-e_wiring_diagram.jpg) *Diagram showing the wiring of the robot's electronic components*
 
 
 ### Raspberry Pi Web Server
+Note: I haven't tested these steps yet; I'll do so as soon as I get a chance!
 
-**Basic Installation**
+#### Basic Installation
 1. Setup the Raspberry Pi to run the latest version of Raspbian/NOOBS. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.org/documentation/installation/installing-images/)
 1. Open the command line terminal on the Raspberry Pi.
 1. Ensure that the package list has been updated (this may take some time): `sudo apt-get update`
 1. Install *Flask* - this is a Python framework used to create webservers:
-    1.1 Ensure that pip is installed: `sudo apt-get install python-pip`
-    1.1 Install Flask and its dependencies: `sudo pip install flask`
+    1. Ensure that pip is installed: `sudo apt-get install python-pip`
+    1. Install Flask and its dependencies: `sudo pip install flask`
 1. Clone repository into the home directory of the Raspberry Pi:
     ```bash
     cd ~
     git clone https://github.com/chillibasket/walle-replica.git
     ``` 
 1. Generate a secret key - this is used to save session data:
-    1.1 Generate a random string as the key: `python -c 'import os; print(os.urandom(16))'`
-    1.1 Copy the string which appears in the terminal.
-    1.1 Open *app.py*: `nano ~/walle-replica/webinterface/app.py`
-    1.1 Paste the string on line 19, where is says *put_secret_key_here*.
-    1.1 Press `CTRL + O` to save and `CTRL + X` to exit the nano editor
+    1. Generate a random string as the key: `python -c 'import os; print(os.urandom(16))'`
+    1. Copy the string which appears in the terminal.
+    1. Open *app.py*: `nano ~/walle-replica/webinterface/app.py`
+    1. Paste the string on line 19, where is says *put_secret_key_here*.
+    1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor
 1. Connect to the Arduino/micro-controller:
-    1.1 Plug the Arduino/micro-controller into the USB port of the Raspberry Pi.
-    1.1 Use the following command to list the connected USB devices. Record the name of the device you want to connect to:
+    1. Plug the Arduino/micro-controller into the USB port of the Raspberry Pi.
+    1. Use the following command to list the connected USB devices. Record the name of the device you want to connect to:
     ```shell
 	result=$(python <<EOF
 	import serial.tools.list_ports
@@ -83,24 +84,24 @@ Coming soon!
 	)
 	python3 -c $result
     ```
-    1.1 Once again open *app.py*: `nano ~/walle-replica/webinterface/app.py`
-    1.1 Paste the name of the micro-controller into line 94, where is says *ttyACM0*.
+    1. Once again open *app.py*: `nano ~/walle-replica/webinterface/app.py`
+    1. Paste the name of the micro-controller into line 94, where is says *ttyACM0*.
 1. Set the web server password:    
-    1.1 On line 181 of *app.py* where is says *put_password_here*, insert the password you want to use for the web interface.
-    1.1 Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
+    1. On line 181 of *app.py* where is says *put_password_here*, insert the password you want to use for the web interface.
+    1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
 
-**Using the Web Server**
+#### Using the Web Server
 1. To start the server: `python3 ~/walle-replica/webinterface/app.py`
 1. To stop the server press: `CTRL + C`
 
-**Adding a Camera Stream**
+#### Adding a Camera Stream
 1. Install *mjpg-streamer* - this is used to stream the video to the webserver. A good description of the installation procedure is described [here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording)
 1. Create the file: `/home/pi/mjpg-streamer.sh` as described in the Setup Guide.
 
-**Automatically start Server on Boot**
+#### Automatically start Server on Boot
 Coming soon!
 
-**Adding new Sounds**
+#### Adding new Sounds
 1. Make sure that the is of file type `*.ogg`. Most music/sound editors should be able to convert the sound file to this format.
 1. Change the file name so that it has the following format: `[file name]_[length in milliseconds].ogg`. For example: `eva_1200.ogg`
 1. Upload the sound file to Raspberry Pi in the following folder: `~\walle-replica\web_interface\static\sounds\`
