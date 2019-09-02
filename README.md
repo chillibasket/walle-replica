@@ -59,7 +59,6 @@ Coming soon!
 
 
 ### Raspberry Pi Web Server
-Note: I haven't tested these steps yet; I'll do so as soon as I get a chance!
 
 #### Basic Installation
 1. Setup the Raspberry Pi to run the latest version of Raspbian/NOOBS. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.org/documentation/installation/installing-images/).
@@ -88,7 +87,7 @@ Note: I haven't tested these steps yet; I'll do so as soon as I get a chance!
     1. Open *app.py*: `nano ~/walle-replica/webinterface/app.py`
     1. Go to line 92 (you can do this with the keyboard command `CTRL + _`), and check whether the name of your micro-controller is already listed there. If not, add it where is says *ARDUINO*.
 1. Set the web server password:    
-    1. On line 180 of *app.py* where is says *put_password_here*, insert the password you want to use for the web interface.
+    1. On line 180 of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
     1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
 
 #### Using the Web Server
@@ -98,8 +97,8 @@ Note: I haven't tested these steps yet; I'll do so as soon as I get a chance!
 1. To stop the server press: `CTRL + C`
 
 #### Adding a Camera Stream
-1. Install *mjpg-streamer* - this is used to stream the video to the webserver. A good description of the installation procedure is described [here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording)
-1. Create the file: `/home/pi/mjpg-streamer.sh` as described in the Setup Guide.
+1. Install *mjpg-streamer* - this is used to stream the video to the webserver. A good description of the installation procedure is [described here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording). Complete the *Install & Setup* steps, as well as creating the *Auto Start Manager Script*. Stop when you reach the *Start on Boot* section. 
+1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`
 
 #### Automatically start Server on Boot
 Coming soon!
