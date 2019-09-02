@@ -46,6 +46,14 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 
 #### Servo Motor Calibration
 Coming soon!
+[This calibration sketch is coming soon! Skip these for the moment]
+1. Open *wall-e_calibration.ino* in the Arduino IDE.
+1. Upload the sketch to the micro-controller, and open the serial monitor.
+1. The sketch is used to calibrate the maximum and minimum servo motor positions.
+	1. Send the character 'p' to move the motor upwards, and 'n' to move it backwards.
+	1. Once the motor is position in the correct position, send the character 'd' to proceed to the next joint.
+	1. When all joints are calibrated, the sketch will output code containing the calibration values to the serial monitor.
+	1. Copy the code, and paste it into line <x> of the program *wall-e.ino*.
 
 ![](/images/wall-e_wiring_diagram.jpg) *Diagram showing the wiring of the robot's electronic components*
 
@@ -54,7 +62,7 @@ Coming soon!
 Note: I haven't tested these steps yet; I'll do so as soon as I get a chance!
 
 #### Basic Installation
-1. Setup the Raspberry Pi to run the latest version of Raspbian/NOOBS. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.org/documentation/installation/installing-images/)
+1. Setup the Raspberry Pi to run the latest version of Raspbian/NOOBS. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.org/documentation/installation/installing-images/).
 1. Open the command line terminal on the Raspberry Pi.
 1. Ensure that the package list has been updated (this may take some time): `sudo apt-get update`
 1. Install *Flask* - this is a Python framework used to create webservers:
@@ -65,33 +73,28 @@ Note: I haven't tested these steps yet; I'll do so as soon as I get a chance!
     cd ~
     git clone https://github.com/chillibasket/walle-replica.git
     ``` 
-1. Generate a secret key - this is used to save session data:
-    1. Generate a random string as the key: `python -c 'import os; print(os.urandom(16))'`
-    1. Copy the string which appears in the terminal.
-    1. Open *app.py*: `nano ~/walle-replica/webinterface/app.py`
-    1. Paste the string on line 19, where is says *put_secret_key_here*.
-    1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor
 1. Connect to the Arduino/micro-controller:
     1. Plug the Arduino/micro-controller into the USB port of the Raspberry Pi.
     1. Use the following command to list the connected USB devices. Record the name of the device you want to connect to:
     ```shell
 	result=$(python <<EOF
-	import serial.tools.list_ports
-	ports = serial.tools.list_ports.comports()
-	for p in ports:
-		print(p)
-	EOF
-	)
-	python3 -c $result
+    import serial.tools.list_ports
+    for p in serial.tools.list_ports.comports():
+        print(p)
+    EOF
+    )
+    echo $result
     ```
-    1. Once again open *app.py*: `nano ~/walle-replica/webinterface/app.py`
-    1. Paste the name of the micro-controller into line 94, where is says *ttyACM0*.
+    1. Open *app.py*: `nano ~/walle-replica/webinterface/app.py`
+    1. Go to line 92 (you can do this with the keyboard command `CTRL + _`), and check whether the name of your micro-controller is already listed there. If not, add it where is says *ARDUINO*.
 1. Set the web server password:    
-    1. On line 181 of *app.py* where is says *put_password_here*, insert the password you want to use for the web interface.
+    1. On line 180 of *app.py* where is says *put_password_here*, insert the password you want to use for the web interface.
     1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
 
 #### Using the Web Server
-1. To start the server: `python3 ~/walle-replica/webinterface/app.py`
+1. To determine the current IP address of the Raspberry Pi on your network, type the command: `hostname -I`
+1. To start the server: `python3 ~/walle-replica/web_interface/app.py`
+1. To access the web interface, open a browser on any computer/device on the same network and type in the IP address of the Raspberry Pi, follow by `:5000`. For example `192.168.1.10:5000`
 1. To stop the server press: `CTRL + C`
 
 #### Adding a Camera Stream
@@ -102,7 +105,8 @@ Note: I haven't tested these steps yet; I'll do so as soon as I get a chance!
 Coming soon!
 
 #### Adding new Sounds
-1. Make sure that the is of file type `*.ogg`. Most music/sound editors should be able to convert the sound file to this format.
+1. Create the folder in which to store the sounds, using the command: `mkdir ~/walle-replica/web_interface/static/sounds`
+1. Make sure that all the sound files are of type `*.ogg`. Most music/sound editors should be able to convert the sound file to this format.
 1. Change the file name so that it has the following format: `[file name]_[length in milliseconds].ogg`. For example: `eva_1200.ogg`
-1. Upload the sound file to Raspberry Pi in the following folder: `~\walle-replica\web_interface\static\sounds\`
-1. The files should appear in the web interface when you reload the page. If the files do not appear, you may need to start the web server with elevated priviledges: `sudo python3 ~/walle-replica/webinterface/app.py`
+1. Upload the sound file to Raspberry Pi in the following folder: `~/walle-replica/web_interface/static/sounds/`
+1. All the files should appear in the web interface when you reload the page. If the files do not appear, you may need to change the privileges required to access the folder: `sudo chmod -R 755 ~/walle-replica/web_interface/static/sounds`

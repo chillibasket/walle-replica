@@ -1,22 +1,20 @@
 #############################################
 # Robot Webinterface - Python Script
-# Simon B., https://wired.chillibasket.com
-# V1.0, 7/6/19
+# Simon Bluett, https://wired.chillibasket.com
+# V1.1, 2nd September 2019
 #############################################
 
 from flask import Flask, request, session, redirect, url_for, jsonify, render_template
 import queue 		# for serial command queue
 import threading 	# for multiple threads
-import glob 		# for file name manipulation
 import os
 import pygame		# for sound
 import serial 		# for Arduino serial access
 import serial.tools.list_ports
 import subprocess 	# for shell commands
-#import time
 
 app = Flask(__name__)
-app.secret_key = 'put_secret_app_key_here'
+app.secret_key = os.environ.get("SECRET_KEY") or os.random(24)
 
 # Start sound mixer
 pygame.mixer.init()
@@ -86,12 +84,12 @@ def onoff_arduino(q):
 	if not arduinoActive:
 		ports = serial.tools.list_ports.comports()
 		for p in ports:
-			print(p)
+			print(p.description)
 
 		arduino_ports = [
 			p.device
 			for p in serial.tools.list_ports.comports()
-			if 'ttyACM0' in p.description
+			if 'GENUINO' or 'ARDUINO' in p.description
 		]
 
 		if not arduino_ports:
@@ -159,11 +157,12 @@ def index():
 		return redirect(url_for('login'))
 
 	files = []
-	for item in glob.glob('static/sounds/*.ogg'):
-		audiofiles = os.path.splitext(os.path.basename(item))[0]
-		audionames = audiofiles.split('_')[0]
-		audiotimes = float(audiofiles.split('_')[1])/1000.0
-		files.append((audiofiles,audionames,audiotimes))
+	for item in os.listdir('/home/pi/walle-replica/web_interface/static/sounds'):
+		if item.endswith(".ogg")
+			audiofiles = os.path.splitext(os.path.basename(item))[0]
+			audionames = audiofiles.split('_')[0]
+			audiotimes = float(audiofiles.split('_')[1])/1000.0
+			files.append((audiofiles,audionames,audiotimes))
 	return render_template('index.html',sounds=files)
 
 # Login
@@ -210,8 +209,8 @@ def settings():
 	if session.get('active') != True:
 		return redirect(url_for('login'))
 
-	thing = request.form.get('type');
-	value = request.form.get('value');
+	thing = request.form.get('type')
+	value = request.form.get('value')
 
 	if thing is not None and value is not None:
 		if thing == "motorOff":
@@ -270,7 +269,7 @@ def audio():
 	if session.get('active') != True:
 		return redirect(url_for('login'))
 
-	clip =  request.form.get('clip');
+	clip =  request.form.get('clip')
 	if clip is not None:
 		clip = "./static/sounds/" + clip + ".ogg"
 		print("Play music clip:", clip)
@@ -292,7 +291,7 @@ def animate():
 	if session.get('active') != True:
 		return redirect(url_for('login'))
 
-	clip = request.form.get('clip');
+	clip = request.form.get('clip')
 	if clip is not None:
 		print("Animate:", clip)
 
