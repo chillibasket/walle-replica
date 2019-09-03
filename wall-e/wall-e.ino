@@ -9,7 +9,6 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 #include "Queue.hpp"
-#include "setupTimers.h"
 #include "MotorController.hpp"
 
 
@@ -26,7 +25,7 @@
 
 // Define other constants
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
-#define FREQUENCY 100      // Frequency at which to update servo and motor positions
+#define FREQUENCY 10       // Time in milliseconds of how often to update servo and motor positions
 #define SERVOS 7           // Number of servo motors
 #define THRESHOLD 1        // The minimum error which the dynamics controller tries to achieve
 #define MOTOR_OFF 6000 	   // Turn servo motors off after 6 seconds
@@ -36,8 +35,8 @@
 // Instantiate objects
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-// Servo shield controller class
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
+// Servo shield controller class - assumes default address 0x40
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 // Set up motor controller classes
 MotorController motorL(DIR_L, PWM_L, BRK_L, false);
@@ -61,7 +60,7 @@ unsigned long lastTime = 0;
 unsigned long animeTimer = 0;
 unsigned long motorTimer = 0;
 bool autoMode = false;
-volatile bool updateTimer = false;
+unsigned long updateTimer = 0;
 
 
 // Serial Parsing
@@ -70,16 +69,6 @@ char firstChar;
 char serialBuffer[MAX_SERIAL];
 uint8_t serialLength = 0;
 
-
-// Servo Control - Position, Velocity, Acceleration
-// -- -- -- -- -- -- -- -- -- -- -- -- -- --
-// Servo Pins:	     1,   2,   3,   4,   5,   6,   7,   -,   -
-// Joint Name:	  head,necT,necB,eyeR,eyeL,armL,armR,motL,motR
-float curpos[] = { 248, 560,  -1, 475, 270, 250, 290, 180, 180};  // Current position (deg)
-float setpos[] = { 248, 560,  -1, 475, 270, 250, 290,   0,   0};  // Required position (deg)
-float curvel[] = {   0,   0,   0,   0,   0,   0,   0,   0,   0};  // Current velocity (deg/sec)
-float maxvel[] = { 500, 750, 255,2400,2400, 500, 500, 255, 255};  // Max Servo velocity (deg/sec)
-float accell[] = { 350, 480, 150,1800,1800, 300, 300, 800, 800};  // Servo acceleration (deg/sec^2)
 
 // Servo Positions:  Low, Mid, High
 int preset[][3] =  {{398, 262, 112}, 	// head rotation
@@ -91,29 +80,40 @@ int preset[][3] =  {{398, 262, 112}, 	// head rotation
                     {188, 290, 360}};	// arm right
 
 
+// Servo Control - Position, Velocity, Acceleration
+// -- -- -- -- -- -- -- -- -- -- -- -- -- --
+// Servo Pins:	     0,   1,   2,   3,   4,   5,   6,   -,   -
+// Joint Name:	  head,necT,necB,eyeR,eyeL,armL,armR,motL,motR
+float curpos[] = { 248, 560,  -1, 475, 270, 250, 290, 180, 180};  // Current position (deg)
+float setpos[] = { 248, 560,  -1, 475, 270, 250, 290,   0,   0};  // Required position (deg)
+float curvel[] = {   0,   0,   0,   0,   0,   0,   0,   0,   0};  // Current velocity (deg/sec)
+float maxvel[] = { 500, 750, 255,2400,2400, 500, 500, 255, 255};  // Max Servo velocity (deg/sec)
+float accell[] = { 350, 480, 150,1800,1800, 300, 300, 800, 800};  // Servo acceleration (deg/sec^2)
+
+
 // Animation Presets
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
 #define SOFT_LEN 7
 // Starting Sequence:        time,head,necT,necB,eyeR,eyeL,armL,armR
-int softSeq[][SERVOS+1] =  {{ 200, 262, 560,  -1, 470, 275, 250, 290},
-                            { 200, 262, 565,  -1, 470, 275, 250, 290},
-                            { 200, 262, 565,  -1, 475, 275, 250, 290},
-                            { 200, 262, 565,  -1, 475, 270, 250, 290},
-                            { 200, 262, 565,  -1, 475, 270, 245, 290},
-                            { 200, 262, 565,  -1, 475, 270, 245, 295},
-                            { 200, 262, 565,  -1, 475, 270, 250, 290}};
+int softSeq[][SERVOS+1] =  {{ 200,  50,  69,  29,   1,   1,  41,  41},
+                            { 200,  50,  70,  29,   1,   1,  41,  41},
+                            { 200,  50,  70,  30,   1,   1,  41,  41},
+                            { 200,  50,  70,  30,   0,   1,  41,  41},
+                            { 200,  50,  70,  30,   0,   0,  41,  41},
+                            { 200,  50,  70,  30,   0,   0,  40,  41},
+                            { 200,  50,  70,  30,   0,   0,  40,  40}};
 
 #define BOOT_LEN 9
 // Bootup Eye Sequence:      time,head,necT,necB,eyeR,eyeL,armL,armR
-int bootSeq[][SERVOS+1] =  {{2000, 262, 340,  -1, 390, 370, 250, 290},
-                            { 700, 262, 340,  -1, 390, 270, 250, 290},
-                            { 700, 262, 340,  -1, 475, 270, 250, 290},
-                            { 700, 262, 340,  -1, 475, 370, 250, 290},
-                            { 700, 262, 340,  -1, 390, 370, 250, 290},
-                            { 400, 262, 340,  -1, 475, 270, 250, 290},
-                            { 400, 262, 340,  -1, 390, 370, 250, 290},
-                            {2000, 262, 565,  -1, 390, 370, 250, 290},
-                            {1000, 262, 565,  -1, 475, 270, 250, 290}};
+int bootSeq[][SERVOS+1] =  {{2000,  50,  68,   0,  55,  55,  40,  40},
+                            { 700,  50,  68,   0,  55,   0,  40,  40},
+                            { 700,  50,  68,   0,   0,   0,  40,  40},
+                            { 700,  50,  68,   0,   0,  55,  40,  40},
+                            { 700,  50,  68,   0,  55,  55,  40,  40},
+                            { 400,  50,  68,   0,   0,   0,  40,  40},
+                            { 400,  50,  68,   0,  55,  55,  40,  40},
+                            {2000,  50,  85,   0,  55,  55,  40,  40},
+                            {1000,  50,  85,   0,   0,   0,  40,  40}};
 
 #define INQU_LEN 9
 // Inquisitive Movements:    time,head,necT,necB,eyeR,eyeL,armL,armR
@@ -127,11 +127,7 @@ int inquSeq[][SERVOS+1] =  {{3000, 262, 340,  -1, 390, 370, 250, 290},
                             {3000, 112, 340,  -1, 380, 370, 250, 360},
                             {1500, 262, 565,  -1, 475, 270, 350, 188}};
 
-
-// --- Function Declarations ---
-// Declare function here (why do we need to do this?)
-void queueAnimation(int seq[][SERVOS+1], int length);
-
+void queueAnimation(int seq[][SERVOS+1], int len);
 
 // ------------------------------------------------------------------
 // 		INITIAL SETUP
@@ -151,22 +147,21 @@ void setup() {
 	pwm.begin();
 	pwm.setPWMFreq(60);
 
+	Serial.println("Starting Program");
+
 	// Move servos to known starting positions
 	queueAnimation(softSeq, SOFT_LEN);
-
-	// Setup interrupt timer (since servos are using external clock, Timer1 is free)
-	setupTimer1(100);
-
-	Serial.println("Starting Program");
 }
 
 
 // ------------------------------------------------------------------
 // 		QUEUE ANIMATIONS
 // ------------------------------------------------------------------
-void queueAnimation(int seq[][SERVOS+1], int length) {
-	for (int i = 0; i < length; i++) {
+void queueAnimation(int seq[][SERVOS+1], int len) {
+  Serial.println(queue.size());
+	for (int i = 0; i < len; i++) {
 		for (int j = 0; j < SERVOS+1; j++) {
+			Serial.println(seq[i][j]);
 			queue.push(seq[i][j]);
 		}
 	}
@@ -486,8 +481,8 @@ void loop() {
 
 	// Move Servos and wheels at regular time intervals
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	if (updateTimer) {
-		updateTimer = false;
+	if (updateTimer < millis()) {
+		updateTimer = millis() + FREQUENCY;
 
 		unsigned long newTime = micros();
 		float dt = (newTime - lastTime) / 1000.0;
@@ -496,12 +491,4 @@ void loop() {
 		manageServos(dt);
 		manageMotors(dt);
 	}
-}
-
-
-// -------------------------------------------------------------------
-// 		TIMER ONE INTERRUPT
-// -------------------------------------------------------------------
-ISR(TIMER1_COMPA_vect) {
-	updateTimer = true;
 }

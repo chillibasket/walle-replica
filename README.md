@@ -68,7 +68,7 @@ Coming soon!
     1. Ensure that pip is installed: `sudo apt-get install python-pip`
     1. Install Flask and its dependencies: `sudo pip install flask`
 1. Clone repository into the home directory of the Raspberry Pi:
-    ```bash
+    ```shell
     cd ~
     git clone https://github.com/chillibasket/walle-replica.git
     ``` 
@@ -84,7 +84,7 @@ Coming soon!
     )
     echo $result
     ```
-    1. Open *app.py*: `nano ~/walle-replica/webinterface/app.py`
+    1. Open *app.py*: `nano ~/walle-replica/web_interface/app.py`
     1. Go to line 92 (you can do this with the keyboard command `CTRL + _`), and check whether the name of your micro-controller is already listed there. If not, add it where is says *ARDUINO*.
 1. Set the web server password:    
     1. On line 180 of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
