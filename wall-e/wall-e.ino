@@ -2,8 +2,8 @@
  ********************************************
  * Code by: Simon Bluett
  * Email:   hello@chillibasket.com
- * Version: 2.2
- * Date:    14/4/19
+ * Version: 2.3
+ * Date:    3rd September 2019
  ********************************************/
 
 #include <Wire.h>
@@ -158,10 +158,8 @@ void setup() {
 // 		QUEUE ANIMATIONS
 // ------------------------------------------------------------------
 void queueAnimation(int seq[][SERVOS+1], int len) {
-  Serial.println(queue.size());
 	for (int i = 0; i < len; i++) {
 		for (int j = 0; j < SERVOS+1; j++) {
-			Serial.println(seq[i][j]);
 			queue.push(seq[i][j]);
 		}
 	}

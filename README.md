@@ -33,7 +33,7 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. Install the *Adafruit_PWMServoDriver.h* library
 	1. Go to Sketch -> Include Library -> Manage Libraries...
 	1. Search for  *Adafruit Servo*.
-	1. Install the latest version of the library.
+	1. Install version 1.0.2 of the library; the newest version currently has a bug and doesn't work properly.
 1. Connect to the computer to the micro-controller with a USB cable. Ensure that the correct *Board* and *Port* are selected in the *Tools* menu.
 1. Upload the sketch to the micro-controller.
 
