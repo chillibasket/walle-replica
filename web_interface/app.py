@@ -158,7 +158,7 @@ def index():
 
 	files = []
 	for item in os.listdir('/home/pi/walle-replica/web_interface/static/sounds'):
-		if item.endswith(".ogg")
+		if item.lower().endswith('.ogg'):
 			audiofiles = os.path.splitext(os.path.basename(item))[0]
 			audionames = audiofiles.split('_')[0]
 			audiotimes = float(audiofiles.split('_')[1])/1000.0
