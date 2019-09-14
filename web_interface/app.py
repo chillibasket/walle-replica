@@ -14,7 +14,7 @@ import serial.tools.list_ports
 import subprocess 	# for shell commands
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or os.random(24)
+app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # Start sound mixer
 pygame.mixer.init()
