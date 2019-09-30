@@ -29,7 +29,7 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 #### Basic Installation
 1. Ensure that the wiring of the electronics matches the diagram shown below.
 1. Download/clone the folder "wall-e" from the GitHub repository.
-1. Open *wall-e.ino* in the Arduino IDE; the files *MotorController.hpp*, *Queue.hpp* and *setupTimers.h* should automatically open on separate tabs of the IDE as well.
+1. Open *wall-e.ino* in the Arduino IDE; the files *MotorController.hpp* and *Queue.hpp* should automatically open on separate tabs of the IDE as well.
 1. Install the *Adafruit_PWMServoDriver.h* library
 	1. Go to Sketch -> Include Library -> Manage Libraries...
 	1. Search for  *Adafruit Servo*.
