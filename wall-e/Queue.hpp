@@ -169,9 +169,9 @@ template<class T> T Queue<T>::front() {
 	else return qData[qFront];
 }
 
-// "peek" is the same as "qFront"
+// "peek" is the same as "front"
 template<class T> T Queue<T>::peek() {
-	return qFront();
+	return front();
 }
 
 
