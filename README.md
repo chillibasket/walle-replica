@@ -37,6 +37,8 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. Connect to the computer to the micro-controller with a USB cable. Ensure that the correct *Board* and *Port* are selected in the *Tools* menu.
 1. Upload the sketch to the micro-controller.
 
+![](/images/wall-e_wiring_diagram.jpg) *Diagram showing the wiring of the robot's electronic components*
+
 #### Testing the Main Program
 1. Once the sketch has been uploaded to the Arduino, power on the 12V battery while the micro-controller is still connected to the computer.
 1. Open the *Serial Monitor* (button in top-right of Arduino IDE). Set the baud rate to 115200.
@@ -51,7 +53,7 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. The sketch is used to calibrate the maximum and minimum PWM pulse lengths required to move each servo motor across its desired range of motion. The standard LOW and HIGH positions of each of the servos can be seen on diagrams [on my website](https://wired.chillibasket.com/3d-printed-wall-e/). 
 1. When starting the sketch and opening the serial monitor, the a message should appear after 2-3 seconds, saying that it is ready to calibrate the LOW position of the first servo motor (the head rotation).
 1. Send the character 'a' and 'd' to move the motor backwards and forwards by -10 and +10. For finer control, use the characters 'z' and 'c' to move the motor by -1 and +1. 
-1. Once the motor is position in the correct position (as shown in the images below), send the character 'n' to proceed to the calibration step. It will move on to the HIGH position of the same servo, after which the process will repeat for each of the 7 servos in the robot.
+1. Once the motor is position in the correct position, send the character 'n' to proceed to the calibration step. It will move on to the HIGH position of the same servo, after which the process will repeat for each of the 7 servos in the robot.
 1. When all joints are calibrated, the sketch will output an array containing the calibration values to the serial monitor.
 1. Copy the array, and paste it into lines 85 to 92 of the program *wall-e.ino*. The array should look similar to this:
 ```cpp
@@ -63,9 +65,6 @@ int preset[][3] =  {{398, 112},  // head rotation
                     {350, 185},  // arm left
                     {188, 360}}; // arm right
 ```
-
-
-![](/images/wall-e_wiring_diagram.jpg) *Diagram showing the wiring of the robot's electronic components*
 
 
 ### Raspberry Pi Web Server
