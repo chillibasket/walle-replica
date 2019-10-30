@@ -1,9 +1,9 @@
 /* WALL-E CALLIBRATION CODE
  ********************************************
  * Code by: Simon Bluett
- * Email: 	hello@chillibasket.com
+ * Email:   hello@chillibasket.com
  * Version: 1.0
- * Date: 	30th October 2019
+ * Date:    30th October 2019
  ********************************************/
 
 /* HOW TO USE:
@@ -38,7 +38,7 @@
  *                        {350, 185},  // arm left
  *                        {188, 360}}; // arm right
  *
- *    Copy the array and paste it into lines <xxx> to <xxx> in [wall-e.ino]
+ *    Copy the array and paste it into lines 85 to 92 in [wall-e.ino]
  */
 
 #include <Wire.h>
