@@ -2,9 +2,21 @@
  ********************************************
  * Code by: Simon Bluett
  * Email:   hello@chillibasket.com
- * Version: 2.3
- * Date:    3rd September 2019
+ * Version: 2.4
+ * Date:    30th October 2019
  ********************************************/
+
+/* HOW TO USE:
+ * 1. Install the Adafruit_PWMServoDriver library
+ *    a. In the Arduino IDE, go to Sketch->Include Library->Manage Libraries
+ *    b. Search for Adafruit PWM Library, and install the latest version
+ * 2. Calibrate the servo motors, using the calibration sketch provided in the
+ *    GitHub repository. Paste the calibrated values between line 85 to 92
+ * 3. Upload the sketch to the micro-controller, and open serial monitor at 
+ *    a baud rate of 115200.
+ * 4. Additional instructions and hints can be found at:
+ *    https://wired.chillibasket.com/3d-printed-wall-e/
+ */
 
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
@@ -34,7 +46,6 @@
 
 // Instantiate objects
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
 // Servo shield controller class - assumes default address 0x40
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
@@ -59,8 +70,8 @@ int turnOff = 0;
 unsigned long lastTime = 0;
 unsigned long animeTimer = 0;
 unsigned long motorTimer = 0;
-bool autoMode = false;
 unsigned long updateTimer = 0;
+bool autoMode = false;
 
 
 // Serial Parsing
@@ -70,64 +81,70 @@ char serialBuffer[MAX_SERIAL];
 uint8_t serialLength = 0;
 
 
-// Servo Positions:  Low, Mid, High
-int preset[][3] =  {{398, 262, 112}, 	// head rotation
-                    {565, 340, 188},	// neck top
-                    {470, 250, 100},	// neck bottom
-                    {475, 390, 230},	// eye right
-                    {270, 370, 440},	// eye left
-                    {350, 250, 185},	// arm left
-                    {188, 290, 360}};	// arm right
+// ****** SERVO MOTOR CALIBRATION *********************
+// Servo Positions:  Low,High
+int preset[][2] =  {{410, 125},   // head rotation
+                    {205, 538},   // neck top
+                    {140, 450},   // neck bottom
+                    {485, 230},   // eye right
+                    {274, 495},   // eye left
+                    {355, 137},   // arm left
+                    {188, 420}};  // arm right
+// *****************************************************
 
 
 // Servo Control - Position, Velocity, Acceleration
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
 // Servo Pins:	     0,   1,   2,   3,   4,   5,   6,   -,   -
 // Joint Name:	  head,necT,necB,eyeR,eyeL,armL,armR,motL,motR
-float curpos[] = { 248, 560,  -1, 475, 270, 250, 290, 180, 180};  // Current position (deg)
-float setpos[] = { 248, 560,  -1, 475, 270, 250, 290,   0,   0};  // Required position (deg)
-float curvel[] = {   0,   0,   0,   0,   0,   0,   0,   0,   0};  // Current velocity (deg/sec)
-float maxvel[] = { 500, 750, 255,2400,2400, 500, 500, 255, 255};  // Max Servo velocity (deg/sec)
-float accell[] = { 350, 480, 150,1800,1800, 300, 300, 800, 800};  // Servo acceleration (deg/sec^2)
+float curpos[] = { 248, 560, 140, 475, 270, 250, 290, 180, 180};  // Current position (units)
+float setpos[] = { 248, 560, 140, 475, 270, 250, 290,   0,   0};  // Required position (units)
+float curvel[] = {   0,   0,   0,   0,   0,   0,   0,   0,   0};  // Current velocity (units/sec)
+float maxvel[] = { 500, 750, 255,2400,2400, 500, 500, 255, 255};  // Max Servo velocity (units/sec)
+float accell[] = { 350, 480, 150,1800,1800, 300, 300, 800, 800};  // Servo acceleration (units/sec^2)
 
 
-// Animation Presets
+// Animation Presets 
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
+// (Time is in milliseconds)
+// (Servo values are between 0 to 100, use -1 to disable the servo)
 #define SOFT_LEN 7
-// Starting Sequence:        time,head,necT,necB,eyeR,eyeL,armL,armR
-int softSeq[][SERVOS+1] =  {{ 200, 262, 560,  -1, 470, 275, 250, 290},
-                            { 200, 262, 565,  -1, 470, 275, 250, 290},
-                            { 200, 262, 565,  -1, 475, 275, 250, 290},
-                            { 200, 262, 565,  -1, 475, 270, 250, 290},
-                            { 200, 262, 565,  -1, 475, 270, 245, 290},
-                            { 200, 262, 565,  -1, 475, 270, 245, 295},
-                            { 200, 262, 565,  -1, 475, 270, 250, 290}};
+// Starting Sequence:              time,head,necT,necB,eyeR,eyeL,armL,armR
+const int softSeq[][SERVOS+1] =  {{ 200,  50,  69,  29,   1,   1,  41,  41},
+                                  { 200,  50,  70,  29,   1,   1,  41,  41},
+                                  { 200,  50,  70,  30,   1,   1,  41,  41},
+                                  { 200,  50,  70,  30,   0,   1,  41,  41},
+                                  { 200,  50,  70,  30,   0,   0,  41,  41},
+                                  { 200,  50,  70,  30,   0,   0,  40,  41},
+                                  { 200,  50,  70,  30,   0,   0,  40,  40}};
 
 #define BOOT_LEN 9
-// Bootup Eye Sequence:      time,head,necT,necB,eyeR,eyeL,armL,armR
-int bootSeq[][SERVOS+1] =  {{2000, 262, 340,  -1, 390, 370, 250, 290},
-                            { 700, 262, 340,  -1, 390, 270, 250, 290},
-                            { 700, 262, 340,  -1, 475, 270, 250, 290},
-                            { 700, 262, 340,  -1, 475, 370, 250, 290},
-                            { 700, 262, 340,  -1, 390, 370, 250, 290},
-                            { 400, 262, 340,  -1, 475, 270, 250, 290},
-                            { 400, 262, 340,  -1, 390, 370, 250, 290},
-                            {2000, 262, 565,  -1, 390, 370, 250, 290},
-                            {1000, 262, 565,  -1, 475, 270, 250, 290}};
+// Bootup Eye Sequence:            time,head,necT,necB,eyeR,eyeL,armL,armR
+const int bootSeq[][SERVOS+1] =  {{2000,  50,  68,   0,  40,  40,  40,  40},
+                                  { 700,  50,  68,   0,  40,   0,  40,  40},
+                                  { 700,  50,  68,   0,   0,   0,  40,  40},
+                                  { 700,  50,  68,   0,   0,  40,  40,  40},
+                                  { 700,  50,  68,   0,  40,  40,  40,  40},
+                                  { 400,  50,  68,   0,   0,   0,  40,  40},
+                                  { 400,  50,  68,   0,  40,  40,  40,  40},
+                                  {2000,  50,  85,   0,  40,  40,  40,  40},
+                                  {1000,  50,  85,   0,   0,   0,  40,  40}};
 
 #define INQU_LEN 9
-// Inquisitive Movements:    time,head,necT,necB,eyeR,eyeL,armL,armR
-int inquSeq[][SERVOS+1] =  {{3000, 262, 340,  -1, 390, 370, 250, 290},
-                            {1500, 262, 340,  -1, 230, 270, 185, 360},
-                            {3000, 398, 188,  -1, 230, 270, 185, 360},
-                            {1500, 262, 188,  -1, 390, 370, 185, 360},
-                            {1500, 262, 340,  -1, 390, 370, 350, 188},
-                            {1500, 300, 400,  -1, 440, 440, 350, 188},
-                            {1500, 262, 340,  -1, 380, 370, 250, 290},
-                            {3000, 112, 340,  -1, 380, 370, 250, 360},
-                            {1500, 262, 565,  -1, 475, 270, 350, 188}};
+// Inquisitive Movements:          time,head,necT,necB,eyeR,eyeL,armL,armR
+const int inquSeq[][SERVOS+1] =  {{3000,  48,  60,   0,  35,  45,  60,  59},
+                                  {1500,  48,  60,   0, 100,   0, 100, 100},
+                                  {3000,   0,   0,   0, 100,   0, 100, 100},
+                                  {1500,  48,   0,   0,  40,  40, 100, 100},
+                                  {1500,  48,  60,   0,  45,  35,   0,   0},
+                                  {1500,  34,  44,   0,  14, 100,   0,   0},
+                                  {1500,  48,  60,   0,  35,  45,  60,  59},
+                                  {3000, 100,  60,   0,  40,  40,  60, 100},
+                                  {1500,  48, 100,   0,   0,   0,   0,   0}};
 
-void queueAnimation(int seq[][SERVOS+1], int len);
+
+void queueAnimation(const int seq[][SERVOS+1], int len);
+
 
 // ------------------------------------------------------------------
 // 		INITIAL SETUP
@@ -157,7 +174,7 @@ void setup() {
 // ------------------------------------------------------------------
 // 		QUEUE ANIMATIONS
 // ------------------------------------------------------------------
-void queueAnimation(int seq[][SERVOS+1], int len) {
+void queueAnimation(const int seq[][SERVOS+1], int len) {
 	for (int i = 0; i < len; i++) {
 		for (int j = 0; j < SERVOS+1; j++) {
 			queue.push(seq[i][j]);
@@ -210,10 +227,10 @@ void evaluateSerial() {
 
 	// Motor Inputs and Offsets
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	if      (firstChar == 'X' && number >= -100 && number <= 100) turnVal = int(number * 2.55);
-	else if (firstChar == 'Y' && number >= -100 && number <= 100) moveVal = int(number * 2.55);
-	else if (firstChar == 'S' && number >=  100 && number <= 100) turnOff = number;
-	else if (firstChar == 'O' && number >=    0 && number <= 250) curpos[7] = curpos[8] = int(number);
+	if      (firstChar == 'X' && number >= -100 && number <= 100) turnVal = int(number * 2.55); 		// Forward/reverse control
+	else if (firstChar == 'Y' && number >= -100 && number <= 100) moveVal = int(number * 2.55); 		// Left/right control
+	else if (firstChar == 'S' && number >=  100 && number <= 100) turnOff = number; 					// Steering offset
+	else if (firstChar == 'O' && number >=    0 && number <= 250) curpos[7] = curpos[8] = int(number); 	// Motor deadzone offset
 
 	// Animations
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -221,7 +238,8 @@ void evaluateSerial() {
 	else if (firstChar == 'A' && number == 1) queueAnimation(bootSeq, BOOT_LEN);
 	else if (firstChar == 'A' && number == 2) queueAnimation(inquSeq, INQU_LEN);
 
-	// Autonomous mode
+	// Autonomous servo mode
+	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
 	else if (firstChar == 'M' && number == 0) autoMode = false;
 	else if (firstChar == 'M' && number == 1) autoMode = true;
 
@@ -230,17 +248,17 @@ void evaluateSerial() {
 	else if (firstChar == 'w') {		// Forward movement
 		moveVal = pwmspeed;
 		turnVal = 0;
-		setpos[0] = preset[0][1];
+		setpos[0] = (preset[0][1] + preset[0][0]) / 2;
 	}
 	else if (firstChar == 'q') {		// Stop movement
 		moveVal = 0;
 		turnVal = 0;
-		setpos[0] = preset[0][1];
+		setpos[0] = (preset[0][1] + preset[0][0]) / 2;
 	}
 	else if (firstChar == 's') {		// Backward movement
 		moveVal = -pwmspeed;
 		turnVal = 0;
-		setpos[0] = preset[0][1];
+		setpos[0] = (preset[0][1] + preset[0][0]) / 2;
 	}
 	else if (firstChar == 'a') {		// Drive & look left
 		moveVal = 0;
@@ -250,17 +268,17 @@ void evaluateSerial() {
 	else if (firstChar == 'd') {   		// Drive & look right
 		moveVal = 0;
 		turnVal = pwmspeed;
-		setpos[0] = preset[0][2];
+		setpos[0] = preset[0][1];
 	}
 
 	// Manual Eye Movements
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
 	else if (firstChar == 'j') {		// Left head tilt
 		setpos[4] = preset[4][0];
-		setpos[3] = preset[3][2];
+		setpos[3] = preset[3][1];
 	}
 	else if (firstChar == 'l') {		// Right head tilt
-		setpos[4] = preset[4][2];
+		setpos[4] = preset[4][1];
 		setpos[3] = preset[3][0];
 	}
 	else if (firstChar == 'i') {		// Sad head
@@ -268,34 +286,37 @@ void evaluateSerial() {
 		setpos[3] = preset[3][0];
 	}
 	else if (firstChar == 'k') {		// Neutral head
-		setpos[4] = preset[4][1];
-		setpos[3] = preset[3][1];
+		setpos[4] = int(0.4 * (preset[4][1] - preset[4][0]) + preset[4][0]);
+		setpos[3] = int(0.4 * (preset[3][1] - preset[3][0]) + preset[3][0]);
 	}
 
 	// Head movement
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
 	else if (firstChar == 'f') {		// Head up
-		setpos[1] = preset[1][0];  
+		setpos[1] = preset[1][0];
+		setpos[2] = (preset[2][1] + preset[2][0])/2;
 	}
 	else if (firstChar == 'g') {		// Head forward
 		setpos[1] = preset[1][1];
+		setpos[2] = preset[2][0];
 	}
 	else if (firstChar == 'h') {		// Head down
-		setpos[1] = preset[1][2];
+		setpos[1] = preset[1][0];
+		setpos[2] = preset[2][0];
 	}
 	
 	// Arm Movements
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
 	else if (firstChar == 'b') {		// Left arm low, right arm high
 		setpos[5] = preset[5][0];
-		setpos[6] = preset[6][2];
-	}
-	else if (firstChar == 'n') {		// Both arms neutral
-		setpos[5] = preset[5][1];
 		setpos[6] = preset[6][1];
 	}
+	else if (firstChar == 'n') {		// Both arms neutral
+		setpos[5] = (preset[5][0] + preset[5][1]) / 2;
+		setpos[6] = (preset[6][0] + preset[6][1]) / 2;
+	}
 	else if (firstChar == 'm') {		// Left arm high, right arm low
-		setpos[5] = preset[5][2];
+		setpos[5] = preset[5][1];
 		setpos[6] = preset[6][0];
 	}
 }
@@ -313,7 +334,10 @@ void manageAnimations() {
 
 		// Set all the joint positions
 		for (int i = 0; i < SERVOS; i++) {
-			setpos[i] = queue.pop();
+			int value = queue.pop();
+
+			// Scale the positions using the servo calibration values
+			setpos[i] = int(value * 0.01 * (preset[i][1] - preset[i][0]) + preset[i][0]);
 		}
 
 	// If we are in autonomous mode, but there are no movements queued, generate new movements
@@ -326,11 +350,11 @@ void manageAnimations() {
 			if (random(2) == 1) {
 
 				// For most of the servo motors
-				if (i == 0 || i == 1 || i == 5 || i == 6) {
+				if (i == 0 || i == 1 || i == 2 || i == 5 || i == 6) {
 
 					// Randomly determine the new position
 					unsigned int min = preset[i][0];
-					unsigned int max = preset[i][2];
+					unsigned int max = preset[i][1];
 					if (min > max) {
 						min = max;
 						max = preset[i][0];
@@ -341,18 +365,21 @@ void manageAnimations() {
 				// Since the eyes should work together, only look at one of them
 				} else if (i == 3) {
 
+					int midPos1 = int((preset[i][1] - preset[i][0])*0.4 + preset[i][0]);
+					int midPos2 = int((preset[i+1][1] - preset[i+1][0])*0.4 + preset[i+1][0]);
+
 					// Determine which type of eye movement to do
 					// Both eye move downwards
 					if (random(2) == 1) {
-						setpos[i] = random(preset[i][1], preset[i][0]);
-						float multiplier = (setpos[i] - preset[i][1]) / float(preset[i][0] - preset[i][1]);
-						setpos[i+1] = ((1 - multiplier) * (preset[i+1][1] - preset[i+1][0])) + preset[i+1][0];
+						setpos[i] = random(midPos1, preset[i][0]);
+						float multiplier = (setpos[i] - midPos1) / float(preset[i][0] - midPos1);
+						setpos[i+1] = ((1 - multiplier) * (midPos2 - preset[i+1][0])) + preset[i+1][0];
 
 					// Both eyes move in opposite directions
 					} else {
-						setpos[i] = random(preset[i][1], preset[i][0]);
-						float multiplier = (setpos[i] - preset[i][2]) / float(preset[i][0] - preset[i][2]);
-						setpos[i+1] = (multiplier * (preset[i+1][2] - preset[i+1][0])) + preset[i+1][0];
+						setpos[i] = random(midPos1, preset[i][0]);
+						float multiplier = (setpos[i] - preset[i][1]) / float(preset[i][0] - preset[i][1]);
+						setpos[i+1] = (multiplier * (preset[i+1][1] - preset[i+1][0])) + preset[i+1][0];
 					}
 				}
 
