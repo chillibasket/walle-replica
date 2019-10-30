@@ -57,7 +57,7 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. When all joints are calibrated, the sketch will output an array containing the calibration values to the serial monitor.
 1. Copy the array, and paste it into lines 85 to 92 of the program *wall-e.ino*. The array should look similar to this:
 ```cpp
-int preset[][3] =  {{398, 112},  // head rotation
+int preset[][2] =  {{398, 112},  // head rotation
                     {565, 188},  // neck top
                     {470, 100},  // neck bottom
                     {475, 230},  // eye right

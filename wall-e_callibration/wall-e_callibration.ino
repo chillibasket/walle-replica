@@ -30,7 +30,7 @@
  *    the serial monitor; for example:
  *
  *    // Servo Positions:  Low,High
- *    int preset[][3] =  {{398, 112},  // head rotation
+ *    int preset[][2] =  {{398, 112},  // head rotation
  *                        {565, 188},  // neck top
  *                        {470, 100},  // neck bottom
  *                        {475, 230},  // eye right
@@ -62,13 +62,13 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 
 // Servo Positions:  Low,High
-int preset[][3] =  {{398, 112}, // head rotation
-                    {565, 188},	// neck top
-                    {200, 400},	// neck bottom
-                    {475, 230},	// eye right
-                    {270, 440},	// eye left
-                    {350, 185},	// arm left
-                    {188, 360}};// arm right
+int preset[][2] =  {{398, 112},  // head rotation
+                    {565, 188},	 // neck top
+                    {200, 400},	 // neck bottom
+                    {475, 230},	 // eye right
+                    {270, 440},	 // eye left
+                    {350, 185},	 // arm left
+                    {188, 360}}; // arm right
 
 // Rest position
 float restpos[7] = {50, 50, 40, 0, 0, 100, 100};
