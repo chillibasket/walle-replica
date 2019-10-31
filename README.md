@@ -114,14 +114,18 @@ Coming soon!
 
 #### Adding new Sounds
 1. By default the Raspberry should automatically select whether to output audio to the HDMI port or the headphone jack. However, you can ensure that it always uses the headphone jack with the following command: `amixer cset numid=3 1`
-1. Create the folder in which to store the sounds, using the command: `mkdir ~/walle-replica/web_interface/static/sounds`
-1. Make sure that all the sound files are of type `*.ogg`. Most music/sound editors should be able to convert the sound file to this format.
+1. Make sure that all the sound files you want to use are of type `*.ogg`. Most music/sound editors should be able to convert the sound file to this format.
 1. Change the file name so that it has the following format: `[file name]_[length in milliseconds].ogg`. For example: `eva_1200.ogg`
 1. Upload the sound file to Raspberry Pi in the following folder: `~/walle-replica/web_interface/static/sounds/`
 1. All the files should appear in the web interface when you reload the page. If the files do not appear, you may need to change the privileges required to access the folder: `sudo chmod -R 755 ~/walle-replica/web_interface/static/sounds`
 
 
 ## Changelog
+
+#### 31st October 2019
+1. Fixed some bugs related to sound playback.
+1. Added 2 sample sound files, which ensures that the sound directory is included in the git files.
+
 #### 30th October 2019 
 1. Added *wall-e_calibration.ino*, with which the maximum and minimum pulse widths of the servo motors can be calibrated.
 1. Updated *wall-e.ino* to use relative coordinates rather than absolute servo pulse widths for the animation presets. This allows the servo calibration data to be used to ensure the movements are the same on all variants of the robot.
