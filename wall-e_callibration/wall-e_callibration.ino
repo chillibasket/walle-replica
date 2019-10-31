@@ -96,24 +96,21 @@ void setup() {
 
 	// Initialize serial communication for debugging
 	Serial.begin(115200);
+	delay(1000);
 
-  //while(!Serial);
-  Serial.println("Starting Wall-E Calibration Program");
-  Serial.println("------------------------------------------------------------------");
-  Serial.println("Move the servos to the correct positions using the serial commands\n");
+	//while(!Serial);
+	Serial.println("Starting Wall-E Calibration Program");
+	Serial.println("------------------------------------------------------------------");
+	Serial.println("Move the servos to the correct positions using the serial commands\n");
 
-  // Output Enable (EO) pin for the servo motors
-  pinMode(SR_OE, OUTPUT);
-  digitalWrite(SR_OE, HIGH);
-  Serial.println("OE High");
-  delay(5000);
-  
+	// Output Enable (EO) pin for the servo motors
+	pinMode(SR_OE, OUTPUT);
+	digitalWrite(SR_OE, HIGH);
+
 	// Communicate with servo shield (Analog servos run at ~60Hz)
 	pwm.begin();
 	pwm.setPWMFreq(60);
-  Serial.println("PWM freq");
-  delay(1000);
-  
+
 	moveToNextPosition();
 }
 

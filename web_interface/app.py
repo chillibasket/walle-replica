@@ -1,7 +1,7 @@
 #############################################
 # Robot Webinterface - Python Script
 # Simon Bluett, https://wired.chillibasket.com
-# V1.1, 2nd September 2019
+# V1.2, 31st October 2019
 #############################################
 
 from flask import Flask, request, session, redirect, url_for, jsonify, render_template
@@ -271,7 +271,7 @@ def audio():
 
 	clip =  request.form.get('clip')
 	if clip is not None:
-		clip = "./static/sounds/" + clip + ".ogg"
+		clip = "/home/pi/walle-replica/web_interface/static/sounds/" + clip + ".ogg"
 		print("Play music clip:", clip)
 		pygame.mixer.music.load(clip)
 		pygame.mixer.music.set_volume(volume/10.0)

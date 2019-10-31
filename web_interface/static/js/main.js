@@ -1,10 +1,18 @@
 /* 
  * Robot Webinterface - Main Script
  * Simon B., https://wired.chillibasket.com
- * V1.0, 7/6/19
+ * V1.1, 31st October 2019
  */
 
 function sendSettings(type, value) {
+
+	// If shutdown is requested, show a confirmation prompt
+	if (type=="shutdown") {
+		if (!confirm("Are you sure you want to shutdown?")) {
+			return 0;
+		}
+	}
+	
 	//alert(type + ", " + value);
 	// Send data to python app, so that it can be passed on
 	$.ajax({
