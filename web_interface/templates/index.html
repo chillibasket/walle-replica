@@ -52,7 +52,7 @@
 						
 						<!-- Camera Stream -->
 						<div class="tab-pane scroll-pane-sm col-sm-12 col-md-6 d-md-block no-padding" id="tab0">
-							<div id="batt-indicator d-none" class="battery-indicator"><i class="fa fa-battery-full"></i><div class="battery-level">100%</div></div>
+							<div id="batt-indicator" class="battery-indicator d-none"><i class="fa fa-battery-full"></i><div class="battery-level">100%</div></div>
 							<div class="media">
 								<img id="stream" class="stream" src="{{ url_for('static', filename='streamimage.jpg') }}">
 							</div>
@@ -231,7 +231,7 @@
 							<div class="container-fluid">
 								<br>
 								<div class="row set-row">
-									<div class="col-xs-12 col-sm-4 set-text">Sound Mode</div>
+									<div class="d-none col-xs-12 col-sm-4 set-text">Sound Mode</div>
 									<div class="col-xs-12 col-sm-8">
 										<div class="btn-group btn-group-toggle" data-toggle="buttons">
 											<label class="btn btn-primary">

@@ -111,7 +111,7 @@ int preset[][2] =  {{398, 112},  // head rotation
 1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`
 
 #### Automatically start Server on Boot
-1. Create a .service file which is used to start the web interface: nano ~/walle.service
+1. Create a `.service` file which is used to start the web interface: `nano ~/walle.service`
 1. Paste the following text into the file:
 ```text
 [Unit]
