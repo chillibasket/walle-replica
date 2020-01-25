@@ -207,12 +207,20 @@ VirtualJoystick.prototype._updateValues = function(){
 		success: function(data){
 			if(data.status == "Error"){
 				text.style.color = "#E74C3C";
+				$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
+											<button type="button" class="close" data-dismiss="alert">&times;</button>\
+											<strong>Error! </strong>' + data.msg + ' \
+										</div>');
 			} else {
 				text.style.color = "#3498DB";
 			}
 		},
 		error: function(error) {
 			text.style.color = "#E74C3C";
+			$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
+										<button type="button" class="close" data-dismiss="alert">&times;</button>\
+										<strong>Unknown Error! </strong> Unable to send movement command. \
+									</div>');
 		}
 	});
 

@@ -96,7 +96,7 @@ int preset[][2] =  {{398, 112},  // head rotation
     1. Open *app.py*: `nano ~/walle-replica/web_interface/app.py`
     1. Go to line 92 (you can do this with the keyboard command `CTRL + _`), and check whether the name of your micro-controller is already listed there. If not, add it where is says *ARDUINO*.
 1. Set the web server password:    
-    1. On line 180 of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
+    1. On line 183 of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
     1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
 
 #### Using the Web Server
@@ -104,13 +104,36 @@ int preset[][2] =  {{398, 112},  // head rotation
 1. To start the server: `python3 ~/walle-replica/web_interface/app.py`
 1. To access the web interface, open a browser on any computer/device on the same network and type in the IP address of the Raspberry Pi, follow by `:5000`. For example `192.168.1.10:5000`
 1. To stop the server press: `CTRL + C`
+1. To connect to the Arduino controlling the motors, you need to go to the `Settings` tab of the web-interface and press on the `Reconnect` button.
 
 #### Adding a Camera Stream
 1. Install *mjpg-streamer* - this is used to stream the video to the webserver. A good description of the installation procedure is [described here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording). Complete the *Install & Setup* steps, as well as creating the *Auto Start Manager Script*. Stop when you reach the *Start on Boot* section. 
 1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`
 
 #### Automatically start Server on Boot
-Coming soon!
+1. Create a .service file which is used to start the web interface: nano ~/walle.service
+1. Paste the following text into the file:
+```text
+[Unit]
+Description=Start Wall-E Web Interface
+After=network.target
+
+[Service]
+WorkingDirectory=/home/pi/walle-replica/web_interface
+ExecStart=/usr/bin/python3 app.py
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=walle
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+```
+1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
+1. Copy this file into the startup directory using the command: `sudo cp ~/walle.service /etc/systemd/system/walle.service`
+1. To enable auto-start, use the following command: `sudo systemctl enable walle.service`
+1. The web interface should now automatically start when the Raspberry Pi is turned on. You can also manually start and stop the service using the commands: `sudo systemctl start walle.service` and `sudo systemctl stop walle.service` 
 
 #### Adding new Sounds
 1. By default the Raspberry should automatically select whether to output audio to the HDMI port or the headphone jack. However, you can ensure that it always uses the headphone jack with the following command: `amixer cset numid=3 1`
@@ -121,6 +144,12 @@ Coming soon!
 
 
 ## Changelog
+
+#### 25th January 2020 - Major Update!
+1. Restructured the web-interface to make it display more nicely on mobile devices; fancy icons are now used!
+1. Added manual servo control - this allows individual servos to be controlled directly from the web-interface.
+1. Improved error handling - error messages are now consistently displayed in a pop-up at the bottom of the page.
+1. Added instructions about how to automatically start server on boot to the Readme.
 
 #### 31st October 2019
 1. Fixed some bugs related to sound playback.

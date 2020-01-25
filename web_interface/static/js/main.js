@@ -1,7 +1,7 @@
 /* 
  * Robot Webinterface - Main Script
  * Simon B., https://wired.chillibasket.com
- * V1.1, 31st October 2019
+ * V1.2, 25th January 2020
  */
 
 function sendSettings(type, value) {
@@ -22,16 +22,20 @@ function sendSettings(type, value) {
 		dataType: "json",
 		success: function(data){
 			if(data.status == "Error"){
+				$('#alert-space').fadeOut(100);
 				$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
-												<button type="button" class="close" data-dismiss="alert">&times;</button>\
-												<strong>Error! </strong>' + data.msg + ' \
-											</div>');
+											<button type="button" class="close" data-dismiss="alert">&times;</button>\
+											<strong>Error! </strong>' + data.msg + ' \
+										</div>');
+				$('#alert-space').fadeIn(150);
 				return 0;
 			} else {
+				$('#alert-space').fadeOut(100);
 				$('#alert-space').html('<div class="alert alert-dismissible alert-success set-alert">\
-													<button type="button" class="close" data-dismiss="alert">&times;</button>\
-													<strong>Success!</strong> Settings have been updated.\
-												</div>');
+											<button type="button" class="close" data-dismiss="alert">&times;</button>\
+											<strong>Success!</strong> Settings have been updated.\
+										</div>');
+				$('#alert-space').fadeIn(150);
 												
 				if(typeof data.arduino !== "undefined"){
 						if(data.arduino == "Connected"){
@@ -60,17 +64,18 @@ function sendSettings(type, value) {
 			}
 		},
 		error: function(error) {
+			$('#alert-space').fadeOut(100);
 			$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
-												<button type="button" class="close" data-dismiss="alert">&times;</button>\
-												<strong>Error! </strong> Unable to update settings. \
-											</div>');
+										<button type="button" class="close" data-dismiss="alert">&times;</button>\
+										<strong>Unknown Error! </strong> Unable to update settings. \
+									</div>');
+			$('#alert-space').fadeIn(150);
 			return 0;
 		}
 	});
 }
 
 function anime(clip, time) {
-	//alert(clip);
 	$.ajax({
 		url: "/animate",
 		type: "POST",
@@ -84,6 +89,12 @@ function anime(clip, time) {
 			if(data.status == "Error"){
 				$('#anime-progress').addClass('bg-danger');
 				$('#anime-progress').css("width", "0%").animate({width: 100+"%"}, 500);
+				$('#alert-space').fadeOut(100);
+				$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
+											<button type="button" class="close" data-dismiss="alert">&times;</button>\
+											<strong>Error! </strong>' + data.msg + ' \
+										</div>');
+				$('#alert-space').fadeIn(150);
 				return false;
 			} else {
 				$('#anime-progress').removeClass('bg-danger');
@@ -94,15 +105,18 @@ function anime(clip, time) {
 		error: function(error) {
 			$('#anime-progress').addClass('bg-danger');
 			$('#anime-progress').css("width", "0%").animate({width: 100+"%"}, 500);
+			$('#alert-space').fadeOut(100);
+			$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
+										<button type="button" class="close" data-dismiss="alert">&times;</button>\
+										<strong>Unknown Error! </strong> Unable to run the animation. \
+									</div>');
+			$('#alert-space').fadeIn(150);
 			return false;
 		}
 	});
 }
 
 function playAudio(clip, time) {
-
-	
-	//alert(clip);
 	$.ajax({
 		url: "/audio",
 		type: "POST",
@@ -116,6 +130,12 @@ function playAudio(clip, time) {
 			if(data.status == "Error"){
 				$('#audio-progress').addClass('bg-danger');
 				$('#audio-progress').css("width", "0%").animate({width: 100+"%"}, 500);
+				$('#alert-space').fadeOut(100);
+				$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
+											<button type="button" class="close" data-dismiss="alert">&times;</button>\
+											<strong>Error! </strong>' + data.msg + ' \
+										</div>');
+				$('#alert-space').fadeIn(150);
 				return false;
 			} else {
 				$('#audio-progress').removeClass('bg-danger');
@@ -126,19 +146,200 @@ function playAudio(clip, time) {
 		error: function(error) {
 			$('#audio-progress').addClass('bg-danger');
 			$('#audio-progress').css("width", "0%").animate({width: 100+"%"}, 500);
+			$('#alert-space').fadeOut(100);
+			$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
+										<button type="button" class="close" data-dismiss="alert">&times;</button>\
+										<strong>Unknown Error! </strong> Unable to play audio file. \
+									</div>');
+			$('#alert-space').fadeIn(150);
 			return false;
 		}
 	});
 }
 
 
+function servoControl(item, servo, value) {
+	$.ajax({
+		url: "/servoControl",
+		type: "POST",
+		data: {"servo": servo, "value": value},
+		dataType: "json",
+		success: function(data){
+			if(data.status == "Error"){
+				item.value = item.oldvalue;
+				$('#alert-space').fadeOut(100);
+				$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
+											<button type="button" class="close" data-dismiss="alert">&times;</button>\
+											<strong>Error! </strong>' + data.msg + ' \
+										</div>');
+				$('#alert-space').fadeIn(150);
+				return false;
+			} else {
+				return true;
+			}
+		},
+		error: function(error) {
+			$('#alert-space').fadeOut(100);
+			$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
+										<button type="button" class="close" data-dismiss="alert">&times;</button>\
+										<strong>Unknown Error! </strong> Unable to update servo position. \
+									</div>');
+			$('#alert-space').fadeIn(150);
+			return false;
+		}
+	});
+}
+
+
+function servoPresets(item, preset, servo) {
+	if (!item.classList.contains('disabled')) {
+		$.ajax({
+			url: "/servoControl",
+			type: "POST",
+			data: {"servo": servo, "value": 0},
+			dataType: "json",
+			success: function(data){
+				if(data.status == "Error"){
+					item.value = item.oldvalue;
+					$('#alert-space').fadeOut(100);
+					$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
+												<button type="button" class="close" data-dismiss="alert">&times;</button>\
+												<strong>Error! </strong>' + data.msg + ' \
+											</div>');
+					$('#alert-space').fadeIn(150);
+					return false;
+				} else {
+					if (preset == "head-up") {
+						$('#neck-top').oldvalue = $('#neck-top').value;
+						$('#neck-bottom').oldvalue = $('#neck-bottom').value;
+						$('#neck-top').val(0);
+						$('#neck-bottom').val(50);
+					} else if (preset == "head-neutral") {
+						$('#neck-top').oldvalue = $('#neck-top').value;
+						$('#neck-bottom').oldvalue = $('#neck-bottom').value;
+						$('#neck-top').val(100);
+						$('#neck-bottom').val(0);
+					} else if (preset == "head-down") {
+						$('#neck-top').oldvalue = $('#neck-top').value;
+						$('#neck-bottom').oldvalue = $('#neck-bottom').value;
+						$('#neck-top').val(0);
+						$('#neck-bottom').val(0);
+					} else if (preset == "arms-left") {
+						$('#arm-left').oldvalue = $('#arm-left').value;
+						$('#arm-right').oldvalue = $('#arm-right').value;
+						$('#arm-left').val(100);
+						$('#arm-right').val(0);
+					} else if (preset == "arms-neutral") {
+						$('#arm-left').oldvalue = $('#arm-left').value;
+						$('#arm-right').oldvalue = $('#arm-right').value;
+						$('#arm-left').val(50);
+						$('#arm-right').val(50);
+					} else if (preset == "arms-right") {
+						$('#arm-left').oldvalue = $('#arm-left').value;
+						$('#arm-right').oldvalue = $('#arm-right').value;
+						$('#arm-left').val(0);
+						$('#arm-right').val(100);
+					} else if (preset == "eyes-left") {
+						$('#eye-left').oldvalue = $('#eye-left').value;
+						$('#eye-right').oldvalue = $('#eye-right').value;
+						$('#eye-left').val(0);
+						$('#eye-right').val(100);
+					} else if (preset == "eyes-neutral") {
+						$('#eye-left').oldvalue = $('#eye-left').value;
+						$('#eye-right').oldvalue = $('#eye-right').value;
+						$('#eye-left').val(40);
+						$('#eye-right').val(40);
+					} else if (preset == "eyes-sad") {
+						$('#eye-left').oldvalue = $('#eye-left').value;
+						$('#eye-right').oldvalue = $('#eye-right').value;
+
+						$('#eye-left').val(0);
+						$('#eye-right').val(0);
+					} else if (preset == "eyes-right") {
+						$('#eye-left').oldvalue = $('#eye-left').value;
+						$('#eye-right').oldvalue = $('#eye-right').value;
+						$('#eye-left').val(100);
+						$('#eye-right').val(0);
+					}
+					return true;
+				}
+			},
+			error: function(error) {
+				$('#alert-space').fadeOut(100);
+				$('#alert-space').html('<div class="alert alert-dismissible alert-danger set-alert">\
+											<button type="button" class="close" data-dismiss="alert">&times;</button>\
+											<strong>Unknown Error! </strong> Unable to update servo position. \
+										</div>');
+				$('#alert-space').fadeIn(150);
+				return false;
+			}
+		});
+	}
+}
+
+
+function servoInputs(enabled) {
+	if (enabled == 1) {
+		$('#head-rotation').prop('disabled', false);
+		$('#neck-top').prop('disabled', false);
+		$('#neck-bottom').prop('disabled', false);
+		$('#eye-left').prop('disabled', false);
+		$('#eye-right').prop('disabled', false);
+		$('#arm-left').prop('disabled', false);
+		$('#arm-right').prop('disabled', false);
+		$('#head-up').removeClass('disabled');
+		$('#head-neutral').removeClass('disabled');
+		$('#head-down').removeClass('disabled');
+		$('#arms-left').removeClass('disabled');
+		$('#arms-neutral').removeClass('disabled');
+		$('#arms-right').removeClass('disabled');
+		$('#eyes-sad').removeClass('disabled');
+		$('#eyes-left').removeClass('disabled');
+		$('#eyes-neutral').removeClass('disabled');
+		$('#eyes-right').removeClass('disabled');
+	} else {
+		$('#head-rotation').prop('disabled',true);
+		$('#neck-top').prop('disabled',true);
+		$('#neck-bottom').prop('disabled',true);
+		$('#eye-left').prop('disabled',true);
+		$('#eye-right').prop('disabled',true);
+		$('#arm-left').prop('disabled',true);
+		$('#arm-right').prop('disabled',true);
+		$('#head-up').addClass('disabled');
+		$('#head-neutral').addClass('disabled');
+		$('#head-down').addClass('disabled');
+		$('#arms-left').addClass('disabled');
+		$('#arms-neutral').addClass('disabled');
+		$('#arms-right').addClass('disabled');
+		$('#eyes-sad').addClass('disabled');
+		$('#eyes-left').addClass('disabled');
+		$('#eyes-neutral').addClass('disabled');
+		$('#eyes-right').addClass('disabled');
+	}
+}
+
+
 window.onload = function () { 
+	var h = window.innerHeight - 80;
 	var cw = $('#limit').width();
-	$('#limit').css({'height':cw+'px'});
-	$('#stick').css({'top':Math.round(cw/2-40)+'px'});
-	$('#stick').css({'left':Math.round(cw/2-40)+'px'});
-	$('#base').css({'top':Math.round(cw/2-40)+'px'});
-	$('#base').css({'left':Math.round(cw/2-40)+'px'});
+	var pointer = 80;
+	
+	if (h > cw) {
+		$('#limit').css({'height':cw+'px'});
+	} else {
+		$('#limit').css({'height':h+'px'});
+		$('#limit').css({'width':h+'px'});
+		pointer = 60;
+		$('#base').css({'width':pointer+'px'});
+		$('#base').css({'height':pointer+'px'});
+		$('#stick').css({'width':pointer+'px'});
+		$('#stick').css({'height':pointer+'px'});
+		cw = h;
+	}
+	$('#stick').css({'top':Math.round(cw/2-pointer/2)+'px'});
+	$('#stick').css({'left':Math.round(cw/2-pointer/2)+'px'});
+	$('#base').css({'top':Math.round(cw/2-pointer/2)+'px'});
+	$('#base').css({'left':Math.round(cw/2-pointer/2)+'px'});
 
 	var offsets = document.getElementById('limit').getBoundingClientRect();
 	var top = offsets.top;
@@ -151,7 +352,7 @@ window.onload = function () {
 		baseY: top+(cw/2),
 		center: (cw/2),
 		limitStickTravel: true,
-		stickRadius: Math.round(cw/2) - 40,
+		stickRadius: Math.round(cw/2) - pointer/2,
 		container: document.getElementById('limit'),
 		stickElement: document.getElementById('stick'),
 		//baseElement: document.getElementById('base'),

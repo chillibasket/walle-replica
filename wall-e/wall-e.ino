@@ -2,8 +2,8 @@
  ********************************************
  * Code by: Simon Bluett
  * Email:   hello@chillibasket.com
- * Version: 2.4
- * Date:    30th October 2019
+ * Version: 2.5
+ * Date:    25th January 2020
  ********************************************/
 
 /* HOW TO USE:
@@ -243,6 +243,38 @@ void evaluateSerial() {
 	else if (firstChar == 'M' && number == 0) autoMode = false;
 	else if (firstChar == 'M' && number == 1) autoMode = true;
 
+	// Manual servo control
+	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
+	else if (firstChar == 'L' && number >= 0 && number <= 100) {   // Move left arm
+		autoMode = false;
+		queue.clear();
+		setpos[5] = int(number * 0.01 * (preset[5][1] - preset[5][0]) + preset[5][0]);
+	} else if (firstChar == 'R' && number >= 0 && number <= 100) { // Move right arm
+		autoMode = false;
+		queue.clear();
+		setpos[6] = int(number * 0.01 * (preset[6][1] - preset[6][0]) + preset[6][0]);
+	} else if (firstChar == 'B' && number >= 0 && number <= 100) { // Move neck bottom
+		autoMode = false;
+		queue.clear();
+		setpos[2] = int(number * 0.01 * (preset[2][1] - preset[2][0]) + preset[2][0]);
+	} else if (firstChar == 'T' && number >= 0 && number <= 100) { // Move neck top
+		autoMode = false;
+		queue.clear();
+		setpos[1] = int(number * 0.01 * (preset[1][1] - preset[1][0]) + preset[1][0]);
+	} else if (firstChar == 'Y' && number >= 0 && number <= 100) { // Move head rotation
+		autoMode = false;
+		queue.clear();
+		setpos[0] = int(number * 0.01 * (preset[0][1] - preset[0][0]) + preset[0][0]);
+	} else if (firstChar == 'E' && number >= 0 && number <= 100) { // Move eye left
+		autoMode = false;
+		queue.clear();
+		setpos[4] = int(number * 0.01 * (preset[4][1] - preset[4][0]) + preset[4][0]);
+	} else if (firstChar == 'U' && number >= 0 && number <= 100) { // Move eye right
+		autoMode = false;
+		queue.clear();
+		setpos[3] = int(number * 0.01 * (preset[3][1] - preset[3][0]) + preset[3][0]);
+	}
+	
 	// Manual Movements with WASD
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
 	else if (firstChar == 'w') {		// Forward movement

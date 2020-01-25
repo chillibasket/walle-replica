@@ -1,7 +1,7 @@
 #############################################
 # Robot Webinterface - Python Script
 # Simon Bluett, https://wired.chillibasket.com
-# V1.2, 31st October 2019
+# V1.3, 25th January 2020
 #############################################
 
 from flask import Flask, request, session, redirect, url_for, jsonify, render_template
@@ -89,9 +89,11 @@ def onoff_arduino(q):
 		arduino_ports = [
 			p.device
 			for p in serial.tools.list_ports.comports()
-			if 'GENUINO' or 'ARDUINO' in p.description
+			if 'ARDUINO' in p.description
 		]
 
+		print(arduino_ports)
+		
 		if not arduino_ports:
 			return 1
 
@@ -157,12 +159,13 @@ def index():
 		return redirect(url_for('login'))
 
 	files = []
-	for item in os.listdir('/home/pi/walle-replica/web_interface/static/sounds'):
+	for item in sorted(os.listdir('/home/pi/walle-replica/web_interface/static/sounds')):
 		if item.lower().endswith('.ogg'):
 			audiofiles = os.path.splitext(os.path.basename(item))[0]
 			audionames = audiofiles.split('_')[0]
 			audiotimes = float(audiofiles.split('_')[1])/1000.0
 			files.append((audiofiles,audionames,audiotimes))
+
 	return render_template('index.html',sounds=files)
 
 # Login
@@ -194,11 +197,14 @@ def motor():
 		xVal = int(float(stickX)*100)
 		yVal = int(float(stickY)*100)
 		print("Motors:", xVal, ",", yVal)
-		queueLock.acquire()
-		workQueue.put("X" + str(xVal))
-		workQueue.put("Y" + str(yVal))
-		queueLock.release()
-		return jsonify({'status': 'OK' })
+		if arduinoActive == 1:
+			queueLock.acquire()
+			workQueue.put("X" + str(xVal))
+			workQueue.put("Y" + str(yVal))
+			queueLock.release()
+			return jsonify({'status': 'OK' })
+		else:
+			return jsonify({'status': 'Error','msg':'Arduino not connected'})
 	else:
 		print("Error: unable to read POST data from motor command")
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
@@ -215,19 +221,28 @@ def settings():
 	if thing is not None and value is not None:
 		if thing == "motorOff":
 			print("Motor Offset:", value)
-			queueLock.acquire()
-			workQueue.put("O" + value)
-			queueLock.release()
+			if arduinoActive == 1:
+				queueLock.acquire()
+				workQueue.put("O" + value)
+				queueLock.release()
+			else:
+				return jsonify({'status': 'Error','msg':'Arduino not connected'})
 		elif thing == "steerOff":
 			print("Steering Offset:", value)
-			queueLock.acquire()
-			workQueue.put("S" + value)
-			queueLock.release()
+			if arduinoActive == 1:
+				queueLock.acquire()
+				workQueue.put("S" + value)
+				queueLock.release()
+			else:
+				return jsonify({'status': 'Error','msg':'Arduino not connected'})
 		elif thing == "animeMode":
 			print("Animation Mode:", value)
-			queueLock.acquire()
-			workQueue.put("M" + value)
-			queueLock.release()
+			if arduinoActive == 1:
+				queueLock.acquire()
+				workQueue.put("M" + value)
+				queueLock.release()
+			else:
+				return jsonify({'status': 'Error','msg':'Arduino not connected'})
 		elif thing == "soundMode":
 			print("Sound Mode:", value)
 		elif thing == "volume":
@@ -255,7 +270,7 @@ def settings():
 		elif thing == "shutdown":
 			print("Shutting down Raspberry Pi!", value)
 			result = subprocess.run(['sudo','nohup','shutdown','-h','now'], stdout=subprocess.PIPE).stdout.decode('utf-8')
-			return jsonify({'status': 'Error','msg': result})
+			return jsonify({'status': 'OK','msg': 'Raspberry Pi is shutting down'})
 		else:
 			return jsonify({'status': 'Error','msg': 'Unable to read POST data'})
 
@@ -295,10 +310,35 @@ def animate():
 	if clip is not None:
 		print("Animate:", clip)
 
-		queueLock.acquire()
-		workQueue.put("A" + clip)
-		queueLock.release()
-		return jsonify({'status': 'OK' })
+		if arduinoActive == 1:
+			queueLock.acquire()
+			workQueue.put("A" + clip)
+			queueLock.release()
+			return jsonify({'status': 'OK' })
+		else:
+			return jsonify({'status': 'Error','msg':'Arduino not connected'})
+	else:
+		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
+
+# Servo Control
+@app.route('/servoControl', methods=['POST'])
+def servoControl():
+	if session.get('active') != True:
+		return redirect(url_for('login'))
+
+	servo = request.form.get('servo');
+	value = request.form.get('value');
+	if servo is not None and value is not None:
+		print("servo:", servo)
+		print("value:", value)
+		
+		if arduinoActive == 1:
+			queueLock.acquire()
+			workQueue.put(servo + value)
+			queueLock.release()
+			return jsonify({'status': 'OK' })
+		else:
+			return jsonify({'status': 'Error','msg':'Arduino not connected'})
 	else:
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
 
