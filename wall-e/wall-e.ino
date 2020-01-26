@@ -261,7 +261,7 @@ void evaluateSerial() {
 		autoMode = false;
 		queue.clear();
 		setpos[1] = int(number * 0.01 * (preset[1][1] - preset[1][0]) + preset[1][0]);
-	} else if (firstChar == 'Y' && number >= 0 && number <= 100) { // Move head rotation
+	} else if (firstChar == 'G' && number >= 0 && number <= 100) { // Move head rotation
 		autoMode = false;
 		queue.clear();
 		setpos[0] = int(number * 0.01 * (preset[0][1] - preset[0][0]) + preset[0][0]);
