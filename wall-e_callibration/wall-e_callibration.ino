@@ -38,7 +38,7 @@
  *                        {350, 185},  // arm left
  *                        {188, 360}}; // arm right
  *
- *    Copy the array and paste it into lines 85 to 92 in [wall-e.ino]
+ *    Copy the array and paste it into lines 108 to 114 in [wall-e.ino]
  */
 
 #include <Wire.h>

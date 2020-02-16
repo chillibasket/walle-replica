@@ -32,10 +32,10 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 #### Basic Installation
 1. Ensure that the wiring of the electronics matches the diagram shown below.
 1. Download/clone the folder "wall-e" from the GitHub repository.
-1. Open *wall-e.ino* in the Arduino IDE; the files *MotorController.hpp* and *Queue.hpp* should automatically open on separate tabs of the IDE as well.
-1. Install the *Adafruit_PWMServoDriver.h* library
+1. Open `wall-e.ino` in the Arduino IDE; the files `MotorController.hpp` and `Queue.hpp` should automatically open on separate tabs of the IDE as well.
+1. Install the `Adafruit_PWMServoDriver.h` library
 	1. Go to Sketch -> Include Library -> Manage Libraries...
-	1. Search for  *Adafruit Servo*.
+	1. Search for *Adafruit Servo*.
 	1. Install version 1.0.2 of the library; the newest version currently has a bug and doesn't work properly.
 1. Connect to the computer to the micro-controller with a USB cable. Ensure that the correct *Board* and *Port* are selected in the *Tools* menu.
 1. Upload the sketch to the micro-controller.
@@ -51,7 +51,7 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 
 #### Servo Motor Calibration
 1. Download/clone the folder "wall-e_calibration" from the GitHub repository
-1. Open *wall-e_calibration.ino* in the Arduino IDE.
+1. Open `wall-e_calibration.ino` in the Arduino IDE.
 1. Upload the sketch to the micro-controller, and open the serial monitor and set the baud rate to 115200.
 1. The sketch is used to calibrate the maximum and minimum PWM pulse lengths required to move each servo motor across its desired range of motion. The standard LOW and HIGH positions of each of the servos can be seen on diagrams [on my website](https://wired.chillibasket.com/3d-printed-wall-e/). 
 1. When starting the sketch and opening the serial monitor, the a message should appear after 2-3 seconds, saying that it is ready to calibrate the LOW position of the first servo motor (the head rotation).
@@ -70,13 +70,13 @@ int preset[][2] =  {{398, 112},  // head rotation
 ```
 
 #### Battery Level Detection
-1. When using batteries to power the robot, it is important to keep track of how much power is left. Some batteries may break if they are over-discharged, and the SD card of the Raspberry Pi may become corrupted if not enough power is delivered.
-1. To use the battery level detection feature on the Arduino, connect the following resistors and wiring as shown in the image below. The resistors (potential divider) reduce the 12V voltage down to a value below 5V, which is safe for the Arduino to measure using its analogue pins. The recommended resistor values are *R1 = 100kΩ* and *R2 = 47kΩ*.
+When using batteries to power the robot, it is important to keep track of how much power is left. Some batteries may break if they are over-discharged, and the SD card of the Raspberry Pi may become corrupted if not enough power is delivered.
+1. To use the battery level detection feature on the Arduino, connect the following resistors and wiring as shown in the image below. The resistors (potential divider) reduce the 12V voltage down to a value below 5V, which is safe for the Arduino to measure using its analogue pins. The recommended resistor values are `R1 = 100kΩ` and `R2 = 47kΩ`.
 1. Uncomment line 50 in the main Arduino sketch *wall-e.ino*.
-1. If you are using different resistor values, change the value of the potential divider gain factor on line 54 of the sketch, according to the formula: *POT_DIV = R2 / (R1 + R2)*. 
-1. The program should now automatically check the battery level every 10 seconds, and this level will automatically be shown on the Raspberry Pi web-interface in the "Status" section.
+1. If you are using different resistor values, change the value of the potential divider gain factor on line 54 of the sketch, according to the formula: `POT_DIV = R2 / (R1 + R2)`. 
+1. The program should now automatically check the battery level every 10 seconds, and this level will be shown on the Raspberry Pi web-interface in the "Status" section.
 
-![](/images/battery-level-circuit.jpg)
+![](/images/battery_level_circuit.jpg)
 *Diagram showing the wiring of the battery level detection circuit*
 
 
@@ -94,17 +94,17 @@ int preset[][2] =  {{398, 112},  // head rotation
     ```shell
     cd ~
     git clone https://github.com/chillibasket/walle-replica.git
-    ``` 
+    ```
 1. Set the web server password:
     1. Open *app.py*: `nano ~/walle-replica/web_interface/app.py` 
     1. On line 20 of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
 1. (Optional) Change the default audio directory and location of the script used to start/stop the video stream.
     1. If you followed the steps above exactly, there is no need to do this. However, if you want to move the web-interface files to a different directory on the Raspberry Pi, you will need to change the location where the program will look for the audio files.
-    1. On line 23 of *app.py*, type the directory where the audio files are located. Ensure that the directory location ends with a forward slash: */*
+    1. On line 23 of *app.py*, type the directory where the audio files are located. Ensure that the directory location ends with a forward slash: `/`.
     1. On line 22 of *app.py*, the location of the script used to start and stop the video camera stream can be modified.
 1. Connect to the Arduino/micro-controller:
     1. Plug the Arduino/micro-controller into the USB port of the Raspberry Pi.
-    1. The web-interface allows you to select the correct serial port for the Arduino from a drop-down menu on the settings tab. If you would like the serial port used by the Arduino to be selected by default in the web-interface, you can set a preferred serial port device in the code. Go to line 21 of *app.py* and replace the text "ARDUINO" with the name of your device as shown in the drop-down list of the web-interface.
+    1. If you would like the serial port used by the Arduino to be selected by default in the web-interface, you can set a preferred serial port device in the code. Go to line 21 of *app.py* and replace the text "ARDUINO" with the name of your device. The name must match the one which appears in the drop-down menu in the "Settings" tab of the web-interface.
     1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
 
 
@@ -117,7 +117,7 @@ int preset[][2] =  {{398, 112},  // head rotation
 
 #### Adding a Camera Stream
 1. Install *mjpg-streamer* - this is used to stream the video to the webserver. A good description of the installation procedure is [described here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording). Complete the *Install & Setup* steps, as well as creating the *Auto Start Manager Script*. Stop when you reach the *Start on Boot* section. 
-1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`
+1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`. If you want the save the script in a different location, you need to update line 22 of *app.py*.
 
 #### Automatically start Server on Boot
 1. Create a `.service` file which is used to start the web interface: `nano ~/walle.service`
