@@ -14,13 +14,40 @@
     <link rel="stylesheet" href="../static/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../static/css/mystyle.css">
 	-->
-
+	
 	<!-- FontAwesome Icons -->
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
 	
     <title>WALL-E Controller</title>
 </head>
 <body>
+	
+	<!-- Gamepad Information Overlay -->
+	<div class="modal fade" id="gamepad-info" tabindex="-1" role="dialog">
+	  <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title" id="gamepad-title">Gamepad Support</h5>
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			  <span aria-hidden="true">&times;</span>
+			</button>
+		  </div>
+		  <div class="modal-body">
+			The WALL·E web-interface supports input from standard gamepads, such as the Xbox or PlayStation controllers on all modern browsers.
+			To get started, connect the gamepad to your computer and press any button while the web-interface is open in your browser.
+			<br>
+			<a href="{{ url_for('static', filename='gamepad-layout.jpg') }}" target="_blank">
+				<img id="gamepad-layout" class="modal-image" src="{{ url_for('static', filename='gamepad-layout.jpg') }}">
+			</a>
+		  </div>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+
+	<!-- Main Body Content -->
 	<div class="container-fluid">
 		<div class="row">
 			<div class="col">
@@ -43,7 +70,7 @@
 							<a class="nav-link tab-padding" href="#tab4" data-toggle="tab"><i class="fa fa-music"></i><div class="tab-text">Sounds</div></a>
 						</li>
 						<li class="nav-item col no-padding">
-							<a class="nav-link tab-padding" href="#tab5" data-toggle="tab"><i class="fa fa-tools"></i><div class="tab-text">Settings</div></a>
+							<a id="settings-tab" class="nav-link tab-padding" href="#tab5" data-toggle="tab"><i class="fa fa-tools"></i><div class="tab-text">Settings</div></a>
 						</li>
 					</ul>
 
@@ -51,30 +78,42 @@
 					<div class="tab-content row">
 						
 						<!-- Camera Stream -->
-						<div class="tab-pane scroll-pane-sm col-sm-12 col-md-6 d-md-block no-padding" id="tab0">
-							<div id="batt-indicator" class="battery-indicator d-none"><i class="fa fa-battery-full"></i><div class="battery-level">100%</div></div>
+						<div class="tab-pane scroll-pane col-sm-12 col-md-6 d-md-block no-padding" id="tab0">
 							<div class="media">
 								<img id="stream" class="stream" src="{{ url_for('static', filename='streamimage.jpg') }}">
+							</div>
+							<div class="info-elements">
+								<div class="info-area text-white">
+									Status:
+								</div>
+								<a id="ardu-area" href="#conn-arduino" onclick="$('#settings-tab').trigger('click')" class="info-area {% if connected == 1 %}bg-success{% else %}bg-danger{% endif %} text-white" title="{% if connected == 1 %}Connected{% else %}Disconnected{% endif %}" data-toggle="tooltip" data-placement="top">
+									<i class="fa fa-robot"></i><div id="ardu-text" class="indicator-text">Arduino</div>
+								</a>
+								<span data-toggle="modal" data-target="#gamepad-info">
+									<a id="cont-area" class="info-area bg-danger text-white cursor-pointer" title="Disconnected" data-toggle="tooltip" data-placement="top">
+										<i class="fa fa-gamepad"></i><div id="cont-text" class="indicator-text">Gamepad</div>
+									</a>
+								</span>
+								<div id="batt-area" class="info-area bg-success text-white d-none" title="Battery Level" data-toggle="tooltip" data-placement="top">
+									<i id="batt-icon" class="fa fa-battery-full"></i><div id="batt-text" class="indicator-text">100%</div>
+								</div>
 							</div>
 						</div>
 						
 						<!-- Robot Control -->
-						<div class="tab-pane col-sm-12 col-md-6 active" id="tab1">
-							<br>
+						<div class="tab-pane col-sm-12 col-md-6 active tabpane-padding" id="tab1">
+							<div id="joytext" class="joystick-text">x: 0, y: 0</div>
 							<div id="joystick" class="joystick">
 								<div id="limit" class="limit border border-secondary rounded-circle">
 									<div id="base" class="base border border-secondary rounded-circle"></div>
 									<div id="stick" class="stick border border-dark rounded-circle" style="display: none;"></div>
 								</div>
 							</div>
-							<br>
-							<div id="joytext" class="joystick-text">x: 0, y: 0</div>
 						</div>
 						
 						<!-- Manual Servo Control -->
-						<div class="tab-pane scroll-pane col-sm-12 col-md-6" id="tab2">
+						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" id="tab2">
 							<div class="container-fluid">
-								<br>
 								<div class="row set-row">
 									<div class="col-xs-12 col-sm-4 set-text"><b>Animation Mode</b></div>
 									<div class="col-xs-12 col-sm-8">
@@ -189,49 +228,60 @@
 						</div>
 
 						<!-- Animation Selection -->
-						<div class="tab-pane scroll-pane col-sm-12 col-md-6" id="tab3">
+						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" id="tab3">
 							<div class="container-fluid">
-								<br>
-								<!-- List Group Template -->
-								<div class="list-group">
-									<div class="list-section disabled list-group-item list-group-item-primary justify-content-between">All Animations <span class="badge badge-secondary badge-pill">3</span></div>
-									<a href="#" class="list-group-item list-group-item-action" onclick="anime(0,1.4)">Reset Servo Positions <i class="entry-time">&nbsp; | &nbsp; 1.4s</i></a>
-									<a href="#" class="list-group-item list-group-item-action" onclick="anime(1,8.6)">Bootup Sequence <i class="entry-time">&nbsp; | &nbsp; 8.6s</i></a>
-									<a href="#" class="list-group-item list-group-item-action" onclick="anime(2,18)">Inquisitive Sequence <i class="entry-time">&nbsp; | &nbsp; 18s</i></a>
-								</div>
-								<br>
 								<!-- Progress Bar Template -->
 								<div class="progress">
 									<div id="anime-progress" class="progress-bar progress-bar-striped notransition" style="width:0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+								</div>
+								<br>
+								<!-- List Group Template -->
+								<div class="list-group" id="anime-accordion">
+									<div class="card">
+										<a href="#all-animations" data-toggle="collapse" class="card-header justify-content-between text-muted">ALL ANIMATIONS 
+											<span class="badge badge-info badge-pill">3</span>
+										</a>
+										<div class="collapse show" id="all-animations" data-parent="#anime-accordion">
+											<a href="#" class="list-group-item list-group-item-action" file-name="0" file-length="1.4" onclick="anime(0,1.4)">Reset Servo Positions <i class="entry-time">&nbsp; | &nbsp; 1.4s</i></a>
+											<a href="#" class="list-group-item list-group-item-action" file-name="1" file-length="8.6" onclick="anime(1,8.6)">Bootup Sequence <i class="entry-time">&nbsp; | &nbsp; 8.6s</i></a>
+											<a href="#" class="list-group-item list-group-item-action" file-name="2" file-length="18" onclick="anime(2,18)">Inquisitive Sequence <i class="entry-time">&nbsp; | &nbsp; 18s</i></a>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
 
 						<!-- Sound Selection -->
-						<div class="tab-pane scroll-pane col-sm-12 col-md-6" id="tab4">
+						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" id="tab4">
 							<div class="container-fluid">
-								<br>
-								<!-- List Group Template -->
-								<div class="list-group">
-									<div class="list-section disabled list-group-item justify-content-between">All Sounds <span class="badge badge-secondary badge-pill">{{ sounds|length() }}</span></div>
-									{% for item in sounds %}
-										<a href="#" class="list-group-item list-group-item-action" onclick="playAudio('{{ item[0] }}',{{ item[2] }})">{{ item[1] }} <i class="entry-time">&nbsp; | &nbsp;{{ item[2] }}s</i></a>
-									{% endfor %}
-								</div>
-								<br>
 								<!-- Progress Bar Template -->
 								<div class="progress">
 									<div id="audio-progress" class="progress-bar progress-bar-striped notransition" style="width:0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+								</div>
+								<br>
+								<!-- List Group Template -->
+								<div class="list-group" id="audio-accordion">
+									{% for group in sounds|groupby(0) %}
+										<div class="card">
+											<a href="#{{ group.grouper.lower() }}-audio" data-toggle="collapse" class="card-header justify-content-between text-muted">{{ group.grouper.upper() }} 
+												<span class="badge badge-info badge-pill">{{ group.list|length() }}</span>
+											</a>
+											<div id="{{ group.grouper.lower() }}-audio" class="collapse" data-parent="#audio-accordion">	
+												{% for item in group.list %}
+													<a href="#" class="list-group-item list-group-item-action" file-name="{{ item[1] }}" file-length="{{ item[3] }}" onclick="playAudio('{{ item[1] }}',{{ item[3] }})">{{ item[2] }} <i class="entry-time">&nbsp; | &nbsp;{{ item[3] }}s</i></a>
+												{% endfor %}
+											</div>
+										</div>
+									{% endfor %}
 								</div>
 							</div>
 						</div>
 
 						<!-- Settings -->
-						<div class="tab-pane scroll-pane col-sm-12 col-md-6" id="tab5">
+						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" id="tab5">
 							<div class="container-fluid">
-								<br>
-								<div class="row set-row">
-									<div class="d-none col-xs-12 col-sm-4 set-text">Sound Mode</div>
+								<div class="row set-row d-none">
+									<div class="col-xs-12 col-sm-4 set-text">Sound Mode</div>
 									<div class="col-xs-12 col-sm-8">
 										<div class="btn-group btn-group-toggle" data-toggle="buttons">
 											<label class="btn btn-primary">
@@ -243,7 +293,7 @@
 										</div>
 									</div>
 								</div>
-								<div class="row set-row d-none">
+								<div class="row set-row">
 									<div class="col-xs-12 col-sm-4 set-text">Sound Volume</div>
 									<div class="col-xs-12 col-sm-8">
 										<input id="volume" class="set-slide custom-range" type="range" min="0" max="10" step="1" value="5" onchange="sendSettings('volume',value)"/>
@@ -270,11 +320,31 @@
 								</div>
 								<hr/>
 								<div class="row set-row">
-									<div class="col-xs-12 col-sm-4 set-text">Arduino Connection</div>
-									<div class="col-xs-12 col-sm-8">
-										<button id="conn-arduino" type="button" class="btn btn-outline-info" onclick="sendSettings('reconnect',1)">Reconnect</button>
+									<div class="col-xs-12 col-sm-4 set-text">Select Port</div>
+									<div class="input-group col-xs-12 col-sm-8">
+										<select class="custom-select set-num" id="port-select">
+											{% if ports %}
+												{% for item in ports %}
+												<option value="{{ loop.index0 }}"{% if loop.index0 == portSelect %} selected{% endif %}>{{ item }}</option>
+												{% endfor %}
+											{% else %}
+												<option disabled selected>No devices found!</option>
+											{% endif %}
+										</select>
+										<div class="input-group-append">
+											<button class="btn btn-outline-info" type="button" onclick="updateSerialList(true)">Reload</button>
+										</div>
 									</div>
 								</div>
+								<div class="row set-row">
+									<div class="col-xs-12 col-sm-4 set-text">Connect Arduino</div>
+									<div class="col-xs-12 col-sm-8">
+											<button id="conn-arduino" type="button" class="btn {% if ports %}{% if connected == 1 %}btn-outline-danger{% else %}btn-outline-info{% endif %}{% else %}btn-outline-secondary disabled{% endif %}" onclick="arduinoConnect(this)">
+												{% if connected == 1 %}Disconnect{% else %}Reconnect{% endif %}
+											</button>
+									</div>
+								</div>
+								<hr/>
 								<div class="row set-row">
 									<div class="col-xs-12 col-sm-4 set-text">MJPG Streamer</div>
 									<div class="col-xs-12 col-sm-8">
@@ -293,9 +363,9 @@
 				</div>
 			</div>
 		</div>
-		<div class="row alert-fixed-row">
+		<div class="row">
 			<div class="d-sm-none d-md-block col-md-6"></div>
-			<div class="col-sm-12 col-md-6">
+			<div class="col-sm-12 col-md-6 alert-col">
 				<div id="alert-space" class="alert-area"></div>
 			</div>
 		</div>
@@ -306,6 +376,7 @@
     <script src="{{ url_for('static', filename='js/jquery-3.3.1.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/joystick.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/joypad.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     <!--

@@ -1,7 +1,7 @@
 /* 
  * Robot Webinterface - CSS
  * Simon B., https://wired.chillibasket.com
- * V1.0, 7/6/19
+ * V1.4, 16th February 2020
  */
 
 .wrapper {
@@ -17,12 +17,14 @@
 .joystick {
 	width: 100%;
 	height: auto;
+	margin-top: -20px;
 }
 
 .joystick-text {
-	width: 100%;
-	text-align: center;
+	text-align: right;
 	color: #444;
+	margin-right: 10px;
+	height: 20px;
 }
 
 .limit {
@@ -59,17 +61,6 @@
 	}
 }
 
-@media screen and (max-width: 767px) {
-	.scroll-pane-sm {
-		max-height: 90vh;
-		padding-bottom: 0px;
-		overflow: scroll;
-		overflow-x: hidden;
-		-ms-overflow-x: hidden;
-		-webkit-overflow-scrolling: touch;
-	}
-}
-
 @media screen and (min-width: 576px) {
 	.set-text {
 		text-align: right;
@@ -77,9 +68,8 @@
 }
 
 .scroll-pane {
-	max-height: 90vh;
-	padding-bottom: 0px;
-	overflow: scroll;
+	max-height: calc(100vh - 40px);
+	overflow: auto;
 	overflow-x: hidden;
 	-ms-overflow-x: hidden;
 	-webkit-overflow-scrolling: touch;
@@ -101,15 +91,32 @@
 	font-weight: bold;
 }
 
+.list-group-item-action:hover, .list-group-item-action:focus {
+	background: #151515 !important;
+}
+
 .set-row {
 	margin-bottom: 10px;
 }
 
 .set-alert {
 	max-width: 330px;
-	margin-left: auto;
-	margin-right: auto;
 	margin-bottom: 20px;
+	width: 100%;
+	bottom: -15px;
+    position: fixed;
+}
+
+.alert-area {
+    z-index: 1500;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 330px;
+}
+
+.alert-col {
+	z-index: 1500;
 }
 
 .set-num {
@@ -124,25 +131,17 @@
 	color: gray;
 }
 
-.alert-area {
-    z-index: 1500;
+
+.info-elements {
+	background: #303030;
 }
 
-.alert-fixed-row {
-	position: fixed;
-    width: 100%;
-    bottom: -15px;
+.info-area {
+	display: inline-block;
+	padding: 5px 10px;
 }
 
-.battery-indicator {
-	position: absolute;
-	z-index: 1000;
-	padding: 10px;
-	top: 0px;
-    background: #375a7f;
-}
-
-.battery-level {
+.indicator-text {
 	display: inline-block;
 	padding-left: 10px;
 }
@@ -151,6 +150,20 @@
 	display: inline-block;
 	padding-left: 5px;
 }
+
+.modal-image {
+	width: 100%;
+}
+
+.cursor-pointer {
+	cursor: pointer;
+}
+
+.tabpane-padding {
+	padding-top: 30px;
+	padding-bottom: 30px;
+}
+
 
 .notransition {
   -webkit-transition: none !important;

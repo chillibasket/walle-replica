@@ -83,6 +83,15 @@ var VirtualJoystick	= function(opts)
 	}
 }
 
+VirtualJoystick.prototype.updateDimensions = function(x, y, c, r)
+{
+	this._baseX = x;
+	this._baseY = y;
+	this._center = c;
+	this._stickRadius = r;
+}
+
+
 VirtualJoystick.prototype.destroy	= function()
 {
 	//this._container.removeChild(this._baseEl);

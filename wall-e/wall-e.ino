@@ -2,16 +2,16 @@
  ********************************************
  * Code by: Simon Bluett
  * Email:   hello@chillibasket.com
- * Version: 2.5
- * Date:    25th January 2020
+ * Version: 2.6
+ * Date:    16th February 2020
  ********************************************/
 
 /* HOW TO USE:
  * 1. Install the Adafruit_PWMServoDriver library
  *    a. In the Arduino IDE, go to Sketch->Include Library->Manage Libraries
- *    b. Search for Adafruit PWM Library, and install the latest version
+ *    b. Search for Adafruit PWM Library, and install version 1.0.2
  * 2. Calibrate the servo motors, using the calibration sketch provided in the
- *    GitHub repository. Paste the calibrated values between line 85 to 92
+ *    GitHub repository. Paste the calibrated values between line 108 to 114.
  * 3. Upload the sketch to the micro-controller, and open serial monitor at 
  *    a baud rate of 115200.
  * 4. Additional instructions and hints can be found at:
@@ -35,6 +35,26 @@
 #define SR_OE 10           // Servo shield output enable pin
 
 
+// Battery level detection
+// -- -- -- -- -- -- -- -- -- -- -- -- -- --
+//
+//   .------R1-----.-------R2------.     | The diagram to the left shows the  |
+//   |             |               |     | potential divider circuit used by  |
+// V_Raw     Analogue pin A2      GND    | the battery level detection system |
+//
+// The scaling factor is calculated according to ratio of the two resistors:
+//   POT_DIV = R2 / (R1 + R2)
+//   For example: 47000 / (100000 + 47000) = 0.3197
+//
+// To enable battery level detection, uncomment the next line:
+//#define BAT_L A2 			// Battery level detection analogue pin
+#ifdef BAT_L
+	#define BAT_MAX 12.6   // Maximum voltage
+	#define BAT_MIN 10.2   // Minimum voltage
+	#define POT_DIV 0.3197 // Potential divider scaling factor
+#endif
+
+
 // Define other constants
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
 #define FREQUENCY 10       // Time in milliseconds of how often to update servo and motor positions
@@ -42,6 +62,7 @@
 #define THRESHOLD 1        // The minimum error which the dynamics controller tries to achieve
 #define MOTOR_OFF 6000 	   // Turn servo motors off after 6 seconds
 #define MAX_SERIAL 5       // Maximum number of characters that can be received
+#define STATUS_TIME 10000  // Time in milliseconds of how often to check robot status (eg. battery level)
 
 
 // Instantiate objects
@@ -70,6 +91,7 @@ int turnOff = 0;
 unsigned long lastTime = 0;
 unsigned long animeTimer = 0;
 unsigned long motorTimer = 0;
+unsigned long statusTimer = 0;
 unsigned long updateTimer = 0;
 bool autoMode = false;
 
@@ -141,7 +163,6 @@ const int inquSeq[][SERVOS+1] =  {{3000,  48,  60,   0,  35,  45,  60,  59},
                                   {1500,  48,  60,   0,  35,  45,  60,  59},
                                   {3000, 100,  60,   0,  40,  40,  60, 100},
                                   {1500,  48, 100,   0,   0,   0,   0,   0}};
-
 
 void queueAnimation(const int seq[][SERVOS+1], int len);
 
@@ -382,7 +403,7 @@ void manageAnimations() {
 			if (random(2) == 1) {
 
 				// For most of the servo motors
-				if (i == 0 || i == 1 || i == 2 || i == 5 || i == 6) {
+				if (i == 0 || i == 1 || i == 5 || i == 6) {
 
 					// Randomly determine the new position
 					unsigned int min = preset[i][0];
@@ -520,6 +541,23 @@ void manageMotors(float dt) {
 
 
 // -------------------------------------------------------------------
+// 		BATTERY LEVEL DETECTION
+// -------------------------------------------------------------------
+#ifdef BAT_L
+void checkBatteryLevel() {
+
+	// Read the analogue pin and calculate battery voltage
+	float voltage = analogRead(BAT_L) * 5 / 1024.0;
+	voltage = voltage / POT_DIV;
+	int percentage = int(100 * (voltage - BAT_MIN) / float(BAT_MAX - BAT_MIN));
+
+	// Send the percentage via serial
+	Serial.print("Battery_"); Serial.println(percentage);
+}
+#endif
+
+
+// -------------------------------------------------------------------
 // 		MAIN PROGRAM LOOP
 // -------------------------------------------------------------------
 void loop() {
@@ -547,5 +585,16 @@ void loop() {
 
 		manageServos(dt);
 		manageMotors(dt);
+	}
+
+
+	// Update robot status
+	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
+	if (statusTimer < millis()) {
+		statusTimer = millis() + STATUS_TIME;
+
+		#ifdef BAT_L
+			checkBatteryLevel();
+		#endif
 	}
 }
