@@ -2,8 +2,8 @@
  ********************************************
  * Code by: Simon Bluett
  * Email:   hello@chillibasket.com
- * Version: 2.6
- * Date:    16th February 2020
+ * Version: 2.6 (Eyebrow Version)
+ * Date:    23rd February 2020
  ********************************************/
 
 /* HOW TO USE:
@@ -58,7 +58,7 @@
 // Define other constants
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
 #define FREQUENCY 10       // Time in milliseconds of how often to update servo and motor positions
-#define SERVOS 7           // Number of servo motors
+#define SERVOS 9           // Number of servo motors (7 normal servos plus the two eyebrow servos)
 #define THRESHOLD 1        // The minimum error which the dynamics controller tries to achieve
 #define MOTOR_OFF 6000 	   // Turn servo motors off after 6 seconds
 #define MAX_SERIAL 5       // Maximum number of characters that can be received
@@ -111,19 +111,21 @@ int preset[][2] =  {{410, 125},   // head rotation
                     {485, 230},   // eye right
                     {274, 495},   // eye left
                     {355, 137},   // arm left
-                    {188, 420}};  // arm right
+                    {188, 420},   // arm right
+                    {200, 400},   // eyebrow left
+                    {400, 200}};  // eyebrow right
 // *****************************************************
 
 
 // Servo Control - Position, Velocity, Acceleration
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
-// Servo Pins:	     0,   1,   2,   3,   4,   5,   6,   -,   -
-// Joint Name:	  head,necT,necB,eyeR,eyeL,armL,armR,motL,motR
-float curpos[] = { 248, 560, 140, 475, 270, 250, 290, 180, 180};  // Current position (units)
-float setpos[] = { 248, 560, 140, 475, 270, 250, 290,   0,   0};  // Required position (units)
-float curvel[] = {   0,   0,   0,   0,   0,   0,   0,   0,   0};  // Current velocity (units/sec)
-float maxvel[] = { 500, 750, 255,2400,2400, 500, 500, 255, 255};  // Max Servo velocity (units/sec)
-float accell[] = { 350, 480, 150,1800,1800, 300, 300, 800, 800};  // Servo acceleration (units/sec^2)
+// Servo Pins:	     0,   1,   2,   3,   4,   5,   6,   7,   8,   -,   -
+// Joint Name:	  head,necT,necB,eyeR,eyeL,armL,armR,ebrL,ebrR,motL,motR
+float curpos[] = { 248, 560, 140, 475, 270, 250, 290, 300, 300, 180, 180};  // Current position (units)
+float setpos[] = { 248, 560, 140, 475, 270, 250, 290, 300, 300,   0,   0};  // Required position (units)
+float curvel[] = {   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0};  // Current velocity (units/sec)
+float maxvel[] = { 500, 750, 255,2400,2400, 500, 500,1000,1000, 255, 255};  // Max Servo velocity (units/sec)
+float accell[] = { 350, 480, 150,1800,1800, 300, 300,1200,1200, 800, 800};  // Servo acceleration (units/sec^2)
 
 
 // Animation Presets 
@@ -131,38 +133,38 @@ float accell[] = { 350, 480, 150,1800,1800, 300, 300, 800, 800};  // Servo accel
 // (Time is in milliseconds)
 // (Servo values are between 0 to 100, use -1 to disable the servo)
 #define SOFT_LEN 7
-// Starting Sequence:              time,head,necT,necB,eyeR,eyeL,armL,armR
-const int softSeq[][SERVOS+1] =  {{ 200,  50,  69,  29,   1,   1,  41,  41},
-                                  { 200,  50,  70,  29,   1,   1,  41,  41},
-                                  { 200,  50,  70,  30,   1,   1,  41,  41},
-                                  { 200,  50,  70,  30,   0,   1,  41,  41},
-                                  { 200,  50,  70,  30,   0,   0,  41,  41},
-                                  { 200,  50,  70,  30,   0,   0,  40,  41},
-                                  { 200,  50,  70,  30,   0,   0,  40,  40}};
+// Starting Sequence:              time,head,necT,necB,eyeR,eyeL,armL,armR,ebrL,ebrR
+const int softSeq[][SERVOS+1] =  {{ 200,  50,  69,  29,   1,   1,  41,  41,   1,   1},
+                                  { 200,  50,  70,  29,   1,   1,  41,  41,   0,   0},
+                                  { 200,  50,  70,  30,   1,   1,  41,  41,   0,   0},
+                                  { 200,  50,  70,  30,   0,   1,  41,  41,   0,   0},
+                                  { 200,  50,  70,  30,   0,   0,  41,  41,   0,   0},
+                                  { 200,  50,  70,  30,   0,   0,  40,  41,   0,   0},
+                                  { 200,  50,  70,  30,   0,   0,  40,  40,   0,   0}};
 
 #define BOOT_LEN 9
-// Bootup Eye Sequence:            time,head,necT,necB,eyeR,eyeL,armL,armR
-const int bootSeq[][SERVOS+1] =  {{2000,  50,  68,   0,  40,  40,  40,  40},
-                                  { 700,  50,  68,   0,  40,   0,  40,  40},
-                                  { 700,  50,  68,   0,   0,   0,  40,  40},
-                                  { 700,  50,  68,   0,   0,  40,  40,  40},
-                                  { 700,  50,  68,   0,  40,  40,  40,  40},
-                                  { 400,  50,  68,   0,   0,   0,  40,  40},
-                                  { 400,  50,  68,   0,  40,  40,  40,  40},
-                                  {2000,  50,  85,   0,  40,  40,  40,  40},
-                                  {1000,  50,  85,   0,   0,   0,  40,  40}};
+// Bootup Eye Sequence:            time,head,necT,necB,eyeR,eyeL,armL,armR,ebrL,ebrR
+const int bootSeq[][SERVOS+1] =  {{2000,  50,  68,   0,  40,  40,  40,  40,   0,   0},
+                                  { 700,  50,  68,   0,  40,   0,  40,  40,   0,   0},
+                                  { 700,  50,  68,   0,   0,   0,  40,  40,   0,   0},
+                                  { 700,  50,  68,   0,   0,  40,  40,  40,   0,   0},
+                                  { 700,  50,  68,   0,  40,  40,  40,  40,   0,   0},
+                                  { 400,  50,  68,   0,   0,   0,  40,  40,   0,   0},
+                                  { 400,  50,  68,   0,  40,  40,  40,  40,   0,   0},
+                                  {2000,  50,  85,   0,  40,  40,  40,  40,   0,   0},
+                                  {1000,  50,  85,   0,   0,   0,  40,  40,   0,   0}};
 
 #define INQU_LEN 9
-// Inquisitive Movements:          time,head,necT,necB,eyeR,eyeL,armL,armR
-const int inquSeq[][SERVOS+1] =  {{3000,  48,  60,   0,  35,  45,  60,  59},
-                                  {1500,  48,  60,   0, 100,   0, 100, 100},
-                                  {3000,   0,   0,   0, 100,   0, 100, 100},
-                                  {1500,  48,   0,   0,  40,  40, 100, 100},
-                                  {1500,  48,  60,   0,  45,  35,   0,   0},
-                                  {1500,  34,  44,   0,  14, 100,   0,   0},
-                                  {1500,  48,  60,   0,  35,  45,  60,  59},
-                                  {3000, 100,  60,   0,  40,  40,  60, 100},
-                                  {1500,  48, 100,   0,   0,   0,   0,   0}};
+// Inquisitive Movements:          time,head,necT,necB,eyeR,eyeL,armL,armR,ebrL,ebrR
+const int inquSeq[][SERVOS+1] =  {{3000,  48,  60,   0,  35,  45,  60,  59,   0,   0},
+                                  {1500,  48,  60,   0, 100,   0, 100, 100,   0,   0},
+                                  {3000,   0,   0,   0, 100,   0, 100, 100,   0,   0},
+                                  {1500,  48,   0,   0,  40,  40, 100, 100,   0,   0},
+                                  {1500,  48,  60,   0,  45,  35,   0,   0,  50,  50},
+                                  {1500,  34,  44,   0,  14, 100,   0,   0, 100,   0},
+                                  {1500,  48,  60,   0,  35,  45,  60,  59,   0,   0},
+                                  {3000, 100,  60,   0,  40,  40,  60, 100,   0,   0},
+                                  {1500,  48, 100,   0,   0,   0,   0,   0,   0,   0}};
 
 void queueAnimation(const int seq[][SERVOS+1], int len);
 
@@ -248,8 +250,8 @@ void evaluateSerial() {
 
 	// Motor Inputs and Offsets
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	if      (firstChar == 'X' && number >= -100 && number <= 100) turnVal = int(number * 2.55); 		// Forward/reverse control
-	else if (firstChar == 'Y' && number >= -100 && number <= 100) moveVal = int(number * 2.55); 		// Left/right control
+	if      (firstChar == 'X' && number >= -100 && number <= 100) turnVal = int(number * 2.55); 		// Left/right control
+	else if (firstChar == 'Y' && number >= -100 && number <= 100) moveVal = int(number * 2.55); 		// Forward/reverse movement
 	else if (firstChar == 'S' && number >=  100 && number <= 100) turnOff = number; 					// Steering offset
 	else if (firstChar == 'O' && number >=    0 && number <= 250) curpos[7] = curpos[8] = int(number); 	// Motor deadzone offset
 
@@ -294,6 +296,14 @@ void evaluateSerial() {
 		autoMode = false;
 		queue.clear();
 		setpos[3] = int(number * 0.01 * (preset[3][1] - preset[3][0]) + preset[3][0]);
+	} else if (firstChar == 'J' && number >= 0 && number <= 100) { // Move eyebrow left
+		autoMode = false;
+		queue.clear();
+		setpos[7] = int(number * 0.01 * (preset[7][1] - preset[7][0]) + preset[7][0]);
+	} else if (firstChar == 'K' && number >= 0 && number <= 100) { // Move eyebrow right
+		autoMode = false;
+		queue.clear();
+		setpos[8] = int(number * 0.01 * (preset[8][1] - preset[8][0]) + preset[8][0]);
 	}
 	
 	// Manual Movements with WASD
@@ -341,6 +351,25 @@ void evaluateSerial() {
 	else if (firstChar == 'k') {		// Neutral head
 		setpos[4] = int(0.4 * (preset[4][1] - preset[4][0]) + preset[4][0]);
 		setpos[3] = int(0.4 * (preset[3][1] - preset[3][0]) + preset[3][0]);
+	}
+
+	// Manual Eyebrow Movements
+	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
+	else if (firstChar == 'r') {		// Left eyebrow up
+		setpos[7] = preset[7][1];
+		setpos[8] = preset[8][0];
+	}
+	else if (firstChar == 't') {		// Both eyebrows up
+		setpos[7] = preset[7][1];
+		setpos[8] = preset[8][1];
+	}
+	else if (firstChar == 'y') {		// Both eyebrows down
+		setpos[7] = preset[7][0];
+		setpos[8] = preset[8][0];
+	}
+	else if (firstChar == 'u') {		// Right eyerbrow up
+		setpos[7] = preset[7][0];
+		setpos[8] = preset[8][1];
 	}
 
 	// Head movement
@@ -503,8 +532,8 @@ void manageServos(float dt) {
 // -------------------------------------------------------------------
 void manageMotors(float dt) {
 	// Update Main Motor Values
-	setpos[7] = moveVal - turnVal - turnOff;
-	setpos[8] = moveVal + turnVal + turnOff;
+	setpos[SERVOS] = moveVal - turnVal - turnOff;
+	setpos[SERVOS+1] = moveVal + turnVal + turnOff;
 
 	// MAIN DRIVING MOTORS
 	// -  -  -  -  -  -  -  -  -  -  -  -  -

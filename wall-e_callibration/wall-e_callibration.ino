@@ -2,8 +2,8 @@
  ********************************************
  * Code by: Simon Bluett
  * Email:   hello@chillibasket.com
- * Version: 1.0
- * Date:    30th October 2019
+ * Version: 1.0 (With eyebrow support)
+ * Date:    23rd February 2020
  ********************************************/
 
 /* HOW TO USE:
@@ -36,9 +36,11 @@
  *                        {475, 230},  // eye right
  *                        {270, 440},  // eye left
  *                        {350, 185},  // arm left
- *                        {188, 360}}; // arm right
+ *                        {188, 360},  // arm right
+ *                        {200, 400},  // eyebrow left
+ *                        {400, 200}}; // eyebrow right
  *
- *    Copy the array and paste it into lines 108 to 114 in [wall-e.ino]
+ *    Copy the array and paste it into lines 108 to 116 in [wall-e.ino]
  */
 
 #include <Wire.h>
@@ -52,7 +54,7 @@
 
 // Define other constants
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
-#define SERVOS 7           // Number of servo motors
+#define SERVOS 9           // Number of servo motors
 
 
 // Instantiate objects
@@ -68,20 +70,24 @@ int preset[][2] =  {{398, 112},  // head rotation
                     {475, 230},	 // eye right
                     {270, 440},	 // eye left
                     {350, 185},	 // arm left
-                    {188, 360}}; // arm right
+                    {188, 360},  // arm right
+                    {200, 400},  // eyebrow left
+                    {400, 200}}; // eyebrow right
 
 // Rest position
-float restpos[7] = {50, 50, 40, 0, 0, 100, 100};
+float restpos[9] = {50, 50, 40, 0, 0, 100, 100, 0, 0};
 
 // Messages
-String messages1[7] = {"Head Rotation - ","Neck Top Joint - ","Neck Bottom Joint - ","Eye Left - ","Eye Right - ","Arm Left - ","Arm Right - "};
+String messages1[9] = {"Head Rotation - ","Neck Top Joint - ","Neck Bottom Joint - ","Eye Left - ","Eye Right - ","Arm Left - ","Arm Right - ","Eyebrow Left - ","Eyebrow Right - "};
 String messages2[][2] = {{"LOW (head facing left)", "HIGH (head facing right)"},
                         {"LOW (head looking down)", "HIGH (head looking up)"},
                         {"LOW (head looking down)", "HIGH (head looking up)"},
                         {"LOW (eye rotated down)", "HIGH (eye rotated up)"},
                         {"LOW (eye rotated down)", "HIGH (eye rotated up)"},
                         {"LOW (arm rotated down)", "HIGH (arm rotated up)"},
-                        {"LOW (arm rotated down)", "HIGH (arm rotated up)"}};
+                        {"LOW (arm rotated down)", "HIGH (arm rotated up)"},
+                        {"LOW (eyebrow down)", "HIGH (eyebrow up)"},
+                        {"LOW (eyebrow down)", "HIGH (eyebrow up)"}};
 
 // Runtime Variables
 int currentServo = 0;
@@ -178,6 +184,8 @@ void outputResults() {
 	Serial.print("                    {"); Serial.print(preset[4][0]); Serial.print(","); Serial.print(preset[4][1]); Serial.println("},  // eye left");
 	Serial.print("                    {"); Serial.print(preset[5][0]); Serial.print(","); Serial.print(preset[5][1]); Serial.println("},  // arm left");
 	Serial.print("                    {"); Serial.print(preset[6][0]); Serial.print(","); Serial.print(preset[6][1]); Serial.println("}}; // arm right");
+	Serial.print("                    {"); Serial.print(preset[7][0]); Serial.print(","); Serial.print(preset[7][1]); Serial.println("},  // eyebrow left");
+	Serial.print("                    {"); Serial.print(preset[8][0]); Serial.print(","); Serial.print(preset[8][1]); Serial.println("}}; // eyebrow right");
 
 	// Stop the program
 	while(1){}

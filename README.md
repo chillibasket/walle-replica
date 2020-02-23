@@ -1,6 +1,6 @@
-# walle-replica
+# walle-replica - Eyebrow support
 Robot and controller code for a Wall-E replica robot. For more information about the robot, visit https://wired.chillibasket.com/3d-printed-wall-e/
-
+This branch contains the code which supports the two additional eyebrow servo motors, as can be found on the Thingiverse remix of the design: https://www.thingiverse.com/thing:3955562
 
 ## Arduino Code (wall-e)
 Main program to control the motors and servos of the robot. Features include:
@@ -77,6 +77,7 @@ When using batteries to power the robot, it is important to keep track of how mu
 1. The program should now automatically check the battery level every 10 seconds, and this level will be shown on the Raspberry Pi web-interface in the "Status" section.
 
 ![](/images/battery_level_circuit.jpg)
+
 *Diagram showing the wiring of the battery level detection circuit*
 
 

@@ -224,6 +224,38 @@
 										</div>
 									</div>
 								</div>
+								<hr/>
+								<div class="row set-row">
+									<div class="col-xs-12 col-sm-4 set-text">Eyebrow Left</div>
+									<div class="col-xs-12 col-sm-8">
+										<input id="eyebrow-left" class="set-slide custom-range" type="range" min="0" max="100" step="1" value="50" onfocus="this.oldvalue = this.value;" onchange="servoControl(this,'J',value)"/>
+									</div>
+								</div>
+								<div class="row set-row">
+									<div class="col-xs-12 col-sm-4 set-text">Eyebrow Right</div>
+									<div class="col-xs-12 col-sm-8">
+										<input id="eyebrow-right" class="set-slide custom-range" type="range" min="0" max="100" step="1" value="50" onfocus="this.oldvalue = this.value;" onchange="servoControl(this,'K',value)"/>
+									</div>
+								</div>
+								<div class="row set-row">
+									<div class="col-xs-12 col-sm-4 set-text">Eyebrow Presets</div>
+									<div class="col-xs-12 col-sm-8">
+										<div class="btn-group" role="group">
+											<button type="button" id="eyebrows-left" class="btn btn-primary" onclick="servoPresets(this,'eyesbrows-left','r')">
+												Left
+											</button>
+											<button type="button" id="eyebrows-both" class="btn btn-primary" onclick="servoPresets(this,'eyebrows-both','t')">
+												Both
+											</button>
+											<button type="button" id="eyebrows-none" class="btn btn-primary" onclick="servoPresets(this,'eyesbrows-none','y')">
+												None
+											</button>
+											<button type="button"  id="eyebrows-right" class="btn btn-primary" onclick="servoPresets(this,'eyebrows-right','u')">
+												Right
+											</button>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 

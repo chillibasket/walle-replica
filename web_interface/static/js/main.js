@@ -383,7 +383,6 @@ function servoPresets(item, preset, servo) {
 					} else if (preset == "eyes-sad") {
 						$('#eye-left').oldvalue = $('#eye-left').value;
 						$('#eye-right').oldvalue = $('#eye-right').value;
-
 						$('#eye-left').val(0);
 						$('#eye-right').val(0);
 					} else if (preset == "eyes-right") {
@@ -391,6 +390,26 @@ function servoPresets(item, preset, servo) {
 						$('#eye-right').oldvalue = $('#eye-right').value;
 						$('#eye-left').val(100);
 						$('#eye-right').val(0);
+					} else if (preset == "eyebrows-left") {
+						$('#eyebrow-left').oldvalue = $('#eyebrow-left').value;
+						$('#eyebrow-right').oldvalue = $('#eyebrow-right').value;
+						$('#eyebrow-left').val(100);
+						$('#eyebrow-right').val(0);
+					} else if (preset == "eyebrows-both") {
+						$('#eyebrow-left').oldvalue = $('#eyebrow-left').value;
+						$('#eyebrow-right').oldvalue = $('#eyebrow-right').value;
+						$('#eyebrow-left').val(100);
+						$('#eyebrow-right').val(100);
+					} else if (preset == "eyebrows-none") {
+						$('#eyebrow-left').oldvalue = $('#eyebrow-left').value;
+						$('#eyebrow-right').oldvalue = $('#eyebrow-right').value;
+						$('#eyebrow-left').val(0);
+						$('#eyebrow-right').val(0);
+					} else if (preset == "eyebrows-right") {
+						$('#eyebrow-left').oldvalue = $('#eyebrow-left').value;
+						$('#eyebrow-right').oldvalue = $('#eyebrow-right').value;
+						$('#eyebrow-left').val(0);
+						$('#eyebrow-right').val(100);
 					}
 					return true;
 				}
