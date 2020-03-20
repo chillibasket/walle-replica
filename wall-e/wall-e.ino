@@ -75,7 +75,7 @@ MotorController motorL(DIR_L, PWM_L, BRK_L, false);
 MotorController motorR(DIR_R, PWM_R, BRK_R, false);
 
 // Queue for animations
-Queue <int> queue(400);
+Queue <int> queue(200);
 
 
 // Motor Control Variables
