@@ -74,7 +74,7 @@ int preset[][2] =  {{398, 112},  // head rotation
 float restpos[7] = {50, 50, 40, 0, 0, 100, 100};
 
 // Messages
-String messages1[7] = {"Head Rotation - ","Neck Top Joint - ","Neck Bottom Joint - ","Eye Left - ","Eye Right - ","Arm Left - ","Arm Right - "};
+String messages1[7] = {"Head Rotation - ","Neck Top Joint - ","Neck Bottom Joint - ","Eye Right - ","Eye Left - ","Arm Left - ","Arm Right - "};
 String messages2[][2] = {{"LOW (head facing left)", "HIGH (head facing right)"},
                         {"LOW (head looking down)", "HIGH (head looking up)"},
                         {"LOW (head looking down)", "HIGH (head looking up)"},
