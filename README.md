@@ -1,6 +1,7 @@
 # walle-replica
 Robot and controller code for a Wall-E replica robot. For more information about the robot, visit https://wired.chillibasket.com/3d-printed-wall-e/
-
+<br />
+<br />
 
 ## Arduino Code (wall-e)
 Main program to control the motors and servos of the robot. Features include:
@@ -21,8 +22,10 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. Gamepad support; on any modern browsers, you can use a connected Xbox of PlayStation controller to control the robot.
 1. A simple login page to prevent everyone from having access to the controls (note: this is not a full access control system, please don't use this web interface on untrusted/public networks)
 
-![](/images/wall-e_webinterface1.jpg) *Image of the web interface and robot*
-
+![](/images/wall-e_webinterface1.jpg)
+*Image of the web interface and robot*
+<br />
+<br />
 
 
 ## Setup Instructions
@@ -36,7 +39,7 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. Install the `Adafruit_PWMServoDriver.h` library
 	1. Go to Sketch -> Include Library -> Manage Libraries...
 	1. Search for *Adafruit Servo*.
-	1. Install version 1.0.2 of the library; the newest version currently has a bug and doesn't work properly.
+	1. Install latest version of the library.
 1. Connect to the computer to the micro-controller with a USB cable. Ensure that the correct *Board* and *Port* are selected in the *Tools* menu.
 1. Upload the sketch to the micro-controller.
 
@@ -78,7 +81,8 @@ When using batteries to power the robot, it is important to keep track of how mu
 
 ![](/images/battery_level_circuit.jpg)
 *Diagram showing the wiring of the battery level detection circuit*
-
+<br />
+<br />
 
 
 ### Raspberry Pi Web Server
@@ -118,6 +122,7 @@ When using batteries to power the robot, it is important to keep track of how mu
 #### Adding a Camera Stream
 1. Install *mjpg-streamer* - this is used to stream the video to the webserver. A good description of the installation procedure is [described here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording). Complete the *Install & Setup* steps, as well as creating the *Auto Start Manager Script*. Stop when you reach the *Start on Boot* section. 
 1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`. If you want the save the script in a different location, you need to update line 22 of *app.py*.
+1. To make the script executable by the web-server, run this command in the terminal: `chmod +x /home/pi/mjpg-streamer.sh`
 
 #### Automatically start Server on Boot
 1. Create a `.service` file which is used to start the web interface: `nano ~/walle.service`
@@ -152,12 +157,17 @@ WantedBy=multi-user.target
 1. All the files should appear in the web interface when you reload the page. If the files do not appear, you may need to change the privileges required to access the folder: `sudo chmod -R 755 ~/walle-replica/web_interface/static/sounds`
 
 #### Set up the Raspberry Pi as a WiFi hotspot
-If you would like to control the robot outdoors or at conventions, there may not be any safe WiFi networks you can connect to. To overcome this issue and eliminate the need for any external networking equipment, the Raspberry Pi can broadcast its own WiFi network. You can then connect the computer/phone/tablet you are using to control the robot directly to this network. 
+If you would like to control the robot outdoors or at conventions, there may not be any safe WiFi networks you can connect to. To overcome this issue and eliminate the need for any external networking equipment, the Raspberry Pi can broadcast its own WiFi network. You can then connect the computer/phone/tablet you are using to control the robot directly to this network.
 
-The instructions for setting up such a WiFi hotspot can be found on the [official Raspberry Pi website](https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md).
-
+The instructions for setting up such a WiFi hotspot can be found on [this website](https://thepi.io/how-to-use-your-raspberry-pi-as-a-wireless-access-point/). You only have to complete steps 1 to 5 for this project.
+<br />
+<br />
 
 ## Changelog
+
+#### 20th June 2020
+1. Minor bug fixes of the `Queue.hpp` and `MotoController.hpp` classes.
+1. Updated commenting of code to make it more consistent.
 
 #### 16th February 2020
 1. Added gamepad support; any controller can now be used (such as the Xbox or PlayStation controllers) to puppet the robot.
