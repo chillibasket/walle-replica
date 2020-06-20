@@ -186,11 +186,11 @@ void setup() {
 	// Communicate with servo shield (Analog servos run at ~60Hz)
 	pwm.begin();
 	pwm.setPWMFreq(60);
+	Serial.println(F("Starting Program"));
 
-	Serial.println("Starting Program");
-
-	// Move servos to known starting positions
-	queueAnimation(softSeq, SOFT_LEN);
+	// Check if servo animation queue is working, and move servos to known starting positions
+	if (queue.errors()) Serial.println(F("Error: Unable to allocate memory for servo animation queue"));
+	else queueAnimation(softSeq, SOFT_LEN);
 }
 
 
@@ -498,7 +498,7 @@ void manageServos(float dt) {
 
 			// Determine whether to accelerate or decelerate
 			float acceleration = accell[i];
-			if ((0.5 * curvel[i] * curvel[i] / accell[i]) > abs(posError)) acceleration = -accell[i];
+			if ((curvel[i] * curvel[i] / (2 * accell[i])) > abs(posError)) acceleration = -accell[i];
 
 			// Update the current velocity
 			if (dir) curvel[i] += acceleration * dt / 1000.0;
@@ -581,7 +581,7 @@ void checkBatteryLevel() {
 	int percentage = int(100 * (voltage - BAT_MIN) / float(BAT_MAX - BAT_MIN));
 
 	// Send the percentage via serial
-	Serial.print("Battery_"); Serial.println(percentage);
+	Serial.print(F("Battery_")); Serial.println(percentage);
 }
 #endif
 

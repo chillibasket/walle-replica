@@ -645,7 +645,7 @@ function pressButton(e) {
 	// Press down on right stick - Move head back to neutral position
 	} else if (buttonName === 'button_11') {
 		moveHead[0] = 50;
-		servoControl(document.getElementById('head-rotation'),'G',50)
+		servoControl(document.getElementById('head-rotation'),'G',50);
 		moveHead[1] = 125;
 		servoPresets(document.getElementById('head-neutral'),'head-neutral','g');
 		

@@ -2,8 +2,11 @@
  * GENERIC QUEUE CLASS
  * Ring Buffer, for use as FIFO or LIFO queue
  *
- * Code by:  Simon B.
+ * Code by:  Simon Bluett
  * Email:    hello@chillibasket.com
+ * Version:  1.1
+ * Date:     20th June 2020
+ * Copyright (C) 2020, MIT License
  * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef QUEUE_HPP
@@ -20,16 +23,18 @@ class Queue {
 
 public:
 	// Default Constructor
-	Queue() {
-		Queue(256);
-	}
-
-	Queue(int max) {
+	Queue(int max = 50) {
 		qFront = 0;
 		qBack = 0;
 		qSize = 0;
 		maxSize = max;
-		qData = new T[max];   
+
+		// Allocate data for the queue
+		qData = new T[max];
+
+		// If allocation has failed, set a warning flag
+		if (qData == nullptr) warning = true;
+		else warning = false;
 	};
 
 	// Default destructor
@@ -49,29 +54,32 @@ public:
 	bool empty();
 	inline int size();
 	void clear();
+	bool errors() { return warning; };
 
 	
 
 private:
 	int qFront, qBack, qSize, maxSize;
+	bool warning;
 	T *qData;
 };
 
 
 
-/*
- * \func  int Queue<T>::size()
- * \desc  Return the size of the queue
+/**
+ * Get the size of the queue
+ *
+ * @return Current size of the queue
  */
 template<class T> inline int Queue<T>::size() {
 	return qSize;
 }
 
 
-/*
- * \func  void Queue<T>::push(const T &item)
- * \desc  Add an item onto the qBack of the queue
- * \para  (&item) Contents of item, passed by reference
+/**
+ * Add an item onto the back of the queue
+ *
+ * @param  Contents of the new item, passed by reference
  */
 template<class T> void Queue<T>::push(const T &item) {
 	// Check if there is space
@@ -113,10 +121,10 @@ template<class T> void Queue<T>::push(const T &item) {
 }
 
 
-/*
- * \func  T Queue<T>::pop() 
- * \desc  Pop the oldest item off the front of the queue
- * \retu  The item at the front of the queue
+/**
+ * Pop the oldest item off the from of the queue
+ *
+ * @return The item at the front of the queue
  */
 template<class T> T Queue<T>::pop() {
 	// If queue is empty, return an empty item
@@ -135,10 +143,10 @@ template<class T> T Queue<T>::pop() {
 }
 
 
-/*
- * \func  T Queue<T>::pop_back() 
- * \desc  Pop the newest item off the back of the queue
- * \retu  The item at the back of the queue
+/**
+ * Pop the newest item off the back of the queue
+ *
+ * @return The item at the back of the queue
  */
 template<class T> T Queue<T>::pop_back() {
 	// If queue is empty, return an empty item
@@ -160,9 +168,10 @@ template<class T> T Queue<T>::pop_back() {
 }
 
 
-/*
- * \func  T Queue<T>::front() 
- * \desc  Return the item at the front of the queue
+/**
+ * Read the item at the front, but leave it in place
+ *
+ * @return The item at the front of the queue
  */
 template<class T> T Queue<T>::front() {
 	if(qSize <= 0) return T();
@@ -175,9 +184,10 @@ template<class T> T Queue<T>::peek() {
 }
 
 
-/*
- * \func  T Queue<T>::back() 
- * \desc  Return the item at the back of the queue
+/**
+ * Read the item at the back, but leave it in place
+ *
+ * @return The item at the back of the queue
  */
 template<class T> T Queue<T>::back() {
 	if(qSize <= 0) return T();
@@ -189,9 +199,10 @@ template<class T> T Queue<T>::back() {
 }
 
 
-/*
- * \func  bool Queue<T>::empty() 
- * \desc  Returns true if the queue is empty
+/**
+ * Check if the queue is empty
+ * 
+ * @return True if empty, false if there are still items
  */
 template<class T> bool Queue<T>::empty() {
 	if (qSize <= 0) return true;
@@ -199,9 +210,8 @@ template<class T> bool Queue<T>::empty() {
 }
 
 
-/*
- * \func  void Queue<T>::clear() 
- * \desc  Clear all items from the queue
+/**
+ * Clear all items from the queue
  */
 template<class T> void Queue<T>::clear() {
 	qFront = qBack;

@@ -1,6 +1,8 @@
 # walle-replica - Eyebrow support
 Robot and controller code for a Wall-E replica robot. For more information about the robot, visit https://wired.chillibasket.com/3d-printed-wall-e/
 This branch contains the code which supports the two additional eyebrow servo motors, as can be found on the Thingiverse remix of the design: https://www.thingiverse.com/thing:3955562
+<br />
+<br />
 
 ## Arduino Code (wall-e)
 Main program to control the motors and servos of the robot. Features include:
@@ -21,8 +23,10 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. Gamepad support; on any modern browsers, you can use a connected Xbox of PlayStation controller to control the robot.
 1. A simple login page to prevent everyone from having access to the controls (note: this is not a full access control system, please don't use this web interface on untrusted/public networks)
 
-![](/images/wall-e_webinterface1.jpg) *Image of the web interface and robot*
-
+![](/images/wall-e_webinterface1.jpg)
+*Image of the web interface and robot*
+<br />
+<br />
 
 
 ## Setup Instructions
@@ -34,9 +38,9 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. Download/clone the folder "wall-e" from the GitHub repository.
 1. Open `wall-e.ino` in the Arduino IDE; the files `MotorController.hpp` and `Queue.hpp` should automatically open on separate tabs of the IDE as well.
 1. Install the `Adafruit_PWMServoDriver.h` library
-	1. Go to Sketch -> Include Library -> Manage Libraries...
-	1. Search for *Adafruit Servo*.
-	1. Install version 1.0.2 of the library; the newest version currently has a bug and doesn't work properly.
+    1. Go to Sketch -> Include Library -> Manage Libraries...
+    1. Search for *Adafruit Servo*.
+    1. Install latest version of the library.
 1. Connect to the computer to the micro-controller with a USB cable. Ensure that the correct *Board* and *Port* are selected in the *Tools* menu.
 1. Upload the sketch to the micro-controller.
 
@@ -56,9 +60,9 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. The sketch is used to calibrate the maximum and minimum PWM pulse lengths required to move each servo motor across its desired range of motion. The standard LOW and HIGH positions of each of the servos can be seen on diagrams [on my website](https://wired.chillibasket.com/3d-printed-wall-e/). 
 1. When starting the sketch and opening the serial monitor, the a message should appear after 2-3 seconds, saying that it is ready to calibrate the LOW position of the first servo motor (the head rotation).
 1. Send the character 'a' and 'd' to move the motor backwards and forwards by -10 and +10. For finer control, use the characters 'z' and 'c' to move the motor by -1 and +1. 
-1. Once the motor is position in the correct position, send the character 'n' to proceed to the calibration step. It will move on to the HIGH position of the same servo, after which the process will repeat for each of the 7 servos in the robot.
+1. Once the motor is position in the correct position, send the character 'n' to proceed to the calibration step. It will move on to the HIGH position of the same servo, after which the process will repeat for each of the 9 servos in the robot.
 1. When all joints are calibrated, the sketch will output an array containing the calibration values to the serial monitor.
-1. Copy the array, and paste it into lines 108 to 114 of the program *wall-e.ino*. The array should look similar to this:
+1. Copy the array, and paste it into lines 108 to 116 of the program *wall-e.ino*. The array should look similar to this:
 ```cpp
 int preset[][2] =  {{398, 112},  // head rotation
                     {565, 188},  // neck top
@@ -66,7 +70,9 @@ int preset[][2] =  {{398, 112},  // head rotation
                     {475, 230},  // eye right
                     {270, 440},  // eye left
                     {350, 185},  // arm left
-                    {188, 360}}; // arm right
+                    {188, 360},  // arm right
+                    {350, 185},  // eyebrow left
+                    {185, 350}}; // eyebrow right
 ```
 
 #### Battery Level Detection
@@ -77,9 +83,9 @@ When using batteries to power the robot, it is important to keep track of how mu
 1. The program should now automatically check the battery level every 10 seconds, and this level will be shown on the Raspberry Pi web-interface in the "Status" section.
 
 ![](/images/battery_level_circuit.jpg)
-
 *Diagram showing the wiring of the battery level detection circuit*
-
+<br />
+<br />
 
 
 ### Raspberry Pi Web Server
@@ -119,6 +125,7 @@ When using batteries to power the robot, it is important to keep track of how mu
 #### Adding a Camera Stream
 1. Install *mjpg-streamer* - this is used to stream the video to the webserver. A good description of the installation procedure is [described here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording). Complete the *Install & Setup* steps, as well as creating the *Auto Start Manager Script*. Stop when you reach the *Start on Boot* section. 
 1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`. If you want the save the script in a different location, you need to update line 22 of *app.py*.
+1. To make the script executable by the web-server, run this command in the terminal: `chmod +x /home/pi/mjpg-streamer.sh`
 
 #### Automatically start Server on Boot
 1. Create a `.service` file which is used to start the web interface: `nano ~/walle.service`
@@ -153,12 +160,17 @@ WantedBy=multi-user.target
 1. All the files should appear in the web interface when you reload the page. If the files do not appear, you may need to change the privileges required to access the folder: `sudo chmod -R 755 ~/walle-replica/web_interface/static/sounds`
 
 #### Set up the Raspberry Pi as a WiFi hotspot
-If you would like to control the robot outdoors or at conventions, there may not be any safe WiFi networks you can connect to. To overcome this issue and eliminate the need for any external networking equipment, the Raspberry Pi can broadcast its own WiFi network. You can then connect the computer/phone/tablet you are using to control the robot directly to this network. 
+If you would like to control the robot outdoors or at conventions, there may not be any safe WiFi networks you can connect to. To overcome this issue and eliminate the need for any external networking equipment, the Raspberry Pi can broadcast its own WiFi network. You can then connect the computer/phone/tablet you are using to control the robot directly to this network.
 
-The instructions for setting up such a WiFi hotspot can be found on the [official Raspberry Pi website](https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md).
-
+The instructions for setting up such a WiFi hotspot can be found on [this website](https://thepi.io/how-to-use-your-raspberry-pi-as-a-wireless-access-point/). You only have to complete steps 1 to 5 for this project.
+<br />
+<br />
 
 ## Changelog
+
+#### 20th June 2020
+1. Minor bug fixes of the `Queue.hpp` and `MotoController.hpp` classes.
+1. Updated commenting of code to make it more consistent.
 
 #### 16th February 2020
 1. Added gamepad support; any controller can now be used (such as the Xbox or PlayStation controllers) to puppet the robot.

@@ -1,10 +1,12 @@
 /* * * * * * * * * * * * * * * * * * * * * * *
  * MOTOR CONTROLLER CLASS
+ * For the Arduino Motor Shield Rev.2
  *
- * Code by: Simon B.
- * Email: 	hello@chillibasket.com
- * Version: 1
- * Date: 	20/4/19
+ * Code by:  Simon Bluett
+ * Email:    hello@chillibasket.com
+ * Version:  1.1
+ * Date:     20th June 2020
+ * Copyright (C) 2020, MIT License
  * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef MOTOR_CONTROLLER_HPP
@@ -14,8 +16,7 @@
 class MotorController {
 public:
 	// Constructor
-	MotorController(uint8_t _dirPin, uint8_t _pwmPin, uint8_t _brkPin, bool _brkEnabled);
-	MotorController(uint8_t _dirPin, uint8_t _pwmPin, uint8_t _brkPin);
+	MotorController(uint8_t _dirPin, uint8_t _pwmPin, uint8_t _brkPin, bool _brkEnabled = true);
 	
 	// Functions
 	void setSpeed(int pwmValue);
@@ -29,9 +30,13 @@ private:
 };
 
 
-/*
- * \Func 	MotorController(uint8_t _dirPin, uint8_t _pwmPin, uint8_t _brkPin)
- * \Desc 	Default constructor
+/**
+ * Default Constructor
+ * 
+ * @param  (_dirPin) Digital pin used for motor direction
+ * @param  (_pwmPin) Digiral pin for PWM motor speed control
+ * @param  (_brkPin) Digital pin to enable/disable the breaks
+ * @param  (_brkEnabled) Should the break be used?
  */
 MotorController::MotorController(uint8_t _dirPin, uint8_t _pwmPin, uint8_t _brkPin, bool _brkEnabled) {
 	dirPin = _dirPin;
@@ -53,23 +58,21 @@ MotorController::MotorController(uint8_t _dirPin, uint8_t _pwmPin, uint8_t _brkP
 	}
 }
 
-MotorController::MotorController(uint8_t _dirPin, uint8_t _pwmPin, uint8_t _brkPin) {
-	MotorController(_dirPin, _pwmPin, _brkPin, true);
-}
 
-
-/*
- * \Func 	~MotorController()
- * \Desc 	Default destructor
+/**
+ * Default Destructor
  */
 MotorController::~MotorController() {
-
+	// Empty
 }
 
 
-/*
- * \Func 	void setSpeed(uint8_t pwmValue)
- * \Desc 	Update the speed of the motor
+/**
+ * Set a new motor speed
+ * 
+ * @param  (pwmValue) The PWM value of the new speed
+ * @note   Negative PWM values will cause the motor to move in reverse
+ * @note   A PWM value of 0 will enable the breaks
  */
 void MotorController::setSpeed(int pwmValue) {
 
@@ -110,4 +113,4 @@ void MotorController::setSpeed(int pwmValue) {
 }
 
 
-#endif // MOTOR_CONTROLLER_HPP
+#endif /* MOTOR_CONTROLLER_HPP */
