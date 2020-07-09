@@ -185,7 +185,7 @@ void softStart() {
 		pwm.setPin(currentServo, 0);
 		delay(50);
 	}
-	digitalWrite(SR_OE, LOW);
+	pwm.setPWM(currentServo, 0, position);
 }
 
 
