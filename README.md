@@ -83,12 +83,16 @@ When using batteries to power the robot, it is important to keep track of how mu
 1. If you are using different resistor values, change the value of the potential divider gain factor on line 54 of the sketch, according to the formula: `POT_DIV = R2 / (R1 + R2)`. 
 1. The program should now automatically check the battery level every 10 seconds, and this level will be shown on the Raspberry Pi web-interface in the "Status" section.
 
+![](/images/battery_level_circuit.jpg)
+<br />
+*Diagram showing the wiring of the battery level detection circuit*
+
 #### Adding your own Servo Animations
 My code comes with two animations which replicate scenes from the movie; the eye movement Wall-E does when booting-up, and a sequence of motions as Wall-E inquisitively looks around. From version 2.7 of the code, I've now made it easier to add your own servo motor animations so that you can make your Wall-E do other movements...
 1. Open up the file `animations.ino`, which is located in the same folder as the main Arduino sketch. 
 1. Each animation command consists of the positions you want each of the servo motors to move to, and the amount of time the animation should wait until moving on to the next instruction.
 1. You can add a new animation by inserting an extra `case` section into the switch statement. You should slot you extra code into the space above the `default` section. For example:
-    ````cpp
+    ```cpp
     case 3:
             // --- Title of your new motion sequence ---
             //          time,head,necT,necB,eyeR,eyeL,armL,armR
@@ -102,8 +106,6 @@ My code comes with two animations which replicate scenes from the movie; the eye
 1. The servo motor position commands need to be an integer number between 0 to 100, where `0 = LOW` and `100 = HIGH` servo position as calibrated in the `wall-e_calibration.ino` sketch.
 1. If you want to disable a motor for a specific move, you can use -1. 
 
-![](/images/battery_level_circuit.jpg)
-*Diagram showing the wiring of the battery level detection circuit*
 <br />
 <br />
 
