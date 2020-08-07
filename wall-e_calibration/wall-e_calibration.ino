@@ -38,7 +38,7 @@
  *                        {350, 185},  // arm left
  *                        {188, 360}}; // arm right
  *
- *    Copy the array and paste it into lines 108 to 114 in [wall-e.ino]
+ *    Copy the array and paste it into lines 116 to 122 in [wall-e.ino]
  */
 
 #include <Wire.h>
@@ -76,7 +76,7 @@ float restpos[7] = {50, 50, 40, 0, 0, 100, 100};
 // Messages
 String messages1[7] = {"Head Rotation - ","Neck Top Joint - ","Neck Bottom Joint - ","Eye Right - ","Eye Left - ","Arm Left - ","Arm Right - "};
 String messages2[][2] = {{"LOW (head facing left)", "HIGH (head facing right)"},
-                        {"LOW (head looking down)", "HIGH (head looking up)"},
+                        {"LOW (head looking up)", "HIGH (head looking down)"},
                         {"LOW (head looking down)", "HIGH (head looking up)"},
                         {"LOW (eye rotated down)", "HIGH (eye rotated up)"},
                         {"LOW (eye rotated down)", "HIGH (eye rotated up)"},

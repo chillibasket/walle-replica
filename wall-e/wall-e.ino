@@ -2,16 +2,16 @@
  ********************************************
  * Code by: Simon Bluett
  * Email:   hello@chillibasket.com
- * Version: 2.6
- * Date:    16th February 2020
+ * Version: 2.7
+ * Date:    7th August 2020
  ********************************************/
 
 /* HOW TO USE:
  * 1. Install the Adafruit_PWMServoDriver library
  *    a. In the Arduino IDE, go to Sketch->Include Library->Manage Libraries
- *    b. Search for Adafruit PWM Library, and install version 1.0.2
+ *    b. Search for Adafruit PWM Library, and install the latest version
  * 2. Calibrate the servo motors, using the calibration sketch provided in the
- *    GitHub repository. Paste the calibrated values between line 108 to 114.
+ *    GitHub repository. Paste the calibrated values between line 116 to 122.
  * 3. Upload the sketch to the micro-controller, and open serial monitor at 
  *    a baud rate of 115200.
  * 4. Additional instructions and hints can be found at:
@@ -74,8 +74,16 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 MotorController motorL(DIR_L, PWM_L, BRK_L, false);
 MotorController motorR(DIR_R, PWM_R, BRK_R, false);
 
-// Queue for animations
-Queue <int> queue(200);
+// Queue for animations - buffer is defined outside of the queue
+// class so that the compiler knows how much dynamic memory will be used
+struct animation_t {
+	uint16_t timer;
+	int8_t servos[SERVOS]; 
+};
+
+#define QUEUE_LENGTH 40
+animation_t buffer[QUEUE_LENGTH];
+Queue <animation_t> queue(QUEUE_LENGTH, buffer);
 
 
 // Motor Control Variables
@@ -105,13 +113,13 @@ uint8_t serialLength = 0;
 
 // ****** SERVO MOTOR CALIBRATION *********************
 // Servo Positions:  Low,High
-int preset[][2] =  {{410, 125},   // head rotation
-                    {205, 538},   // neck top
-                    {140, 450},   // neck bottom
-                    {485, 230},   // eye right
-                    {274, 495},   // eye left
-                    {355, 137},   // arm left
-                    {188, 420}};  // arm right
+int preset[][2] =  {{410,120},  // head rotation
+                    {532,178},  // neck top
+                    {120,310},  // neck bottom
+                    {465,271},  // eye right
+                    {278,479},  // eye left
+                    {340,135},  // arm left
+                    {150,360}}; // arm right
 // *****************************************************
 
 
@@ -122,60 +130,14 @@ int preset[][2] =  {{410, 125},   // head rotation
 float curpos[] = { 248, 560, 140, 475, 270, 250, 290, 180, 180};  // Current position (units)
 float setpos[] = { 248, 560, 140, 475, 270, 250, 290,   0,   0};  // Required position (units)
 float curvel[] = {   0,   0,   0,   0,   0,   0,   0,   0,   0};  // Current velocity (units/sec)
-float maxvel[] = { 500, 750, 255,2400,2400, 500, 500, 255, 255};  // Max Servo velocity (units/sec)
-float accell[] = { 350, 480, 150,1800,1800, 300, 300, 800, 800};  // Servo acceleration (units/sec^2)
-
-
-// Animation Presets 
-// -- -- -- -- -- -- -- -- -- -- -- -- -- --
-// (Time is in milliseconds)
-// (Servo values are between 0 to 100, use -1 to disable the servo)
-#define SOFT_LEN 7
-// Starting Sequence:              time,head,necT,necB,eyeR,eyeL,armL,armR
-const int softSeq[][SERVOS+1] =  {{ 200,  50,  69,  29,   1,   1,  41,  41},
-                                  { 200,  50,  70,  29,   1,   1,  41,  41},
-                                  { 200,  50,  70,  30,   1,   1,  41,  41},
-                                  { 200,  50,  70,  30,   0,   1,  41,  41},
-                                  { 200,  50,  70,  30,   0,   0,  41,  41},
-                                  { 200,  50,  70,  30,   0,   0,  40,  41},
-                                  { 200,  50,  70,  30,   0,   0,  40,  40}};
-
-#define BOOT_LEN 9
-// Bootup Eye Sequence:            time,head,necT,necB,eyeR,eyeL,armL,armR
-const int bootSeq[][SERVOS+1] =  {{2000,  50,  68,   0,  40,  40,  40,  40},
-                                  { 700,  50,  68,   0,  40,   0,  40,  40},
-                                  { 700,  50,  68,   0,   0,   0,  40,  40},
-                                  { 700,  50,  68,   0,   0,  40,  40,  40},
-                                  { 700,  50,  68,   0,  40,  40,  40,  40},
-                                  { 400,  50,  68,   0,   0,   0,  40,  40},
-                                  { 400,  50,  68,   0,  40,  40,  40,  40},
-                                  {2000,  50,  85,   0,  40,  40,  40,  40},
-                                  {1000,  50,  85,   0,   0,   0,  40,  40}};
-
-#define INQU_LEN 9
-// Inquisitive Movements:          time,head,necT,necB,eyeR,eyeL,armL,armR
-const int inquSeq[][SERVOS+1] =  {{3000,  48,  60,   0,  35,  45,  60,  59},
-                                  {1500,  48,  60,   0, 100,   0, 100, 100},
-                                  {3000,   0,   0,   0, 100,   0, 100, 100},
-                                  {1500,  48,   0,   0,  40,  40, 100, 100},
-                                  {1500,  48,  60,   0,  45,  35,   0,   0},
-                                  {1500,  34,  44,   0,  14, 100,   0,   0},
-                                  {1500,  48,  60,   0,  35,  45,  60,  59},
-                                  {3000, 100,  60,   0,  40,  40,  60, 100},
-                                  {1500,  48, 100,   0,   0,   0,   0,   0}};
-
-void queueAnimation(const int seq[][SERVOS+1], int len);
+float maxvel[] = { 500, 400, 500,2400,2400, 600, 600, 255, 255};  // Max Servo velocity (units/sec)
+float accell[] = { 350, 300, 480,1800,1800, 500, 500, 800, 800};  // Servo acceleration (units/sec^2)
 
 
 // ------------------------------------------------------------------
 // 		INITIAL SETUP
 // ------------------------------------------------------------------
 void setup() {
-
-	// Initialize serial communication for debugging
-	Serial.begin(115200);
-
-	randomSeed(analogRead(0));
 
 	// Output Enable (EO) pin for the servo motors
 	pinMode(SR_OE, OUTPUT);
@@ -184,23 +146,26 @@ void setup() {
 	// Communicate with servo shield (Analog servos run at ~60Hz)
 	pwm.begin();
 	pwm.setPWMFreq(60);
-	Serial.println(F("--- Starting Program ---"));
+
+	// Turn off servo outputs
+	for (int i = 0; i < SERVOS; i++) pwm.setPin(i, 0);
+
+	// Initialize serial communication for debugging
+	Serial.begin(115200);
+	Serial.println(F("--- Wall-E Control Sketch ---"));
+
+	randomSeed(analogRead(0));
 
 	// Check if servo animation queue is working, and move servos to known starting positions
 	if (queue.errors()) Serial.println(F("Error: Unable to allocate memory for servo animation queue"));
-	else queueAnimation(softSeq, SOFT_LEN);
-}
+	
+	// Soft start the servo motors
+	Serial.println(F("Starting up the servo motors"));
+	digitalWrite(SR_OE, LOW);
+	playAnimation(0);
+	softStart(queue.pop(), 3500);
 
-
-// ------------------------------------------------------------------
-// 		QUEUE ANIMATIONS
-// ------------------------------------------------------------------
-void queueAnimation(const int seq[][SERVOS+1], int len) {
-	for (int i = 0; i < len; i++) {
-		for (int j = 0; j < SERVOS+1; j++) {
-			queue.push(seq[i][j]);
-		}
-	}
+	Serial.println(F("Sartup complete; entering main loop"));
 }
 
 
@@ -255,9 +220,7 @@ void evaluateSerial() {
 
 	// Animations
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	else if (firstChar == 'A' && number == 0) queueAnimation(softSeq, SOFT_LEN);
-	else if (firstChar == 'A' && number == 1) queueAnimation(bootSeq, BOOT_LEN);
-	else if (firstChar == 'A' && number == 2) queueAnimation(inquSeq, INQU_LEN);
+	else if (firstChar == 'A') playAnimation(number);
 
 	// Autonomous servo mode
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -381,16 +344,15 @@ void evaluateSerial() {
 void manageAnimations() {
 	// If we are running an animation
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	if ((queue.size() >= SERVOS+1) && (animeTimer <= millis())) {
+	if ((queue.size() > 0) && (animeTimer <= millis())) {
 		// Set the next waypoint time
-		animeTimer = millis() + queue.pop();
+		animation_t newValues = queue.pop();
+		animeTimer = millis() + newValues.timer;
 
 		// Set all the joint positions
 		for (int i = 0; i < SERVOS; i++) {
-			int value = queue.pop();
-
 			// Scale the positions using the servo calibration values
-			setpos[i] = int(value * 0.01 * (preset[i][1] - preset[i][0]) + preset[i][0]);
+			setpos[i] = int(newValues.servos[i] * 0.01 * (preset[i][1] - preset[i][0]) + preset[i][0]);
 		}
 
 	// If we are in autonomous mode, but there are no movements queued, generate new movements
@@ -494,7 +456,36 @@ void manageServos(float dt) {
 	// Disable servos if robot is not moving
 	// This prevents the motors from overheating
 	if (moving) motorTimer = millis() + MOTOR_OFF;
-	else if (millis() > motorTimer) digitalWrite(SR_OE, HIGH);
+	else if (millis() > motorTimer) {
+		//digitalWrite(SR_OE, HIGH);
+		for (int i = 0; i < SERVOS; i++) {
+			pwm.setPin(i, 0);
+		}
+	}
+}
+
+
+// -------------------------------------------------------------------
+// 		SOFT START - Try and start up servo gently
+// -------------------------------------------------------------------
+void softStart(animation_t targetPos, int time) {
+
+	for (int i = 0; i < SERVOS; i++) {
+		if (targetPos.servos[i] >= 0) {
+			curpos[i] = int(targetPos.servos[i] * 0.01 * (preset[i][1] - preset[i][0]) + preset[i][0]);
+
+			unsigned long endTime = millis() + time / SERVOS;
+
+			while (millis() < endTime) {
+				 pwm.setPWM(i, 0, curpos[i]);
+				delay(10);
+				pwm.setPin(i, 0);
+				delay(50);
+			}
+			pwm.setPWM(i, 0, curpos[i]);
+			setpos[i] = curpos[i];
+		}
+	}
 }
 
 

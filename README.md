@@ -1,4 +1,8 @@
-# walle-replica
+[![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
+[![Issues](https://img.shields.io/github/issues-raw/chillibasket/walle-replica.svg?maxAge=25000)](https://github.com/chillibasket/walle-replica/issues)
+[![GitHub last commit](https://img.shields.io/github/last-commit/chillibasket/walle-replica.svg?style=flat)](https://github.com/chillibasket/walle-replica/commits/master)
+
+# Wall-E Robot Replica
 Robot and controller code for a Wall-E replica robot. For more information about the robot, visit https://wired.chillibasket.com/3d-printed-wall-e/
 <br />
 <br />
@@ -35,7 +39,7 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 #### Basic Installation
 1. Ensure that the wiring of the electronics matches the diagram shown below.
 1. Download/clone the folder "wall-e" from the GitHub repository.
-1. Open `wall-e.ino` in the Arduino IDE; the files `MotorController.hpp` and `Queue.hpp` should automatically open on separate tabs of the IDE as well.
+1. Open `wall-e.ino` in the Arduino IDE; the files `animations.ino`, `MotorController.hpp` and `Queue.hpp` should automatically open on separate tabs of the IDE as well.
 1. Install the `Adafruit_PWMServoDriver.h` library
 	1. Go to Sketch -> Include Library -> Manage Libraries...
 	1. Search for *Adafruit Servo*.
@@ -61,16 +65,16 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. Send the character 'a' and 'd' to move the motor backwards and forwards by -10 and +10. For finer control, use the characters 'z' and 'c' to move the motor by -1 and +1. 
 1. Once the motor is position in the correct position, send the character 'n' to proceed to the calibration step. It will move on to the HIGH position of the same servo, after which the process will repeat for each of the 7 servos in the robot.
 1. When all joints are calibrated, the sketch will output an array containing the calibration values to the serial monitor.
-1. Copy the array, and paste it into lines 108 to 114 of the program *wall-e.ino*. The array should look similar to this:
-```cpp
-int preset[][2] =  {{398, 112},  // head rotation
-                    {565, 188},  // neck top
-                    {470, 100},  // neck bottom
-                    {475, 230},  // eye right
-                    {270, 440},  // eye left
-                    {350, 185},  // arm left
-                    {188, 360}}; // arm right
-```
+1. Copy the array, and paste it into lines 116 to 122 of the program *wall-e.ino*. The array should look similar to this:
+    ```cpp
+    int preset[][2] =  {{410,120},  // head rotation
+                        {532,178},  // neck top
+                        {120,310},  // neck bottom
+                        {465,271},  // eye right
+                        {278,479},  // eye left
+                        {340,135},  // arm left
+                        {150,360}}; // arm right
+    ```
 
 #### Battery Level Detection
 When using batteries to power the robot, it is important to keep track of how much power is left. Some batteries may break if they are over-discharged, and the SD card of the Raspberry Pi may become corrupted if not enough power is delivered.
@@ -78,6 +82,25 @@ When using batteries to power the robot, it is important to keep track of how mu
 1. Uncomment line 50 in the main Arduino sketch *wall-e.ino*.
 1. If you are using different resistor values, change the value of the potential divider gain factor on line 54 of the sketch, according to the formula: `POT_DIV = R2 / (R1 + R2)`. 
 1. The program should now automatically check the battery level every 10 seconds, and this level will be shown on the Raspberry Pi web-interface in the "Status" section.
+
+#### Adding your own Servo Animations
+My code comes with two animations which replicate scenes from the movie; the eye movement Wall-E does when booting-up, and a sequence of motions as Wall-E inquisitively looks around. From version 2.7 of the code, I've now made it easier to add your own servo motor animations so that you can make your Wall-E do other movements...
+1. Open up the file `animations.ino`, which is located in the same folder as the main Arduino sketch. 
+1. Each animation command consists of the positions you want each of the servo motors to move to, and the amount of time the animation should wait until moving on to the next instruction.
+1. You can add a new animation by inserting an extra `case` section into the switch statement. You should slot you extra code into the space above the `default` section. For example:
+    ````cpp
+    case 3:
+            // --- Title of your new motion sequence ---
+            //          time,head,necT,necB,eyeR,eyeL,armL,armR
+            queue.push({  12,  48,  40,   0,  35,  45,  60,  59});
+            queue.push({1500,  48,  40,  20, 100,   0,  80,  80});
+            // Add as many additional movements here as you need to complete the animation
+            // queue.push({time, head rotation, neck top, neck bottom, eye right, eye left, arm left, arm right})
+            break;
+    ```
+1. The time needs to be a number in milliseconds (for example, 3.5 seconds = 3500)
+1. The servo motor position commands need to be an integer number between 0 to 100, where `0 = LOW` and `100 = HIGH` servo position as calibrated in the `wall-e_calibration.ino` sketch.
+1. If you want to disable a motor for a specific move, you can use -1. 
 
 ![](/images/battery_level_circuit.jpg)
 *Diagram showing the wiring of the battery level detection circuit*
@@ -127,23 +150,23 @@ When using batteries to power the robot, it is important to keep track of how mu
 #### Automatically start Server on Boot
 1. Create a `.service` file which is used to start the web interface: `nano ~/walle.service`
 1. Paste the following text into the file:
-```text
-[Unit]
-Description=Start Wall-E Web Interface
-After=network.target
+    ```text
+    [Unit]
+    Description=Start Wall-E Web Interface
+    After=network.target
 
-[Service]
-WorkingDirectory=/home/pi/walle-replica/web_interface
-ExecStart=/usr/bin/python3 app.py
-Restart=always
-StandardOutput=syslog
-StandardError=syslog
-SyslogIdentifier=walle
-User=pi
+    [Service]
+    WorkingDirectory=/home/pi/walle-replica/web_interface
+    ExecStart=/usr/bin/python3 app.py
+    Restart=always
+    StandardOutput=syslog
+    StandardError=syslog
+    SyslogIdentifier=walle
+    User=pi
 
-[Install]
-WantedBy=multi-user.target
-```
+    [Install]
+    WantedBy=multi-user.target
+    ```
 1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
 1. Copy this file into the startup directory using the command: `sudo cp ~/walle.service /etc/systemd/system/walle.service`
 1. To enable auto-start, use the following command: `sudo systemctl enable walle.service`
@@ -164,6 +187,11 @@ The instructions for setting up such a WiFi hotspot can be found on [this websit
 <br />
 
 ## Changelog
+
+#### 7th August 2020 (Version 2.7)
+1. Added a soft servo start function to the main Wall-E sketch and the servo calibration sketch. This prevents the servos from jumping as violently on startup.
+1. Changed the data-type of the animation queue to reduce the amount of dynamic memory required. Also updated the Queue class so that the buffer memory can be declared globally; this means the compiler can keep track of how much memory the queue actually uses.
+1. Moved the preset servo animations into a separate file, to make it easier to add your own animations. 
 
 #### 20th June 2020
 1. Minor bug fixes of the `Queue.hpp` and `MotoController.hpp` classes.

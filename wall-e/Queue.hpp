@@ -4,8 +4,8 @@
  *
  * Code by:  Simon Bluett
  * Email:    hello@chillibasket.com
- * Version:  1.1
- * Date:     20th June 2020
+ * Version:  1.2
+ * Date:     7th August 2020
  * Copyright (C) 2020, MIT License
  * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -23,14 +23,15 @@ class Queue {
 
 public:
 	// Default Constructor
-	Queue(int max = 50) {
+	Queue(int max = 50, T *buffer = NULL) {
 		qFront = 0;
 		qBack = 0;
 		qSize = 0;
 		maxSize = max;
 
 		// Allocate data for the queue
-		qData = new T[max];
+		if (buffer == NULL) qData = new T[max];
+		else qData = buffer;
 
 		// If allocation has failed, set a warning flag
 		if (qData == nullptr) warning = true;

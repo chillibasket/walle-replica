@@ -163,7 +163,7 @@ def onoff_streamer():
 		result = ""
 		# Check whether the stream is on or not
 		try:
-			result = subprocess.run([streamScript, 'status'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+			result = subprocess.call([streamScript, 'status'], stdout=subprocess.PIPE).stdout.decode('utf-8')
 		except subprocess.CalledProcessError as e:
 			result = e.output.decode('utf-8')
 		print(result)
@@ -329,7 +329,7 @@ def settings():
 				return jsonify({'status': 'OK','streamer': 'Offline'})
 		elif thing == "shutdown":
 			print("Shutting down Raspberry Pi!", value)
-			result = subprocess.run(['sudo','nohup','shutdown','-h','now'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+			result = subprocess.call(['sudo','nohup','shutdown','-h','now'], stdout=subprocess.PIPE).stdout.decode('utf-8')
 			return jsonify({'status': 'OK','msg': 'Raspberry Pi is shutting down'})
 		else:
 			return jsonify({'status': 'Error','msg': 'Unable to read POST data'})
