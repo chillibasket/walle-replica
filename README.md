@@ -113,12 +113,17 @@ My code comes with two animations which replicate scenes from the movie; the eye
 ### Raspberry Pi Web Server
 
 #### Basic Installation
-1. Setup the Raspberry Pi to run the latest version of Raspbian/NOOBS. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.org/documentation/installation/installing-images/).
+1. Setup the Raspberry Pi to run the latest version of Raspberry Pi OS (Raspbian) - Full. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.org/documentation/installation/installing-images/).
 1. Open the command line terminal on the Raspberry Pi.
-1. Ensure that the package list has been updated (this may take some time): `sudo apt-get update`
+1. Ensure that the package list has been updated (this may take some time): `sudo apt update`
 1. Install *Flask* - this is a Python framework used to create web servers:
-    1. Ensure that pip is installed: `sudo apt-get install python-pip`
-    1. Install Flask and its dependencies: `sudo pip install flask`
+    1. Ensure that pip is installed: `sudo apt install python3-pip`
+    1. Install Flask and its dependencies: `sudo pip3 install flask`
+1. (Optional) The *Full* version of Raspbian includes these packages by default, but if you are using a different OS (for example the *Lite* version), you will need to run these commands:
+    ```shell
+    sudo apt install git libsdl1.2 libsdl-mixer1.2
+    sudo pip3 install pygame serial pyserial
+    ```
 1. Clone repository into the home directory of the Raspberry Pi:
     ```shell
     cd ~

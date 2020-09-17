@@ -213,10 +213,10 @@ void evaluateSerial() {
 
 	// Motor Inputs and Offsets
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
-	if      (firstChar == 'X' && number >= -100 && number <= 100) turnVal = int(number * 2.55); 		// Forward/reverse control
-	else if (firstChar == 'Y' && number >= -100 && number <= 100) moveVal = int(number * 2.55); 		// Left/right control
-	else if (firstChar == 'S' && number >=  100 && number <= 100) turnOff = number; 					// Steering offset
-	else if (firstChar == 'O' && number >=    0 && number <= 250) curpos[7] = curpos[8] = int(number); 	// Motor deadzone offset
+	if      (firstChar == 'X' && number >= -100 && number <= 100) turnVal = int(number * 2.55);         // Left/right control
+	else if (firstChar == 'Y' && number >= -100 && number <= 100) moveVal = int(number * 2.55);         // Forward/reverse control
+	else if (firstChar == 'S' && number >=  100 && number <= 100) turnOff = number;                     // Steering offset
+	else if (firstChar == 'O' && number >=    0 && number <= 250) curpos[7] = curpos[8] = int(number);  // Motor deadzone offset
 
 	// Animations
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- --
