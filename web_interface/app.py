@@ -163,7 +163,7 @@ def onoff_streamer():
 		result = ""
 		# Check whether the stream is on or not
 		try:
-			result = subprocess.call([streamScript, 'status'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+			result = subprocess.run([streamScript, 'status'], stdout=subprocess.PIPE).stdout.decode('utf-8')
 		except subprocess.CalledProcessError as e:
 			result = e.output.decode('utf-8')
 		print(result)
@@ -177,7 +177,7 @@ def onoff_streamer():
 
 	else:
 		# Turn off stream
-		subprocess.call([streamScript, 'stop'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+		subprocess.run([streamScript, 'stop'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 		
 		streaming = 0
 		return 0

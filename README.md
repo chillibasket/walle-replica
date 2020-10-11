@@ -149,12 +149,12 @@ My code comes with two animations which replicate scenes from the movie; the eye
 1. To stop the server press: `CTRL + C`
 1. To start controlling the robot, you first need to start serial communication with the Arduino. To do this, go to the `Settings` tab of the web-interface, select the correct serial port from the drop-down list and press on the `Reconnect` button.
 
-#### Adding a Camera Stream
+#### (Optional) Adding a Camera Stream
 1. Install *mjpg-streamer* - this is used to stream the video to the webserver. A good description of the installation procedure is [described here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording). Complete the *Install & Setup* steps, as well as creating the *Auto Start Manager Script*. Stop when you reach the *Start on Boot* section. 
 1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`. If you want the save the script in a different location, you need to update line 22 of *app.py*.
 1. To make the script executable by the web-server, run this command in the terminal: `chmod +x /home/pi/mjpg-streamer.sh`
 
-#### Automatically start Server on Boot
+#### (Optional) Automatically start Server on Boot
 1. Create a `.service` file which is used to start the web interface: `nano ~/walle.service`
 1. Paste the following text into the file:
     ```text
@@ -179,14 +179,14 @@ My code comes with two animations which replicate scenes from the movie; the eye
 1. To enable auto-start, use the following command: `sudo systemctl enable walle.service`
 1. The web interface should now automatically start when the Raspberry Pi is turned on. You can also manually start and stop the service using the commands: `sudo systemctl start walle.service` and `sudo systemctl stop walle.service` 
 
-#### Adding new Sounds
+#### (Optional) Adding new Sounds
 1. By default the Raspberry should automatically select whether to output audio to the HDMI port or the headphone jack. However, you can ensure that it always uses the headphone jack with the following command: `amixer cset numid=3 1`
 1. Make sure that all the sound files you want to use are of type `*.ogg`. Most music/sound editors should be able to convert the sound file to this format.
 1. Change the file name so that it has the following format: `[group name]_[file name]_[length in milliseconds].ogg`. For example: `voice_eva_1200.ogg`. In the web-interface, the audio files will be grouped using the "group name" and sorted alphabetically.
 1. Upload the sound file to Raspberry Pi in the following folder: `~/walle-replica/web_interface/static/sounds/`
 1. All the files should appear in the web interface when you reload the page. If the files do not appear, you may need to change the privileges required to access the folder: `sudo chmod -R 755 ~/walle-replica/web_interface/static/sounds`
 
-#### Set up the Raspberry Pi as a WiFi hotspot
+#### (Optional) Set up the Raspberry Pi as a WiFi hotspot
 If you would like to control the robot outdoors or at conventions, there may not be any safe WiFi networks you can connect to. To overcome this issue and eliminate the need for any external networking equipment, the Raspberry Pi can broadcast its own WiFi network. You can then connect the computer/phone/tablet you are using to control the robot directly to this network.
 
 The instructions for setting up such a WiFi hotspot can be found on [this website](https://thepi.io/how-to-use-your-raspberry-pi-as-a-wireless-access-point/). You only have to complete steps 1 to 5 for this project.
