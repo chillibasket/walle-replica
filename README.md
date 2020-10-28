@@ -91,7 +91,7 @@ When using batteries to power the robot, it is important to keep track of how mu
 My code comes with two animations which replicate scenes from the movie; the eye movement Wall-E does when booting-up, and a sequence of motions as Wall-E inquisitively looks around. From version 2.7 of the code, I've now made it easier to add your own servo motor animations so that you can make your Wall-E do other movements...
 1. Open up the file `animations.ino`, which is located in the same folder as the main Arduino sketch. 
 1. Each animation command consists of the positions you want each of the servo motors to move to, and the amount of time the animation should wait until moving on to the next instruction.
-1. You can add a new animation by inserting an extra `case` section into the switch statement. You should slot you extra code into the space above the `default` section. For example:
+1. You can add a new animation by inserting an extra `case` section into the switch statement. You should slot your extra code into the space above the `default` section. For example:
     ```cpp
     case 3:
             // --- Title of your new motion sequence ---
@@ -122,7 +122,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 1. (Optional) The *Full* version of Raspbian includes these packages by default, but if you are using a different OS (for example the *Lite* version), you will need to run these commands:
     ```shell
     sudo apt install git libsdl1.2 libsdl-mixer1.2
-    sudo pip3 install pygame serial pyserial
+    sudo pip3 install pygame pyserial
     ```
 1. Clone repository into the home directory of the Raspberry Pi:
     ```shell
@@ -150,6 +150,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 1. To start controlling the robot, you first need to start serial communication with the Arduino. To do this, go to the `Settings` tab of the web-interface, select the correct serial port from the drop-down list and press on the `Reconnect` button.
 
 #### (Optional) Adding a Camera Stream
+1. If you are using the Official Raspberry Pi camera, you will first need to enable the camera in `sudo raspi-config`. In the config screen which appears, navigate to “Interface Options” > “Camera” > “Enable”.
 1. Install *mjpg-streamer* - this is used to stream the video to the webserver. A good description of the installation procedure is [described here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording). Complete the *Install & Setup* steps, as well as creating the *Auto Start Manager Script*. Stop when you reach the *Start on Boot* section. 
 1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`. If you want the save the script in a different location, you need to update line 22 of *app.py*.
 1. To make the script executable by the web-server, run this command in the terminal: `chmod +x /home/pi/mjpg-streamer.sh`
