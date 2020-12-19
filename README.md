@@ -190,11 +190,33 @@ My code comes with two animations which replicate scenes from the movie; the eye
 #### (Optional) Set up the Raspberry Pi as a WiFi hotspot
 If you would like to control the robot outdoors or at conventions, there may not be any safe WiFi networks you can connect to. To overcome this issue and eliminate the need for any external networking equipment, the Raspberry Pi can broadcast its own WiFi network. You can then connect the computer/phone/tablet you are using to control the robot directly to this network.
 
-The instructions for setting up such a WiFi hotspot can be found on [this website](https://thepi.io/how-to-use-your-raspberry-pi-as-a-wireless-access-point/). You only have to complete steps 1 to 5 for this project.
+To set up the WiFi hotspot, we will use the [RaspAP project](https://raspap.com/) which takes care of all the configuration and tools to get the system working. The following instructions are based on their quick installation guide:
+
+1. Update Raspian, the kernel and firmware (and then reboot):
+    ```
+    sudo apt-get update
+    sudo apt-get dist-upgrade
+    sudo reboot
+    ```
+1. Ensure that you have set the correct WiFi country in raspi-config’s Localisation Options: `sudo raspi-config`
+1. Run the quick installer: `curl -sL https://install.raspap.com | bash`
+    1. For the first few yes/no prompts which will appear during the install, type “y” (yes) to accept all of the recommended settings. The final two prompts (Ad Blocking and the next one) are not required so you can type “n” (no) for those.
+1. Reboot the Raspberry Pi again to implement the changes: `sudo reboot`
+1. Now the Raspberry Pi should be broadcasting a WiFi network with the following details:
+    1. SSID (wifi name): `raspi-webgui`
+    1. Password: `ChangeMe`
+1. After connecting to the WiFi network from a your computer, phone or tablet, the Wall-E web-interface can be opened by typing this address into your browser: `http://10.3.141.1:5000`
+1. (Recommended) To change the WiFi name and password, go to the WiFi configuration webpage at: `http://10.3.141.1`. The default username is `admin` and password is `secret`.
+    1. Click on “Hotspot” in the left sidebar. In the “Basic” tab you can change the WiFi network name, while the WiFi password can be changed in the “Security” tab.
+    1. To change the admin password for the interface used to manage the WiFi settings, click on the “Admin” icon in the top-right of the interface.
 <br />
 <br />
 
 ## Changelog
+
+#### 19th December 2020
+1. Updated instructions of how to set up a WiFi hotspot on the Raspberry Pi. 
+1. Added offline Lato font files to prevent errors when running the web-interface while disconnected from the internet.
 
 #### 7th August 2020 (Version 2.7)
 1. Added a soft servo start function to the main Wall-E sketch and the servo calibration sketch. This prevents the servos from jumping as violently on startup.

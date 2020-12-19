@@ -1,13 +1,14 @@
 <!doctype html>
 <html lang="en">
-  <head>
-	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<head>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 	
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/latoFontFamily.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/mystyle.css') }}">
     <!--
@@ -23,7 +24,7 @@
 			<div class="row set-row">
 				<div class="col set-text">Password</div>
 				<div class="col">
-					<input type="text" class="form-control set-num" name="password">
+					<input type="text" class="form-control set-num" autocomplete="off" name="password">
 				</div>
 			</div>
 			<div class="row set-row">
@@ -35,17 +36,10 @@
 		</form>
 	</div>
 
-	<!-- Optional JavaScript -->
+    <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="{{ url_for('static', filename='js/jquery-3.3.1.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
-
-    <!--
-    <script src="../static/js/jquery-3.3.1.min.js"></script>
-    <script src="../static/js/bootstrap.bundle.min.js"></script>
-    <script src="../static/js/joystick.js"></script>
-    <script src="../static/js/main.js"></script>
-	-->
 	
 </body>
 <footer></footer>

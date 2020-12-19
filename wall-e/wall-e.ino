@@ -356,7 +356,7 @@ void manageAnimations() {
 		}
 
 	// If we are in autonomous mode, but there are no movements queued, generate new movements
-	} else if (autoMode && (queue.size() < SERVOS+1) && (animeTimer <= millis())) {
+	} else if (autoMode && queue.empty() && (animeTimer <= millis())) {
 
 		// For each of the servos
 		for (int i = 0; i < SERVOS; i++) {
