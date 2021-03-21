@@ -87,6 +87,16 @@ When using batteries to power the robot, it is important to keep track of how mu
 <br />
 *Diagram showing the wiring of the battery level detection circuit*
 
+#### oLed Display
+The oLed display will indicate the battery level, which means it depends on the Battery Level detection feature being active. The screen will update every time the battery level is calculated. This function uses the u8g2 library in page mode. This allows it to function on an Arduino UNO, but during compilation you can get a warning that the meomry usable is high. This warning can be ignored. 
+1. To use the oLed display feature on the Arduino, connect an i2c oLed display on the i2c bus on the servo motor module (see diagram).
+1. Uncomment line 67 in the main Arduino sketch *wall-e.ino*.
+1. If you are using a different display that is supported by the library, you can change the constructor as documented on https://github.com/olikraus/u8g2/wiki/u8g2setupcpp#constructor-reference
+
+![](/images/oLed_circuit.jpg)
+<br />
+*Diagram showing the wiring of the oLed display*
+
 #### Adding your own Servo Animations
 My code comes with two animations which replicate scenes from the movie; the eye movement Wall-E does when booting-up, and a sequence of motions as Wall-E inquisitively looks around. From version 2.7 of the code, I've now made it easier to add your own servo motor animations so that you can make your Wall-E do other movements...
 1. Open up the file `animations.ino`, which is located in the same folder as the main Arduino sketch. 
