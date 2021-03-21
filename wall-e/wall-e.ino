@@ -22,7 +22,7 @@
 #include <Adafruit_PWMServoDriver.h>
 #include "Queue.hpp"
 #include "MotorController.hpp"
-
+#include <U8g2lib.h>  
 
 // Define the pin-mapping
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -54,6 +54,21 @@
 	#define POT_DIV 0.3197 // Potential divider scaling factor
 #endif
 
+// Oled
+// -- -- -- -- -- -- -- -- -- -- -- -- - -- --
+//
+// Displays the battery level on an oLed display.
+// Supports a 1.3 inch Oled display using I2C. The constructor is set to an SH1106 1.3 inch display. Change the constructor if you want to use a different display.
+// Solder additional headers to the servo control board and link connect the display there.
+// The drawing of the bars is copied from https://www.weimars.net/wall-e/
+// Requires Battery level detection.
+// With this enabled you can get a Low memory available warning when compiling for Arduino UNO boards (79% memory usage). It did work in my case, so you should be able to ignore this message.
+//
+// To enable the oLED display, uncomment the next line:
+//#define OLED
+#ifdef OLED
+  U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, 10);
+#endif
 
 // Define other constants
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -164,6 +179,13 @@ void setup() {
 	digitalWrite(SR_OE, LOW);
 	playAnimation(0);
 	softStart(queue.pop(), 3500);
+
+  // If an oLED is present, start it up
+  #ifdef OLED
+    Serial.println(F("Starting up the display"));
+    u8g2.begin();
+    displayLevel(100);
+  #endif
 
 	Serial.println(F("Sartup complete; entering main loop"));
 }
@@ -541,6 +563,11 @@ void checkBatteryLevel() {
 	float voltage = analogRead(BAT_L) * 5 / 1024.0;
 	voltage = voltage / POT_DIV;
 	int percentage = int(100 * (voltage - BAT_MIN) / float(BAT_MAX - BAT_MIN));
+
+  // Update the oLed Display if installed
+  #ifdef OLED
+    displayLevel(percentage);
+  #endif
 
 	// Send the percentage via serial
 	Serial.print(F("Battery_")); Serial.println(percentage);
