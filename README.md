@@ -87,11 +87,11 @@ When using batteries to power the robot, it is important to keep track of how mu
 <br />
 *Diagram showing the wiring of the battery level detection circuit*
 
-#### oLed Display
+#### oLed Display (Contributed by: [hpkevertje](https://github.com/hpkevertje))
 The oLed display will indicate the battery level, which means it depends on the Battery Level detection feature being active. The screen will update every time the battery level is calculated. This function uses the u8g2 library in page mode. This allows it to function on an Arduino UNO, but during compilation you can get a warning that the meomry usable is high. This warning can be ignored. 
 1. To use the oLed display feature on the Arduino, connect an i2c oLed display on the i2c bus on the servo motor module (see diagram).
 1. Uncomment line 67 in the main Arduino sketch *wall-e.ino*.
-1. If you are using a different display that is supported by the library, you can change the constructor on line 69 as documented on https://github.com/olikraus/u8g2/wiki/u8g2setupcpp#constructor-reference. The default is for an SH1106_128X64_NONAME display.
+1. If you are using a different display that is supported by the library, you can change the constructor on line 70 as documented on https://github.com/olikraus/u8g2/wiki/u8g2setupcpp#constructor-reference. The default is for an SH1106_128X64_NONAME display.
 
 ![](/images/oLed_circuit.jpg)
 <br />

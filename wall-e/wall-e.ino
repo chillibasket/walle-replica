@@ -22,7 +22,6 @@
 #include <Adafruit_PWMServoDriver.h>
 #include "Queue.hpp"
 #include "MotorController.hpp"
-#include <U8g2lib.h>  
 
 // Define the pin-mapping
 // -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -67,6 +66,7 @@
 // To enable the oLED display, uncomment the next line:
 //#define OLED
 #ifdef OLED
+  #include <U8g2lib.h>
   U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, 10);
 #endif
 
