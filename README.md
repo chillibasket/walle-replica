@@ -158,14 +158,14 @@ My code comes with two animations which replicate scenes from the movie; the eye
     ```
 1. Set the web server password:
     1. Open *app.py*: `nano ~/walle-replica/web_interface/app.py` 
-    1. On line 20 of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
+    1. On line [26](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L26) of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
 1. (Optional) Change the default audio directory and location of the script used to start/stop the video stream.
     1. If you followed the steps above exactly, there is no need to do this. However, if you want to move the web-interface files to a different directory on the Raspberry Pi, you will need to change the location where the program will look for the audio files.
-    1. On line 23 of *app.py*, type the directory where the audio files are located. Ensure that the directory location ends with a forward slash: `/`.
-    1. On line 22 of *app.py*, the location of the script used to start and stop the video camera stream can be modified.
+    1. On line [29](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L29) of *app.py*, type the directory where the audio files are located. Ensure that the directory location ends with a forward slash: `/`.
+    1. On line [28](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L28) of *app.py*, the location of the script used to start and stop the video camera stream can be modified.
 1. Connect to the Arduino/micro-controller:
     1. Plug the Arduino/micro-controller into the USB port of the Raspberry Pi.
-    1. If you would like the serial port used by the Arduino to be selected by default in the web-interface, you can set a preferred serial port device in the code. Go to line 21 of *app.py* and replace the text "ARDUINO" with the name of your device. The name must match the one which appears in the drop-down menu in the "Settings" tab of the web-interface.
+    1. If you would like the serial port used by the Arduino to be selected by default in the web-interface, you can set a preferred serial port device in the code. Go to line [27](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L26) of *app.py* and replace the text "ARDUINO" with the name of your device. The name must match the one which appears in the drop-down menu in the "Settings" tab of the web-interface.
     1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
 
 <br />
