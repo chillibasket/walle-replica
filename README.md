@@ -2,13 +2,13 @@
 [![Issues](https://img.shields.io/github/issues-raw/chillibasket/walle-replica.svg?maxAge=25000)](https://github.com/chillibasket/walle-replica/issues)
 [![GitHub last commit](https://img.shields.io/github/last-commit/chillibasket/walle-replica.svg?style=flat)](https://github.com/chillibasket/walle-replica/commits/master)
 
-#Wall-E Robot Replica
+# Wall-E Robot Replica
 Robot and controller code for a Wall-E replica robot. For more information about the robot, visit https://wired.chillibasket.com/3d-printed-wall-e/
 
 <br />
 <br />
 
-##1. Arduino Code (wall-e)
+## 1. Arduino Code (wall-e)
 Main program to control the motors and servos of the robot. Features include:
 1. An animation queue, keeping track of the next servo movements the robot needs to perform.
 1. A random movement generator, allowing the robot to autonomously move and appear animated.
@@ -17,7 +17,7 @@ Main program to control the motors and servos of the robot. Features include:
 1. Battery level monitoring using a potential divider circuit.
 <br />
 
-##2. Raspberry Pi Web Server (web_interface)
+## 2. Raspberry Pi Web Server (web_interface)
 The web interface is programmed in Python and uses *Flask* to generate a server. The Raspberry Pi is connected via USB to the Arduino micro-controller. The main features are:
 1. A JavaScript joystick, with which the movement of the robot can easily be controller.
 1. Manual control of all the servo motors.
@@ -34,11 +34,11 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 <br />
 
 
-##Setup Instructions
+## Setup Instructions
 
-###1. Arduino
+### 1. Arduino
 
-####[a] Basic Installation
+#### [a] Basic Installation
 1. Ensure that the wiring of the electronics matches the diagram shown below.
 1. Download/clone the folder "wall-e" from the GitHub repository.
 1. Open `wall-e.ino` in the Arduino IDE; the files `animations.ino`, `MotorController.hpp` and `Queue.hpp` should automatically open on separate tabs of the IDE as well.
@@ -55,7 +55,7 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 
 <br />
 
-####[b] Testing the Main Program
+#### [b] Testing the Main Program
 1. Once the sketch has been uploaded to the Arduino, power on the 12V battery while the micro-controller is still connected to the computer.
 1. Open the *Serial Monitor* (button in top-right of Arduino IDE). Set the baud rate to 115200.
 1. To control the movement of the robot, send the characters 'w', 'a', 's' or 'd' to move forward, left, back or right respectively. Send 'q' to stop all movement.
@@ -63,7 +63,7 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 
 <br />
 
-####[c] Servo Motor Calibration
+#### [c] Servo Motor Calibration
 1. Download/clone the folder "wall-e_calibration" from the GitHub repository
 1. Open `wall-e_calibration.ino` in the Arduino IDE.
 1. Upload the sketch to the micro-controller, and open the serial monitor and set the baud rate to 115200.
@@ -85,7 +85,7 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 
 <br />
 
-####[d] Battery Level Detection (Optional)
+#### [d] Battery Level Detection (Optional)
 When using batteries to power the robot, it is important to keep track of how much power is left. Some batteries may break if they are over-discharged, and the SD card of the Raspberry Pi may become corrupted if not enough power is delivered.
 1. To use the battery level detection feature on the Arduino, connect the following resistors and wiring as shown in the image below. The resistors (potential divider) reduce the 12V voltage down to a value below 5V, which is safe for the Arduino to measure using its analogue pins. The recommended resistor values are `R1 = 100kΩ` and `R2 = 47kΩ`.
 1. Uncomment [line 54](https://github.com/chillibasket/walle-replica/blob/master/wall-e/wall-e.ino#L54) `#define BAT_L` in the main Arduino sketch *wall-e.ino*.
@@ -98,7 +98,7 @@ When using batteries to power the robot, it is important to keep track of how mu
 
 <br />
 
-####[e] oLed Display (Optional) (Contributed by: [hpkevertje](https://github.com/hpkevertje))
+#### [e] oLed Display (Optional) (Contributed by: [hpkevertje](https://github.com/hpkevertje))
 It is possible to integrate a small oLED display which will show the battery level of the robot on the front battery indicator panel. This feature requires the battery level detection circuit in the previous section to be enabled, and the screen will update every time the battery level is calculated. This function uses the u8g2 display library in page mode; on the Arduino UNO you may get a warning that the memory usage is high, but this warning can be ignored. 
 1. To use the oLed display feature on the Arduino, connect an i2c oLed display on the i2c bus on the servo motor module (see diagram).
 1. Install the U8g2 library in the Arduino library manager:
@@ -114,7 +114,7 @@ It is possible to integrate a small oLED display which will show the battery lev
 
 <br />
 
-####[f] Adding your own Servo Animations (Optional)
+#### [f] Adding your own Servo Animations (Optional)
 My code comes with two animations which replicate scenes from the movie; the eye movement Wall-E does when booting-up, and a sequence of motions as Wall-E inquisitively looks around. From version 2.7 of the code, I've now made it easier to add your own servo motor animations so that you can make your Wall-E do other movements...
 1. Open up the file `animations.ino`, which is located in the same folder as the main Arduino sketch. 
 1. Each animation command consists of the positions you want each of the servo motors to move to, and the amount of time the animation should wait until moving on to the next instruction.
@@ -137,9 +137,9 @@ My code comes with two animations which replicate scenes from the movie; the eye
 <br />
 
 
-###2. Raspberry Pi Web Server
+### 2. Raspberry Pi Web Server
 
-####[a] Basic Installation
+#### [a] Basic Installation
 1. Setup the Raspberry Pi to run the latest version of Raspberry Pi OS (Raspbian) - Full. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.org/documentation/installation/installing-images/).
 1. Open the command line terminal on the Raspberry Pi.
 1. Ensure that the package list has been updated (this may take some time): `sudo apt update`
@@ -170,7 +170,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 
 <br />
 
-####[b] Using the Web Server
+#### [b] Using the Web Server
 1. To determine the current IP address of the Raspberry Pi on your network, type the command: `hostname -I`
 1. To start the server: `python3 ~/walle-replica/web_interface/app.py`
 1. To access the web interface, open a browser on any computer/device on the same network and type in the IP address of the Raspberry Pi, follow by `:5000`. For example `192.168.1.10:5000`
@@ -179,7 +179,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 
 <br />
 
-####[c] Adding a Camera Stream (Optional)
+#### [c] Adding a Camera Stream (Optional)
 1. If you are using the Official Raspberry Pi camera, you will first need to enable the camera in `sudo raspi-config`. In the config screen which appears, navigate to “Interface Options” > “Camera” > “Enable”.
 1. Install *mjpg-streamer* - this is used to stream the video to the webserver. A good description of the installation procedure is [described here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording). Complete the *Install & Setup* steps, as well as creating the *Auto Start Manager Script*. Stop when you reach the *Start on Boot* section. 
 1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`. If you want the save the script in a different location, you need to update line 22 of *app.py*.
@@ -187,7 +187,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 
 <br />
 
-####[d] Automatically start Server on Boot *(Optional, but recommended)*
+#### [d] Automatically start Server on Boot *(Optional, but recommended)*
 1. Create a `.service` file which is used to start the web interface: `nano ~/walle.service`
 1. Paste the following text into the file:
     ```text
@@ -214,7 +214,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 
 <br />
 
-####[e] Adding new Sounds (Optional)
+#### [e] Adding new Sounds (Optional)
 1. By default the Raspberry should automatically select whether to output audio to the HDMI port or the headphone jack. However, you can ensure that it always uses the headphone jack with the following command: `amixer cset numid=3 1`
 1. Make sure that all the sound files you want to use are of type `*.ogg`. Most music/sound editors should be able to convert the sound file to this format.
 1. Change the file name so that it has the following format: `[group name]_[file name]_[length in milliseconds].ogg`. For example: `voice_eva_1200.ogg`. In the web-interface, the audio files will be grouped using the "group name" and sorted alphabetically.
@@ -223,7 +223,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 
 <br />
 
-####[f] Set up the Raspberry Pi as a WiFi hotspot *(Optional)*
+#### [f] Set up the Raspberry Pi as a WiFi hotspot *(Optional)*
 If you would like to control the robot outdoors or at conventions, there may not be any safe WiFi networks you can connect to. To overcome this issue and eliminate the need for any external networking equipment, the Raspberry Pi can broadcast its own WiFi network. You can then connect the computer/phone/tablet you are using to control the robot directly to this network.
 
 To set up the WiFi hotspot, we will use the [RaspAP project](https://raspap.com/) which takes care of all the configuration and tools to get the system working. The following instructions are based on their quick installation guide:
