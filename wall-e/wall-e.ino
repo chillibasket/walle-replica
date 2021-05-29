@@ -51,7 +51,7 @@
  *
  * To enable battery level detection, uncomment the next line:
  */
-#define BAT_L
+//#define BAT_L
 #ifdef BAT_L
 	#define BATTERY_LEVEL_PIN A2
 	#define BATTERY_MAX_VOLTAGE 12.6
