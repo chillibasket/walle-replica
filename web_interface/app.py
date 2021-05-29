@@ -1,7 +1,13 @@
 #############################################
-# Robot Webinterface - Python Script
-# Simon Bluett, https://wired.chillibasket.com
-# V1.4, 16th February 2020
+# Wall-e Robot Web-interface
+#
+# @file       app.py
+# @brief      Flask web-interface to control Wall-e robot
+# @author     Simon Bluett
+# @website    https://wired.chillibasket.com
+# @copyright  Copyright (C) 2020 - Distributed under MIT license
+# @version    1.4
+# @date       16th February 2020
 #############################################
 
 from flask import Flask, request, session, redirect, url_for, jsonify, render_template
@@ -42,28 +48,57 @@ threads = []
 #############################################
 # Set up the multithreading stuff here
 #############################################
-# The second thread will be used to send data to the Arduino
+
+##
+# Thread class used for managing communication with the Arduino
+#
 class arduino (threading.Thread):
+
+	##
+	# Constructor
+	#
+	# @param  threadID  The thread identification number
+	# @param  name      Name of the thread
+	# @param  q         Queue containing the message to be sent
+	# @param  port      The serial port where the Arduino is connected
+	#
 	def __init__(self, threadID, name, q, port):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
 		self.name = name
 		self.q = q
 		self.port = port
+
+
+	##
+	# Run the thread
+	#
 	def run(self):
 		print("Starting Arduino Thread", self.name)
 		process_data(self.name, self.q, self.port)
 		print("Exiting Arduino Thread", self.name)
 
-# Function to send data to the Arduino from a buffer queue
+""" End of class: Arduino """
+
+
+##
+# Send data to the Arduino from a buffer queue
+#
+# @param  threadName Name of the thread
+# @param  q          Queue containing the messages to be sent
+# @param  port       The serial port where the Arduino is connected
+#
 def process_data(threadName, q, port):
 	global exitFlag
 	
 	ser = serial.Serial(port,115200)
 	ser.flushInput()
 	dataString = ""
+
+	# Keep this thread running until the exitFlag changes
 	while not exitFlag:
 		try:
+			# If there are any messages in the queue, send them
 			queueLock.acquire()
 			if not workQueue.empty():
 				data = q.get() + '\n'
@@ -72,6 +107,8 @@ def process_data(threadName, q, port):
 				print(data)
 			else:
 				queueLock.release()
+
+			# Read any incomming messages
 			if (ser.inWaiting() > 0):
 				data = ser.read()
 				if (data.decode() == '\n' or data.decode() == '\r'):
@@ -80,13 +117,19 @@ def process_data(threadName, q, port):
 					dataString = ""
 				else:
 					dataString += data.decode()
+
 		# If an error occured in the Arduino Communication
 		except Exception as e: 
 			print(e)
 			exitFlag = 1
 	ser.close()
 
-# Function to parse messages received from the Arduino
+
+##
+# Parse messages received from the Arduino
+#
+# @param  dataString  String containing the serial message to be parsed
+#
 def parseArduinoMessage(dataString):
 	global batteryLevel
 	
@@ -96,15 +139,21 @@ def parseArduinoMessage(dataString):
 		if len(dataList) > 1 and dataList[1].isdigit():
 			batteryLevel = dataList[1]
 
-# Turn on/off the Arduino Thread system
+
+##
+# Turn on/off the Arduino background communications thread
+#
+# @param  q    Queue object containing the messages to be sent
+# @param  port The serial port where the Arduino is connected
+#
 def onoff_arduino(q, portNum):
 	global arduinoActive
 	global exitFlag
 	global threads
 	global batteryLevel
 	
+	# Set up thread and connect to Arduino
 	if not arduinoActive:
-		# Set up thread and connect to Arduino
 		exitFlag = 0
 
 		usb_ports = [
@@ -118,8 +167,8 @@ def onoff_arduino(q, portNum):
 
 		arduinoActive = 1
 
+	# Disconnect Arduino and exit thread
 	else:
-		# Disconnect Arduino and exit thread
 		exitFlag = 1
 		batteryLevel = -999
 
@@ -139,7 +188,9 @@ def onoff_arduino(q, portNum):
 	return 0
 
 
+##
 # Test whether the Arduino connection is still active
+#
 def test_arduino():
 	global arduinoActive
 	global exitFlag
@@ -153,7 +204,9 @@ def test_arduino():
 		return 0
 
 
-# Turn on/off the MJPG Streamer
+##
+# Turn on/off the webcam MJPG Streamer
+#
 def onoff_streamer():
 	global streaming
 	
@@ -161,6 +214,7 @@ def onoff_streamer():
 		# Turn on stream
 		subprocess.call([streamScript, 'start'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 		result = ""
+
 		# Check whether the stream is on or not
 		try:
 			result = subprocess.run([streamScript, 'status'], stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -187,7 +241,9 @@ def onoff_streamer():
 # Flask Pages and Functions
 #############################################
 
-# Main Page
+##
+# Show the main web-interface page
+#
 @app.route('/')
 def index():
 	if session.get('active') != True:
@@ -237,7 +293,10 @@ def index():
 	
 	return render_template('index.html',sounds=files,ports=usb_ports,portSelect=selectedPort,connected=arduinoActive)
 
-# Login
+
+##
+# Show the Login page
+#
 @app.route('/login')
 def login():
 	if session.get('active') == True:
@@ -245,7 +304,9 @@ def login():
 	else:
 		return render_template('login.html')
 
-# Login Request
+##
+# Check if the login password is correct
+#
 @app.route('/login_request', methods = ['POST'])
 def login_request():
 	password = request.form.get('password')
@@ -254,7 +315,10 @@ def login_request():
 		return redirect(url_for('index'))
 	return redirect(url_for('login'))
 
-# Motor Control
+
+##
+# Control the main movement motors
+#
 @app.route('/motor', methods=['POST'])
 def motor():
 	if session.get('active') != True:
@@ -262,10 +326,12 @@ def motor():
 
 	stickX =  request.form.get('stickX')
 	stickY =  request.form.get('stickY')
+
 	if stickX is not None and stickY is not None:
 		xVal = int(float(stickX)*100)
 		yVal = int(float(stickY)*100)
 		print("Motors:", xVal, ",", yVal)
+
 		if test_arduino() == 1:
 			queueLock.acquire()
 			workQueue.put("X" + str(xVal))
@@ -278,7 +344,10 @@ def motor():
 		print("Error: unable to read POST data from motor command")
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
 
+
+##
 # Update Settings
+#
 @app.route('/settings', methods=['POST'])
 def settings():
 	if session.get('active') != True:
@@ -288,6 +357,7 @@ def settings():
 	value = request.form.get('value');
 
 	if thing is not None and value is not None:
+		# Motor deadzone threshold
 		if thing == "motorOff":
 			print("Motor Offset:", value)
 			if test_arduino() == 1:
@@ -296,6 +366,8 @@ def settings():
 				queueLock.release()
 			else:
 				return jsonify({'status': 'Error','msg':'Arduino not connected'})
+
+		# Motor steering offset/trim
 		elif thing == "steerOff":
 			print("Steering Offset:", value)
 			if test_arduino() == 1:
@@ -304,6 +376,8 @@ def settings():
 				queueLock.release()
 			else:
 				return jsonify({'status': 'Error','msg':'Arduino not connected'})
+
+		# Automatic/manual animation mode
 		elif thing == "animeMode":
 			print("Animation Mode:", value)
 			if test_arduino() == 1:
@@ -312,12 +386,18 @@ def settings():
 				queueLock.release()
 			else:
 				return jsonify({'status': 'Error','msg':'Arduino not connected'})
+
+		# Sound mode currently doesn't do anything
 		elif thing == "soundMode":
 			print("Sound Mode:", value)
+
+		# Change the sound effects volume
 		elif thing == "volume":
 			global volume
 			volume = int(value)
 			print("Change Volume:", value)
+
+		# Turn on/off the webcam
 		elif thing == "streamer":
 			print("Turning on/off MJPG Streamer:", value)
 			if onoff_streamer() == 1:
@@ -327,10 +407,14 @@ def settings():
 				return jsonify({'status': 'OK','streamer': 'Active'})
 			else:
 				return jsonify({'status': 'OK','streamer': 'Offline'})
+
+		# Shut down the Raspberry Pi
 		elif thing == "shutdown":
 			print("Shutting down Raspberry Pi!", value)
 			result = subprocess.run(['sudo','nohup','shutdown','-h','now'], stdout=subprocess.PIPE).stdout.decode('utf-8')
 			return jsonify({'status': 'OK','msg': 'Raspberry Pi is shutting down'})
+
+		# Unknown command
 		else:
 			return jsonify({'status': 'Error','msg': 'Unable to read POST data'})
 
@@ -338,7 +422,10 @@ def settings():
 	else:
 		return jsonify({'status': 'Error','msg': 'Unable to read POST data'})
 
-# Play Audio
+
+##
+# Play an Audio clip on the Raspberry Pi
+#
 @app.route('/audio', methods=['POST'])
 def audio():
 	if session.get('active') != True:
@@ -360,7 +447,10 @@ def audio():
 	else:
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
 
-# Animate
+
+##
+# Send an Animation command to the Arduino
+#
 @app.route('/animate', methods=['POST'])
 def animate():
 	if session.get('active') != True:
@@ -379,8 +469,11 @@ def animate():
 			return jsonify({'status': 'Error','msg':'Arduino not connected'})
 	else:
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
-		
-# Servo Control
+
+	
+##
+# Send a Servo Control command to the Arduino
+#
 @app.route('/servoControl', methods=['POST'])
 def servoControl():
 	if session.get('active') != True:
@@ -402,7 +495,10 @@ def servoControl():
 	else:
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
 
-# Arduino Connection
+
+##
+# Connect/Disconnect the Arduino Serial Port
+#
 @app.route('/arduinoConnect', methods=['POST'])
 def arduinoConnect():
 	if session.get('active') != True:
@@ -468,8 +564,13 @@ def arduinoConnect():
 			return jsonify({'status': 'Error','msg':'Unable to read [action] POST data'})
 	else:
 		return jsonify({'status': 'Error','msg':'Unable to read [action] POST data'})
-		
-# Arduino Status (only looks at battery level at the moment)
+
+
+##
+# Update the Arduino Status
+#
+# @return JSON containing the current battery level
+#
 @app.route('/arduinoStatus', methods=['POST'])
 def arduinoStatus():
 	if session.get('active') != True:
@@ -487,6 +588,9 @@ def arduinoStatus():
 	return jsonify({'status': 'Error','msg':'Unable to read POST data'})
 
 
+##
+# Program start code, which initialises the web-interface
+#
 if __name__ == '__main__':
-    #app.run()
-    app.run(debug=False, host='0.0.0.0')
+	#app.run()
+	app.run(debug=False, host='0.0.0.0')

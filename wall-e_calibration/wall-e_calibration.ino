@@ -1,12 +1,14 @@
-/* WALL-E CALIBRATION CODE
- ********************************************
- * Code by: Simon Bluett
- * Email:   hello@chillibasket.com
- * Version: 1.1
- * Date:    9th July 2020
- ********************************************/
-
-/* HOW TO USE:
+/**
+ * WALL-E CALIBRATION CODE
+ * 
+ * @file      wall-e_calibration.ino
+ * @brief     Sketch to calibrate the servo motor min/max positions
+ * @author    Simon Bluett
+ * @copyright MIT license
+ * @version   1.1
+ * @date      9th July 2020
+ *
+ * HOW TO USE:
  * 1. Install the Adafruit_PWMServoDriver library
  *    a. In the Arduino IDE, go to Sketch->Include Library->Manage Libraries
  *    b. Search for Adafruit PWM Library, and install the latest version
@@ -38,7 +40,7 @@
  *                        {350, 185},  // arm left
  *                        {188, 360}}; // arm right
  *
- *    Copy the array and paste it into lines 116 to 122 in [wall-e.ino]
+ *    Copy the array and paste it into lines 144 to 150 in [wall-e.ino]
  */
 
 #include <Wire.h>
@@ -90,7 +92,7 @@ int position = preset[0][0] - 1;
 
 
 // ------------------------------------------------------------------
-// 		INITIAL SETUP
+/// INITIAL SETUP
 // ------------------------------------------------------------------
 void setup() {
 
@@ -118,7 +120,7 @@ void setup() {
 
 
 // -------------------------------------------------------------------
-// 		MOVE TO NEXT POSITION OR SERVO
+/// MOVE TO NEXT POSITION OR SERVO
 // -------------------------------------------------------------------
 void moveToNextPosition() {
 
@@ -162,7 +164,7 @@ void moveToNextPosition() {
 
 
 // -------------------------------------------------------------------
-// 		CHANGE SERVO POSITION
+/// CHANGE SERVO POSITION
 // -------------------------------------------------------------------
 void changeServoPosition(int newPosition) {
 	while (position != newPosition) {
@@ -175,7 +177,7 @@ void changeServoPosition(int newPosition) {
 
 
 // -------------------------------------------------------------------
-// 		SOFT START - Try and start up servo gently
+/// SOFT START - Try and start up servo gently
 // -------------------------------------------------------------------
 void softStart() {
 	unsigned long endTime = millis() + 1000;
@@ -190,7 +192,7 @@ void softStart() {
 
 
 // -------------------------------------------------------------------
-// 		OUTPUT THE RESULTS
+/// OUTPUT THE RESULTS
 // -------------------------------------------------------------------
 void outputResults() {
 	Serial.println("Calibrated values - please copy and paste these into the 'wall-e.ino' sketch:\n");
@@ -208,7 +210,7 @@ void outputResults() {
 
 
 // -------------------------------------------------------------------
-// 		READ INPUT FROM SERIAL
+/// READ INPUT FROM SERIAL
 // -------------------------------------------------------------------
 void readSerial() {
 	// Read incoming byte
@@ -238,7 +240,7 @@ void readSerial() {
 
 
 // -------------------------------------------------------------------
-// 		MAIN PROGRAM LOOP
+/// MAIN PROGRAM LOOP
 // -------------------------------------------------------------------
 void loop() {
 	// Read any new serial messages
