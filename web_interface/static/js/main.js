@@ -58,7 +58,7 @@ function sendSettings(type, value) {
 							$('#conn-streamer').html('End Stream');
 							$('#conn-streamer').removeClass('btn-outline-info');
 							$('#conn-streamer').addClass('btn-outline-danger');
-							$("#stream").attr("src","http:/" + "/" + window.location.hostname + ":8081/?action=stream");
+							$("#stream").attr("src","http:/" + "/" + window.location.hostname + ":8080/?action=stream");
 						} else if(data.streamer == "Offline"){
 							$('#conn-streamer').html('Reactivate');
 							$('#conn-streamer').addClass('btn-outline-info');
