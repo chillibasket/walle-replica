@@ -81,13 +81,13 @@
 						<!-- Camera Stream -->
 						<div class="tab-pane scroll-pane col-sm-12 col-md-6 d-md-block no-padding" id="tab0">
 							<div class="media">
-								<img id="stream" class="stream" src="{{ url_for('static', filename='streamimage.jpg') }}">
+								<img id="stream" class="stream{% if cameraActive == 1 %} starting{% endif %}" src="{{ url_for('static', filename='streamimage.jpg') }}">
 							</div>
 							<div class="info-elements">
 								<div class="info-area text-white">
 									Status:
 								</div>
-								<a id="ardu-area" href="#conn-arduino" onclick="$('#settings-tab').trigger('click')" class="info-area {% if connected == 1 %}bg-success{% else %}bg-danger{% endif %} text-white" title="{% if connected == 1 %}Connected{% else %}Disconnected{% endif %}" data-toggle="tooltip" data-placement="top">
+								<a id="ardu-area" href="#conn-arduino" onclick="$('#settings-tab').trigger('click')" class="info-area{% if connected == 1 %} bg-success{% else %}bg-danger{% endif %} text-white" title="{% if connected == 1 %}Connected{% else %}Disconnected{% endif %}" data-toggle="tooltip" data-placement="top">
 									<i class="fa fa-robot"></i><div id="ardu-text" class="indicator-text">Arduino</div>
 								</a>
 								<span data-toggle="modal" data-target="#gamepad-info">

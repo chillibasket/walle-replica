@@ -1,7 +1,7 @@
-/* 
+/**
  * Robot Webinterface - Main Script
  * Simon B., https://wired.chillibasket.com
- * V1.4, 16th February 2020
+ * V1.5, 31st October 2021
  */
 
 
@@ -865,6 +865,21 @@ $(document).ready(function () {
 	$(function () {
 	  $('[data-toggle="tooltip"]').tooltip()
 	})
+
+	// If arduino has already been connected, start the status check
+	if ($('#ardu-area').hasClass('bg-success')) {
+		arduinoTimer = setInterval(checkArduinoStatus, 10000);
+		checkArduinoStatus();
+	}
+
+	// If camera stream has already been started, show it on the web-interface
+	if ($('#stream').hasClass('starting')) {
+		$('#stream').removeClass('starting');
+		$('#conn-streamer').html('End Stream');
+		$('#conn-streamer').removeClass('btn-outline-info');
+		$('#conn-streamer').addClass('btn-outline-danger');
+		$("#stream").attr("src","http:/" + "/" + window.location.hostname + ":8080/?action=stream");
+	}
 
 	controllerOn();
 	if (joypad.instances[0] != null && joypad.instances[0].connected) updateInfo(joypad.instances[0]);

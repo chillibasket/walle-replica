@@ -166,6 +166,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 1. Connect to the Arduino/micro-controller:
     1. Plug the Arduino/micro-controller into the USB port of the Raspberry Pi.
     1. If you would like the serial port used by the Arduino to be selected by default in the web-interface, you can set a preferred serial port device in the code. Go to line [27](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L26) of *app.py* and replace the text "ARDUINO" with the name of your device. The name must match the one which appears in the drop-down menu in the "Settings" tab of the web-interface.
+    1. To make the interface automatically connect to the Arduino when it starts up, you can change line [31](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L31) to `autoStartArduino = True`
     1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
 
 <br />
@@ -352,6 +353,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
 1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`. If you want the save the script in a different location, you need to update line 22 of *app.py*.
 1. To make the script executable by the web-server, run this command in the terminal: `chmod +x /home/pi/mjpg-streamer.sh`
+1. If you want the camera to automatically startup when you open the web-interface you can change line [32](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L31) of *app.py* to `autoStartCamera = True`
 
 <br />
 
@@ -419,6 +421,9 @@ To set up the WiFi hotspot, we will use the [RaspAP project](https://raspap.com/
 
 
 ## Changelog
+
+#### 31st October 2021 (Version 2.92)
+1. Added options in *app.py* to automatically connect to the Arduino and to start the camera stream when the web-interface is opened for the first time.
 
 #### 30th October 2021 (Version 2.91)
 1. Changed camera stream port from 8081 to 8080 inline with changes made to the start/stop script.

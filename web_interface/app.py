@@ -5,9 +5,9 @@
 # @brief      Flask web-interface to control Wall-e robot
 # @author     Simon Bluett
 # @website    https://wired.chillibasket.com
-# @copyright  Copyright (C) 2020 - Distributed under MIT license
-# @version    1.4
-# @date       16th February 2020
+# @copyright  Copyright (C) 2021 - Distributed under MIT license
+# @version    1.5
+# @date       31st October 2021
 #############################################
 
 from flask import Flask, request, session, redirect, url_for, jsonify, render_template
@@ -18,7 +18,7 @@ import pygame		# for sound
 import serial 		# for Arduino serial access
 import serial.tools.list_ports
 import subprocess 	# for shell commands
-
+import time
 app = Flask(__name__)
 
 
@@ -28,6 +28,8 @@ arduinoPort = "ARDUINO"                                              # Default p
 streamScript = "/home/pi/mjpg-streamer.sh"                           # Location of script used to start/stop video stream
 soundFolder = "/home/pi/walle-replica/web_interface/static/sounds/"  # Location of the folder containing all audio files
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)      # Secret key used for login session cookies
+autoStartArduino = False                                             # False = no auto connect, True = automatically try to connect to default port
+autoStartCamera = False                                              # False = no auto start, True = automatically start up the camera
 ##########################################
 
 
@@ -43,6 +45,7 @@ batteryLevel = -999
 queueLock = threading.Lock()
 workQueue = queue.Queue()
 threads = []
+initialStartup = False
 
 
 #############################################
@@ -109,7 +112,7 @@ def process_data(threadName, q, port):
 				queueLock.release()
 
 			# Read any incomming messages
-			if (ser.inWaiting() > 0):
+			while (ser.inWaiting() > 0):
 				data = ser.read()
 				if (data.decode() == '\n' or data.decode() == '\r'):
 					print(dataString)
@@ -117,6 +120,8 @@ def process_data(threadName, q, port):
 					dataString = ""
 				else:
 					dataString += data.decode()
+
+			time.sleep(0.01)
 
 		# If an error occured in the Arduino Communication
 		except Exception as e: 
@@ -246,6 +251,7 @@ def onoff_streamer():
 #
 @app.route('/')
 def index():
+
 	if session.get('active') != True:
 		return redirect(url_for('login'))
 
@@ -257,8 +263,8 @@ def index():
 			
 			# Set up default details
 			audiogroup = "Other"
-			audionames = audiofiles;
-			audiotimes = 0;
+			audionames = audiofiles
+			audiotimes = 0
 			
 			# Get item details from name, and make sure they are valid
 			if len(audiofiles.split('_')) == 2:
@@ -291,7 +297,22 @@ def index():
 		if arduinoPort in item:
 			selectedPort = index
 	
-	return render_template('index.html',sounds=files,ports=usb_ports,portSelect=selectedPort,connected=arduinoActive)
+	# Only automatically connect systems on startup
+	global initialStartup
+	if not initialStartup:
+		initialStartup = True
+
+		# If user has selected for the Arduino to connect by default, do so now
+		if autoStartArduino and not test_arduino():
+			onoff_arduino(workQueue, selectedPort)
+			print("Started Arduino comms")
+
+		# If user has selected for the camera stream to be active by default, turn it on now
+		if autoStartCamera and not streaming:
+			onoff_streamer()
+			print("Started camera stream")
+
+	return render_template('index.html',sounds=files,ports=usb_ports,portSelect=selectedPort,connected=arduinoActive,cameraActive=streaming)
 
 
 ##
@@ -353,8 +374,8 @@ def settings():
 	if session.get('active') != True:
 		return redirect(url_for('login'))
 
-	thing = request.form.get('type');
-	value = request.form.get('value');
+	thing = request.form.get('type')
+	value = request.form.get('value')
 
 	if thing is not None and value is not None:
 		# Motor deadzone threshold
@@ -479,8 +500,8 @@ def servoControl():
 	if session.get('active') != True:
 		return redirect(url_for('login'))
 
-	servo = request.form.get('servo');
-	value = request.form.get('value');
+	servo = request.form.get('servo')
+	value = request.form.get('value')
 	if servo is not None and value is not None:
 		print("servo:", servo)
 		print("value:", value)
@@ -504,7 +525,7 @@ def arduinoConnect():
 	if session.get('active') != True:
 		return redirect(url_for('login'))
 		
-	action = request.form.get('action');
+	action = request.form.get('action')
 	
 	if action is not None:
 		# Update drop-down selection with list of connected USB devices
@@ -576,7 +597,7 @@ def arduinoStatus():
 	if session.get('active') != True:
 		return redirect(url_for('login'))
 		
-	action = request.form.get('type');
+	action = request.form.get('type')
 	
 	if action is not None:
 		if action == "battery":
@@ -592,5 +613,6 @@ def arduinoStatus():
 # Program start code, which initialises the web-interface
 #
 if __name__ == '__main__':
+
 	#app.run()
 	app.run(debug=False, host='0.0.0.0')
