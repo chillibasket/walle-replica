@@ -353,7 +353,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
 1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`. If you want the save the script in a different location, you need to update line 22 of *app.py*.
 1. To make the script executable by the web-server, run this command in the terminal: `chmod +x /home/pi/mjpg-streamer.sh`
-1. If you want the camera to automatically startup when you open the web-interface you can change line [32](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L31) of *app.py* to `autoStartCamera = True`
+1. If you want the camera to automatically startup when you open the web-interface you can change line [32](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L32) of *app.py* to `autoStartCamera = True`
 
 <br />
 
