@@ -33,37 +33,37 @@ void playAnimation(int animationNo) {
 
 		case 0:
 			// --- Reset Servo positions ---
-			//          time,head,necT,necB,eyeR,eyeL,armL,armR
-			queue.push({1000,  50,  10,  0,   0,   0,  40,  40});
+			//          time,head,necT,necB,eyeR,eyeL,armL,armR,ebrL,ebrR
+			queue.push({1000,  50,  10,  0,   0,   0,  40,  40,   0,   0});
 			break;
 
 		case 1:
 			// --- Bootup Eye Sequence ---
-			//          time,head,necT,necB,eyeR,eyeL,armL,armR
-			queue.push({2000,  50,  45,  90,  40,  40,  40,  40});
-			queue.push({ 700,  50,  45,  90,  40,   0,  40,  40});
-			queue.push({ 700,  50,  45,  90,   0,   0,  40,  40});
-			queue.push({ 700,  50,  45,  90,   0,  40,  40,  40});
-			queue.push({ 700,  50,  45,  90,  40,  40,  40,  40});
-			queue.push({ 400,  50,  45,  90,   0,   0,  40,  40});
-			queue.push({ 400,  50,  45,  90,  40,  40,  40,  40});
-			queue.push({2000,  50,   0,  60,  40,  40,  40,  40});
-			queue.push({1000,  50,   0,  60,   0,   0,  40,  40});
+			//          time,head,necT,necB,eyeR,eyeL,armL,armR,ebrL,ebrR
+			queue.push({2000,  50,  45,  90,  40,  40,  40,  40,   0,  0});
+			queue.push({ 700,  50,  45,  90,  40,   0,  40,  40,   0,  0});
+			queue.push({ 700,  50,  45,  90,   0,   0,  40,  40,   0,  0});
+			queue.push({ 700,  50,  45,  90,   0,  40,  40,  40,   0,  0});
+			queue.push({ 700,  50,  45,  90,  40,  40,  40,  40,   0,  0});
+			queue.push({ 400,  50,  45,  90,   0,   0,  40,  40,   0,  0});
+			queue.push({ 400,  50,  45,  90,  40,  40,  40,  40,   0,  0});
+			queue.push({2000,  50,   0,  60,  40,  40,  40,  40,   0,  0});
+			queue.push({1000,  50,   0,  60,   0,   0,  40,  40,   0,  0});
 			break;
 
 		case 2:
 			// --- Inquisitive motion sequence ---
-			//          time,head,necT,necB,eyeR,eyeL,armL,armR
-			queue.push({3000,  48,  40,   0,  35,  45,  60,  59});
-			queue.push({1500,  48,  40,  20, 100,   0,  80,  80});
-			queue.push({3000,   0,  40,  40, 100,   0,  80,  80});
-			queue.push({1500,  48,  60, 100,  40,  40, 100, 100});
-			queue.push({1500,  48,  40,  30,  45,  35,   0,   0});
-			queue.push({1500,  34,  34,  10,  14, 100,   0,   0});
-			queue.push({1500,  48,  60,  20,  35,  45,  60,  59});
-			queue.push({3000, 100,  20,  50,  40,  40,  60, 100});
-			queue.push({1500,  48,  15,   0,   0,   0,   0,   0});
-			queue.push({1000,  50,  10,   0,   0,   0,  40,  40});
+			//          time,head,necT,necB,eyeR,eyeL,armL,armR,ebrL,ebrR
+			queue.push({3000,  48,  40,   0,  35,  45,  60,  59,   0,  0});
+			queue.push({1500,  48,  40,  20, 100,   0,  80,  80,   0,  0});
+			queue.push({3000,   0,  40,  40, 100,   0,  80,  80,   0,  0});
+			queue.push({1500,  48,  60, 100,  40,  40, 100, 100,   0,  0});
+			queue.push({1500,  48,  40,  30,  45,  35,   0,   0,   0,  0});
+			queue.push({1500,  34,  34,  10,  14, 100,   0,   0,   0,  0});
+			queue.push({1500,  48,  60,  20,  35,  45,  60,  59,   0,  0});
+			queue.push({3000, 100,  20,  50,  40,  40,  60, 100, 100,100});
+			queue.push({1500,  48,  15,   0,   0,   0,   0,   0,   0,  0});
+			queue.push({1000,  50,  10,   0,   0,   0,  40,  40,   0,  0});
 			break;
 
 		default:

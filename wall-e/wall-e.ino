@@ -488,6 +488,28 @@ void manageAnimations() {
 						float multiplier = (setpos[i] - preset[i][1]) / float(preset[i][0] - preset[i][1]);
 						setpos[i+1] = (multiplier * (preset[i+1][1] - preset[i+1][0])) + preset[i+1][0];
 					}
+				
+				// Eyebrows should work together as well
+				} else if (i == 7) {
+
+					// Determine whether to open or close eyebrows
+					if (random(4) == 1) {
+						// Randomly determine the new position
+						unsigned int min = preset[i][0];
+						unsigned int max = preset[i][1];
+
+						if (min > max) {
+							min = max;
+							max = preset[i][0];
+						}
+
+						setpos[i] = random(min, max+1);
+						setpos[i+1] = setpos[i];
+
+					} else {
+						setpos[i] = 0;
+						setpos[i+1] = 0;
+					}
 				}
 
 			}
