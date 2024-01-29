@@ -289,6 +289,48 @@ function playAudio(clip, time) {
 
 
 /*
+ * Play Text-to-Speech
+ */
+function playTTS(text) {
+
+	$.ajax({
+		url: "/tts",
+		type: "POST",
+		data: {"text": text},
+		dataType: "json",
+		beforeSend: function(){
+			// Reset the audio progress bar
+			$('#audio-progress').stop();
+			$('#audio-progress').css('width', '0%').attr('aria-valuenow', 0);
+		},
+		success: function(data){
+			// If a response is received from the python backend, but it contains an error
+			if(data.status == "Error"){
+				$('#audio-progress').addClass('bg-danger');
+				$('#audio-progress').css("width", "0%").animate({width: 100+"%"}, 500);
+				showAlert(1, 'Error!', data.msg, 1);
+				return false;
+
+			// Otherwise set the progress bar to show the audio clip progress
+			} else {
+				$('#audio-progress').removeClass('bg-danger');
+				//$('#audio-progress').css("width", "0%").animate({width: 100+"%"}, data.time*1000);
+				return true;
+			}
+		},
+		error: function(error) {
+			// If no response was recevied from the python backend, show an "unknown" error
+			$('#audio-progress').addClass('bg-danger');
+			$('#audio-progress').css("width", "0%").animate({width: 100+"%"}, 500);
+			showAlert(1, 'Unknown Error!', 'Unable to play audio file.', 1);
+			return false;
+		}
+	});
+
+}
+
+
+/*
  * Send a manual servo control command
  */
 function servoControl(item, servo, value) {
@@ -818,6 +860,13 @@ window.onload = function () {
 		//baseElement: document.getElementById('base'),
 		useCssTransform: true,
 		updateText: document.getElementById('joytext')
+	});
+
+	// Add listener for the tts input field
+	$( "#tts_text" ).keypress(function( event ) {
+	  if ( event.which == 13 ) {
+	     playTTS($('#tts_text').val());
+	  }
 	});
 }
 

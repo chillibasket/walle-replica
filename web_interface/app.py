@@ -11,6 +11,7 @@
 #############################################
 
 from flask import Flask, request, session, redirect, url_for, jsonify, render_template
+
 import queue 		# for serial command queue
 import threading 	# for multiple threads
 import os
@@ -19,17 +20,18 @@ import serial 		# for Arduino serial access
 import serial.tools.list_ports
 import subprocess 	# for shell commands
 import time
+import tempfile
+
 app = Flask(__name__)
 
 
 ##### VARIABLES WHICH YOU CAN MODIFY #####
-loginPassword = "put_password_here"                                  # Password for web-interface
+loginPassword = "eva"                                  # Password for web-interface
 arduinoPort = "ARDUINO"                                              # Default port which will be selected
-streamScript = "/home/pi/mjpg-streamer.sh"                           # Location of script used to start/stop video stream
 soundFolder = "/home/pi/walle-replica/web_interface/static/sounds/"  # Location of the folder containing all audio files
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)      # Secret key used for login session cookies
-autoStartArduino = False                                             # False = no auto connect, True = automatically try to connect to default port
-autoStartCamera = False                                              # False = no auto start, True = automatically start up the camera
+autoStartArduino = True                                             # False = no auto connect, True = automatically try to connect to default port
+autoStartCamera = True                                              # False = no auto start, True = automatically start up the camera
 ##########################################
 
 
@@ -214,20 +216,15 @@ def test_arduino():
 #
 def onoff_streamer():
 	global streaming
-	
+	result = ""
+
 	if not streaming:
 		# Turn on stream
-		subprocess.call([streamScript, 'start'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-		result = ""
+		subprocess.call(['systemctl', 'start' , "--quiet", "camera-streamer"])
 
-		# Check whether the stream is on or not
-		try:
-			result = subprocess.run([streamScript, 'status'], stdout=subprocess.PIPE).stdout.decode('utf-8')
-		except subprocess.CalledProcessError as e:
-			result = e.output.decode('utf-8')
-		print(result)
+		result = subprocess.run(['systemctl', 'is-active', "--quiet", "camera-streamer"])
 		
-		if 'stopped' in result:
+		if (result == 0):
 			streaming = 0
 			return 1
 		else:
@@ -236,7 +233,7 @@ def onoff_streamer():
 
 	else:
 		# Turn off stream
-		subprocess.call([streamScript, 'stop'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+		subprocess.call(['systemctl', 'stop' , "--quiet", "camera-streamer"])
 		
 		streaming = 0
 		return 0
@@ -305,12 +302,12 @@ def index():
 		# If user has selected for the Arduino to connect by default, do so now
 		if autoStartArduino and not test_arduino():
 			onoff_arduino(workQueue, selectedPort)
-			print("Started Arduino comms")
+			#print("Started Arduino comms")
 
 		# If user has selected for the camera stream to be active by default, turn it on now
 		if autoStartCamera and not streaming:
 			onoff_streamer()
-			print("Started camera stream")
+			#print("Started camera stream")
 
 	return render_template('index.html',sounds=files,ports=usb_ports,portSelect=selectedPort,connected=arduinoActive,cameraActive=streaming)
 
@@ -351,7 +348,7 @@ def motor():
 	if stickX is not None and stickY is not None:
 		xVal = int(float(stickX)*100)
 		yVal = int(float(stickY)*100)
-		print("Motors:", xVal, ",", yVal)
+		#print("Motors:", xVal, ",", yVal)
 
 		if test_arduino() == 1:
 			queueLock.acquire()
@@ -362,7 +359,7 @@ def motor():
 		else:
 			return jsonify({'status': 'Error','msg':'Arduino not connected'})
 	else:
-		print("Error: unable to read POST data from motor command")
+		#print("Error: unable to read POST data from motor command")
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
 
 
@@ -380,7 +377,7 @@ def settings():
 	if thing is not None and value is not None:
 		# Motor deadzone threshold
 		if thing == "motorOff":
-			print("Motor Offset:", value)
+			#print("Motor Offset:", value)
 			if test_arduino() == 1:
 				queueLock.acquire()
 				workQueue.put("O" + value)
@@ -390,7 +387,7 @@ def settings():
 
 		# Motor steering offset/trim
 		elif thing == "steerOff":
-			print("Steering Offset:", value)
+			#print("Steering Offset:", value)
 			if test_arduino() == 1:
 				queueLock.acquire()
 				workQueue.put("S" + value)
@@ -400,7 +397,7 @@ def settings():
 
 		# Automatic/manual animation mode
 		elif thing == "animeMode":
-			print("Animation Mode:", value)
+			#print("Animation Mode:", value)
 			if test_arduino() == 1:
 				queueLock.acquire()
 				workQueue.put("M" + value)
@@ -409,18 +406,18 @@ def settings():
 				return jsonify({'status': 'Error','msg':'Arduino not connected'})
 
 		# Sound mode currently doesn't do anything
-		elif thing == "soundMode":
-			print("Sound Mode:", value)
+		#elif thing == "soundMode":
+			#print("Sound Mode:", value)
 
 		# Change the sound effects volume
 		elif thing == "volume":
 			global volume
 			volume = int(value)
-			print("Change Volume:", value)
+			#print("Change Volume:", value)
 
 		# Turn on/off the webcam
 		elif thing == "streamer":
-			print("Turning on/off MJPG Streamer:", value)
+			#print("Turning on/off MJPG Streamer:", value)
 			if onoff_streamer() == 1:
 				return jsonify({'status': 'Error', 'msg': 'Unable to start the stream'})
 
@@ -431,7 +428,7 @@ def settings():
 
 		# Shut down the Raspberry Pi
 		elif thing == "shutdown":
-			print("Shutting down Raspberry Pi!", value)
+			#print("Shutting down Raspberry Pi!", value)
 			result = subprocess.run(['sudo','nohup','shutdown','-h','now'], stdout=subprocess.PIPE).stdout.decode('utf-8')
 			return jsonify({'status': 'OK','msg': 'Raspberry Pi is shutting down'})
 
@@ -455,7 +452,7 @@ def audio():
 	clip =  request.form.get('clip')
 	if clip is not None:
 		clip = soundFolder + clip + ".ogg"
-		print("Play music clip:", clip)
+		#print("Play music clip:", clip)
 		pygame.mixer.music.load(clip)
 		pygame.mixer.music.set_volume(volume/10.0)
 		#start_time = time.time()
@@ -468,6 +465,59 @@ def audio():
 	else:
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
 
+##
+# Text to Speech on the Raspberry Pi - requires Espeak-NG and Rubberband
+#
+@app.route('/tts', methods=['POST'])
+def tts():
+
+	if session.get('active') != True:
+		return redirect(url_for('login'))
+
+	text =  request.form.get('text')
+
+	# Shell commands
+	espeak_cmd = ['espeak-ng','-v', 'de','-b', '1']
+	rb_cmd = ['rubberband', '-t', '1.2','-p','2','-c','6','-f','1.8','-q']
+
+	if text is not None:
+		if text != "":		# don't react to empty strings
+			print (text) 	# debugging
+
+			infile  = tempfile.NamedTemporaryFile()
+			outfile = tempfile.NamedTemporaryFile()
+
+			text_e  = text.encode('utf8')
+			espeak_args = ['-w', infile.name, text_e]
+
+			try:
+				# Generate Speech
+				espeak_cmd.extend(espeak_args)
+
+				p_espeak_ng = subprocess.run(espeak_cmd,
+				                             stdout = subprocess.DEVNULL,
+				                             stderr = subprocess.DEVNULL)
+
+				# Shift pitch
+				rb_cmd.extend([infile.name,outfile.name])
+
+				p_rb = subprocess.run(rb_cmd,
+				                      stdout = subprocess.DEVNULL,
+				                      stderr = subprocess.DEVNULL)
+				# Play it
+				pygame.mixer.music.load(outfile.name)
+				pygame.mixer.music.set_volume(volume/10.0)
+				#start_time = time.time()
+				pygame.mixer.music.play()
+			finally:
+				infile.close()
+				outfile.close()
+				#os.unlink(infile.name)
+		return jsonify({'status': 'OK' })
+	else:
+		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
+
+
 
 ##
 # Send an Animation command to the Arduino
@@ -479,7 +529,7 @@ def animate():
 
 	clip = request.form.get('clip')
 	if clip is not None:
-		print("Animate:", clip)
+		#print("Animate:", clip)
 
 		if test_arduino() == 1:
 			queueLock.acquire()
@@ -503,8 +553,8 @@ def servoControl():
 	servo = request.form.get('servo')
 	value = request.form.get('value')
 	if servo is not None and value is not None:
-		print("servo:", servo)
-		print("value:", value)
+		#print("servo:", servo)
+		#print("value:", value)
 		
 		if test_arduino() == 1:
 			queueLock.acquire()
@@ -551,7 +601,7 @@ def arduinoConnect():
 		# If we want to connect/disconnect Arduino device
 		elif action == "reconnect":
 			
-			print("Reconnect to Arduino")
+			#print("Reconnect to Arduino")
 			
 			if test_arduino():
 				onoff_arduino(workQueue, 0)
@@ -615,4 +665,4 @@ def arduinoStatus():
 if __name__ == '__main__':
 
 	#app.run()
-	app.run(debug=False, host='0.0.0.0')
+	app.run(port=5050, debug=True, host='0.0.0.0')

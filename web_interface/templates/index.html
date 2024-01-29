@@ -275,6 +275,19 @@
 										</div>
 									{% endfor %}
 								</div>
+								<!-- Text to Speech -->
+								<hr/>
+								<div class="row set-row ">
+									<div class="col-xs-12 set-text">&nbsp;Text-To-Speech</div>
+								</div>
+								<div class="row set-row">
+									<div class="input-group col-xs-12 col-sm-10">
+										<input type="text" class="form-control" id="tts_text">
+										<div class="input-group-append">
+											<button class="btn btn-outline-info" type="button" onclick="playTTS($('#tts_text').val())">Speak</button>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 
