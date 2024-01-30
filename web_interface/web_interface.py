@@ -213,25 +213,25 @@ def onoff_streamer():
 
 		# Check, if service is already running
 		result = subprocess.run(['systemctl', 'is-active', "--quiet", "camera-streamer"])
-		if (result == 1):
+		if (result.returncode == 0):
 			streaming = 1
 			return 1
 
 		# Turn on stream
-		subprocess.call(['systemctl', 'start' , "--quiet", "camera-streamer"])
+		subprocess.call(['sudo','systemctl', 'start' , "--quiet", "camera-streamer"])
 		# ... and check again
 		result = subprocess.run(['systemctl', 'is-active', "--quiet", "camera-streamer"])
 		
-		if (result == 0):
-			streaming = 0
+		if (result.returncode == 0):
+			streaming = 1
 			return 1
 		else:
-			streaming = 1
+			streaming = 0
 			return 0
 
 	else:
 		# Turn off stream
-		subprocess.call(['systemctl', 'stop' , "--quiet", "camera-streamer"])
+		subprocess.call(['sudo', 'systemctl', 'stop' , "--quiet", "camera-streamer"])
 		
 		streaming = 0
 		return 0
@@ -574,7 +574,7 @@ def arduinoConnect():
 	if action is not None:
 		# Update drop-down selection with list of connected USB devices
 		if action == "updateList":
-			print("Reload list of connected USB ports")
+			#print("Reload list of connected USB ports")
 			
 			# Get list of connected USB devices
 			ports = serial.tools.list_ports.comports()
@@ -658,5 +658,5 @@ def arduinoStatus():
 #
 if __name__ == '__main__':
 
-	app.run()
-	#app.run(port=5050, debug=True, host='0.0.0.0')
+	#app.run()
+	app.run(port=5000, debug=False, host='0.0.0.0')
