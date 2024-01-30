@@ -24,16 +24,7 @@ import tempfile
 
 app = Flask(__name__)
 
-
-##### VARIABLES WHICH YOU CAN MODIFY #####
-loginPassword = "eva"                                  # Password for web-interface
-arduinoPort = "ARDUINO"                                              # Default port which will be selected
-soundFolder = "/home/pi/walle-replica/web_interface/static/sounds/"  # Location of the folder containing all audio files
-app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)      # Secret key used for login session cookies
-autoStartArduino = True                                             # False = no auto connect, True = automatically try to connect to default port
-autoStartCamera = True                                              # False = no auto start, True = automatically start up the camera
-##########################################
-
+app.config.from_pyfile("config.py")
 
 # Start sound mixer
 pygame.mixer.init()
@@ -219,9 +210,16 @@ def onoff_streamer():
 	result = ""
 
 	if not streaming:
+
+		# Check, if service is already running
+		result = subprocess.run(['systemctl', 'is-active', "--quiet", "camera-streamer"])
+		if (result == 1):
+			streaming = 1
+			return 1
+
 		# Turn on stream
 		subprocess.call(['systemctl', 'start' , "--quiet", "camera-streamer"])
-
+		# ... and check again
 		result = subprocess.run(['systemctl', 'is-active', "--quiet", "camera-streamer"])
 		
 		if (result == 0):
@@ -254,7 +252,7 @@ def index():
 
 	# Get list of audio files
 	files = []
-	for item in sorted(os.listdir(soundFolder)):
+	for item in sorted(os.listdir(app.config['SOUND_FOLDER'])):
 		if item.endswith(".ogg"):
 			audiofiles = os.path.splitext(os.path.basename(item))[0]
 			
@@ -291,7 +289,7 @@ def index():
 	# Ensure that the preferred Arduino port is selected by default
 	selectedPort = 0
 	for index, item in enumerate(usb_ports):
-		if arduinoPort in item:
+		if app.config['ARDUINO_PORT'] in item:
 			selectedPort = index
 	
 	# Only automatically connect systems on startup
@@ -300,12 +298,12 @@ def index():
 		initialStartup = True
 
 		# If user has selected for the Arduino to connect by default, do so now
-		if autoStartArduino and not test_arduino():
+		if app.config['AUTOSTART_ARDUINO'] and not test_arduino():
 			onoff_arduino(workQueue, selectedPort)
 			#print("Started Arduino comms")
 
 		# If user has selected for the camera stream to be active by default, turn it on now
-		if autoStartCamera and not streaming:
+		if app.config['AUTOSTART_CAM'] and not streaming:
 			onoff_streamer()
 			#print("Started camera stream")
 
@@ -328,7 +326,7 @@ def login():
 @app.route('/login_request', methods = ['POST'])
 def login_request():
 	password = request.form.get('password')
-	if password == loginPassword:
+	if password == app.config['LOGIN_PASSWORD']:
 		session['active'] = True
 		return redirect(url_for('index'))
 	return redirect(url_for('login'))
@@ -451,7 +449,7 @@ def audio():
 
 	clip =  request.form.get('clip')
 	if clip is not None:
-		clip = soundFolder + clip + ".ogg"
+		clip = app.config['SOUND_FOLDER'] + clip + ".ogg"
 		#print("Play music clip:", clip)
 		pygame.mixer.music.load(clip)
 		pygame.mixer.music.set_volume(volume/10.0)
@@ -477,12 +475,12 @@ def tts():
 	text =  request.form.get('text')
 
 	# Shell commands
-	espeak_cmd = ['espeak-ng','-v', 'de','-b', '1']
-	rb_cmd = ['rubberband', '-t', '1.2','-p','2','-c','6','-f','1.8','-q']
+	espeak_cmd = app.config['ESPEAK_CMD']
+	rb_cmd = app.config['RB_CMD']
 
 	if text is not None:
 		if text != "":		# don't react to empty strings
-			print (text) 	# debugging
+			#print (text) 	# debugging
 
 			infile  = tempfile.NamedTemporaryFile()
 			outfile = tempfile.NamedTemporaryFile()
@@ -492,27 +490,23 @@ def tts():
 
 			try:
 				# Generate Speech
-				espeak_cmd.extend(espeak_args)
-
-				p_espeak_ng = subprocess.run(espeak_cmd,
+				p_espeak_ng = subprocess.run(espeak_cmd + ['-w', infile.name, text_e],
 				                             stdout = subprocess.DEVNULL,
 				                             stderr = subprocess.DEVNULL)
 
 				# Shift pitch
-				rb_cmd.extend([infile.name,outfile.name])
-
-				p_rb = subprocess.run(rb_cmd,
+				p_rb = subprocess.run(rb_cmd + [infile.name,outfile.name],
 				                      stdout = subprocess.DEVNULL,
 				                      stderr = subprocess.DEVNULL)
 				# Play it
 				pygame.mixer.music.load(outfile.name)
 				pygame.mixer.music.set_volume(volume/10.0)
-				#start_time = time.time()
 				pygame.mixer.music.play()
+
 			finally:
 				infile.close()
 				outfile.close()
-				#os.unlink(infile.name)
+
 		return jsonify({'status': 'OK' })
 	else:
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
@@ -593,7 +587,7 @@ def arduinoConnect():
 			# Ensure that the preferred Arduino port is selected by default
 			selectedPort = 0
 			for index, item in enumerate(usb_ports):
-				if arduinoPort in item:
+				if app.config['ARDUINO_PORT'] in item:
 					selectedPort = index
 					
 			return jsonify({'status': 'OK','ports':usb_ports,'portSelect':selectedPort})
@@ -664,5 +658,5 @@ def arduinoStatus():
 #
 if __name__ == '__main__':
 
-	#app.run()
-	app.run(port=5050, debug=True, host='0.0.0.0')
+	app.run()
+	#app.run(port=5050, debug=True, host='0.0.0.0')

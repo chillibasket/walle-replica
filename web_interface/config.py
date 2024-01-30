@@ -2,7 +2,6 @@
 import os
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
-#BASEDIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)      # Secret key used for login session cookies
 
