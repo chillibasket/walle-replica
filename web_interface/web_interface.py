@@ -15,7 +15,6 @@ from flask import Flask, request, session, redirect, url_for, jsonify, render_te
 import queue 		# for serial command queue
 import threading 	# for multiple threads
 import os
-import pygame		# for sound
 import serial 		# for Arduino serial access
 import serial.tools.list_ports
 import subprocess 	# for shell commands
@@ -24,16 +23,16 @@ import tempfile
 
 app = Flask(__name__)
 
-app.config.from_pyfile("config.py")
-
-# Start sound mixer
-pygame.mixer.init()
+if os.path.isfile("local_config.py"):
+	app.config.from_pyfile("local_config.py")
+else:
+	app.config.from_pyfile("config.py")
 
 # Set up runtime variables and queues
 exitFlag = 0
 arduinoActive = 0
 streaming = 0
-volume = 5
+volume = 8
 batteryLevel = -999
 queueLock = threading.Lock()
 workQueue = queue.Queue()
@@ -411,7 +410,6 @@ def settings():
 		elif thing == "volume":
 			global volume
 			volume = int(value)
-			#print("Change Volume:", value)
 
 		# Turn on/off the webcam
 		elif thing == "streamer":
@@ -426,9 +424,9 @@ def settings():
 
 		# Restart the web-interface
 		elif thing == "restart":
-			#print("Shutting down Raspberry Pi!", value)
-			subprocess.call(['sudo', 'systemctl', 'restart' , "--quiet", "walle"])
-			return jsonify({'status': 'OK','msg': 'Interface will reload'})
+			command = "sleep 5 && sudo systemctl restart --quiet walle"
+			subprocess.Popen(command,shell=True)
+			return redirect(url_for('login'))
 
 		# Shut down the Raspberry Pi
 		elif thing == "shutdown":
@@ -456,15 +454,18 @@ def audio():
 	clip =  request.form.get('clip')
 	if clip is not None:
 		clip = app.config['SOUND_FOLDER'] + clip + ".ogg"
-		#print("Play music clip:", clip)
-		pygame.mixer.music.load(clip)
-		pygame.mixer.music.set_volume(volume/10.0)
-		#start_time = time.time()
-		pygame.mixer.music.play()
-		#while pygame.mixer.music.get_busy() == True:
-		#	continue
-		#elapsed_time = time.time() - start_time
-		#print(elapsed_time)
+
+		# Volume control only on linux via amixer
+		if sys.platform == "linux":
+			audiomixer_cmd = ["amixer", "sset", "Master","{}%".format(volume *10)]
+			p_audiomixer = subprocess.run(audiomixer_cmd ,
+	                             stdout = subprocess.DEVNULL,
+	                             stderr = subprocess.DEVNULL)
+
+		p_audioplay = subprocess.Popen(app.config['AUDIOPLAYER_CMD'] + [clip],
+                             stdout = subprocess.DEVNULL,
+                             stderr = subprocess.DEVNULL)
+
 		return jsonify({'status': 'OK' })
 	else:
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
@@ -486,7 +487,7 @@ def tts():
 
 	if text is not None:
 		if text != "":		# don't react to empty strings
-			#print (text) 	# debugging
+
 
 			infile  = tempfile.NamedTemporaryFile()
 			outfile = tempfile.NamedTemporaryFile()
@@ -505,9 +506,16 @@ def tts():
 				                      stdout = subprocess.DEVNULL,
 				                      stderr = subprocess.DEVNULL)
 				# Play it
-				pygame.mixer.music.load(outfile.name)
-				pygame.mixer.music.set_volume(volume/10.0)
-				pygame.mixer.music.play()
+				# Volume control only on linux via amixer
+				if sys.platform == "linux":
+					audiomixer_cmd = ["amixer", "sset", "Master","{}%".format(volume *10)]
+					p_audiomixer = subprocess.run(audiomixer_cmd ,
+			                             stdout = subprocess.DEVNULL,
+			                             stderr = subprocess.DEVNULL)
+
+				p_audioplay = subprocess.run(app.config['AUDIOPLAYER_CMD'] + [outfile.name],
+		                             stdout = subprocess.DEVNULL,
+		                             stderr = subprocess.DEVNULL)
 
 			finally:
 				infile.close()
