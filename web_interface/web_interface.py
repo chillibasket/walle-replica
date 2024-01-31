@@ -70,9 +70,9 @@ class arduino (threading.Thread):
 	# Run the thread
 	#
 	def run(self):
-		print("Starting Arduino Thread", self.name)
+		#print("Starting Arduino Thread", self.name)
 		process_data(self.name, self.q, self.port)
-		print("Exiting Arduino Thread", self.name)
+		#print("Exiting Arduino Thread", self.name)
 
 """ End of class: Arduino """
 
@@ -100,7 +100,7 @@ def process_data(threadName, q, port):
 				data = q.get() + '\n'
 				queueLock.release()
 				ser.write(data.encode())
-				print(data)
+				#print(data)
 			else:
 				queueLock.release()
 
@@ -108,7 +108,7 @@ def process_data(threadName, q, port):
 			while (ser.inWaiting() > 0):
 				data = ser.read()
 				if (data.decode() == '\n' or data.decode() == '\r'):
-					print(dataString)
+					#print(dataString)
 					parseArduinoMessage(dataString)
 					dataString = ""
 				else:
@@ -424,10 +424,16 @@ def settings():
 			else:
 				return jsonify({'status': 'OK','streamer': 'Offline'})
 
+		# Restart the web-interface
+		elif thing == "restart":
+			#print("Shutting down Raspberry Pi!", value)
+			subprocess.call(['sudo', 'systemctl', 'restart' , "--quiet", "walle"])
+			return jsonify({'status': 'OK','msg': 'Interface will reload'})
+
 		# Shut down the Raspberry Pi
 		elif thing == "shutdown":
 			#print("Shutting down Raspberry Pi!", value)
-			result = subprocess.run(['sudo','nohup','shutdown','-h','now'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+			subprocess.run(['sudo','nohup','shutdown','-h','now'], stdout=subprocess.PIPE).stdout.decode('utf-8')
 			return jsonify({'status': 'OK','msg': 'Raspberry Pi is shutting down'})
 
 		# Unknown command
@@ -659,4 +665,4 @@ def arduinoStatus():
 if __name__ == '__main__':
 
 	#app.run()
-	app.run(port=5000, debug=False, host='0.0.0.0')
+	app.run(port=5050, debug=True, host='0.0.0.0')

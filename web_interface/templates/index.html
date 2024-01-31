@@ -366,6 +366,12 @@
 									</div>
 								</div>
 								<div class="row set-row">
+									<div class="col-xs-12 col-sm-4 set-text">Restart Web-interface</div>
+									<div class="col-xs-12 col-sm-8">
+										<button id="restart" type="button" class="btn btn-outline-danger" onclick="sendSettings('restart',1)">Restart Interface</button>
+									</div>
+								</div>
+								<div class="row set-row">
 									<div class="col-xs-12 col-sm-4 set-text">Turn off Raspberry Pi</div>
 									<div class="col-xs-12 col-sm-8">
 										<button id="shutdown" type="button" class="btn btn-outline-danger" onclick="sendSettings('shutdown',1)">Shutdown!</button>
@@ -387,18 +393,13 @@
 
 	<!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="{{ url_for('static', filename='js/jquery-3.3.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/joystick.js') }}"></script>
     <script src="{{ url_for('static', filename='js/joypad.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
-    <!--
-    <script src="../static/js/jquery-3.3.1.min.js"></script>
-    <script src="../static/js/bootstrap.bundle.min.js"></script>
-    <script src="../static/js/joystick.js"></script>
-    <script src="../static/js/main.js"></script>
-	-->
 	
 </body>
 <footer></footer>

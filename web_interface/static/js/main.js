@@ -34,6 +34,12 @@ function sendSettings(type, value) {
 			return 0;
 		}
 	}
+	// If restart is requested, show a confirmation prompt
+	else if (type=="restart") {
+		if (!confirm("Are you sure you want to restart the web-interface?")) {
+			return 0;
+		}
+	}
 	
 	//alert(type + ", " + value);
 	// Send data to python app, so that it can be passed on
@@ -73,6 +79,9 @@ function sendSettings(type, value) {
 			// If no response was recevied from the python backend, show an "unknown" error
 			if (type == "shutdown") {
 				showAlert(0, 'Raspberry Pi is now shutting down!', 'The WALL-E web-interface is no longer active.', 1);
+			}
+			else if (type == "restart") {
+				showAlert(0, 'Interface restarts', 'The interface is restarting, please reload this page.', 1);
 			} else {
 				showAlert(1, 'Unknown Error!', 'Unable to update settings.', 1);
 			}
