@@ -15,6 +15,7 @@ from flask import Flask, request, session, redirect, url_for, jsonify, render_te
 import queue 		# for serial command queue
 import threading 	# for multiple threads
 import os
+import sys
 import serial 		# for Arduino serial access
 import serial.tools.list_ports
 import subprocess 	# for shell commands
@@ -214,26 +215,29 @@ def onoff_streamer():
 		result = subprocess.run(['systemctl', 'is-active', "--quiet", "camera-streamer"])
 		if (result.returncode == 0):
 			streaming = 1
+			return 0
+		else:
 			return 1
 
 		# Turn on stream
-		subprocess.call(['sudo','systemctl', 'start' , "--quiet", "camera-streamer"])
+		subprocess.run(['sudo','systemctl', 'start' , "--quiet", "camera-streamer"])
 		# ... and check again
 		result = subprocess.run(['systemctl', 'is-active', "--quiet", "camera-streamer"])
 		
 		if (result.returncode == 0):
 			streaming = 1
-			return 1
-		else:
-			streaming = 0
 			return 0
+		else:
+			return 1
 
 	else:
 		# Turn off stream
-		subprocess.call(['sudo', 'systemctl', 'stop' , "--quiet", "camera-streamer"])
-		
-		streaming = 0
-		return 0
+		result = subprocess.run(['sudo', 'systemctl', 'stop' , "--quiet", "camera-streamer"])
+		if (result.returncode == 0):
+			streaming = 0
+			return 0
+		else:
+			return 1
 
 
 #############################################
@@ -295,6 +299,12 @@ def index():
 	global initialStartup
 	if not initialStartup:
 		initialStartup = True
+
+		# Clear the queue
+		queueLock.acquire()
+		while not workQueue.empty():
+			q.get()
+		queueLock.release()
 
 		# If user has selected for the Arduino to connect by default, do so now
 		if app.config['AUTOSTART_ARDUINO'] and not test_arduino():

@@ -71,7 +71,10 @@
 							<a class="nav-link tab-padding" href="#tab4" data-toggle="tab"><i class="fa fa-music"></i><div class="tab-text">Sounds</div></a>
 						</li>
 						<li class="nav-item col no-padding">
-							<a id="settings-tab" class="nav-link tab-padding" href="#tab5" data-toggle="tab"><i class="fa fa-tools"></i><div class="tab-text">Settings</div></a>
+							<a class="nav-link tab-padding" href="#tab5" data-toggle="tab"><i class="fa fa-puzzle-piece"></i><div class="tab-text">Automate</div></a>
+						</li>
+						<li class="nav-item col no-padding">
+							<a id="settings-tab" class="nav-link tab-padding" href="#tab6" data-toggle="tab"><i class="fa fa-tools"></i><div class="tab-text">Settings</div></a>
 						</li>
 					</ul>
 
@@ -291,8 +294,23 @@
 							</div>
 						</div>
 
+						<!-- Automation -->
+						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" data-toggle="tab" id="tab5">
+							<div class="container-fluid">
+								<div class="row set-row ">
+										<button id="run" type="button" class="btn btn-outline-info" onclick="runCode();">
+										<i class="far fa-play-circle"></i><div class="indicator-text">Run!</div>
+										</button>
+								</div>
+								<div class="row set-row ">
+									<div id="blocklyDiv" style="height: 600px; width: 1200px;"></div>
+								</div>
+								<hr/>
+							</div>
+						</div>
+
 						<!-- Settings -->
-						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" id="tab5">
+						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" data-toggle="tab" id="tab6">
 							<div class="container-fluid">
 								<div class="row set-row d-none">
 									<div class="col-xs-12 col-sm-4 set-text">Sound Mode</div>
@@ -398,6 +416,16 @@
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/joystick.js') }}"></script>
     <script src="{{ url_for('static', filename='js/joypad.min.js') }}"></script>
+    <!-- Blockly -->
+    <script src="{{ url_for('static', filename='js/blockly/acorn_interpreter.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/blockly/blockly_compressed.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/blockly/blocks_compressed.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/blockly/javascript_compressed.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/blockly/en.js') }}"></script>
+
+    <!-- app code -->
+    <script src="{{ url_for('static', filename='js/automation_blocks.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/automation.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 	

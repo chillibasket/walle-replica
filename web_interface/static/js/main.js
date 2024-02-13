@@ -301,7 +301,6 @@ function playAudio(clip, time) {
  * Play Text-to-Speech
  */
 function playTTS(text) {
-
 	$.ajax({
 		url: "/tts",
 		type: "POST",
@@ -877,6 +876,11 @@ window.onload = function () {
 	     playTTS($('#tts_text').val());
 	  }
 	});
+
+	// Load blockly
+	init_blocks();
+
+
 }
 
 
@@ -912,6 +916,7 @@ $(window).resize(function () {
 	var middleY = 40 + 30 + cw / 2;
 	
 	jsJoystick.updateDimensions(middleX, middleY, (cw/2), Math.round(cw/2) - pointer/2);
+
 });
 
 
@@ -989,3 +994,4 @@ $(document).ready(function () {
 	    }
 	});
 });
+
