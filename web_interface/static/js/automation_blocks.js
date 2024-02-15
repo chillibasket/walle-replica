@@ -3,6 +3,16 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+//Start
+Blockly.defineBlocksWithJsonArray([{
+  "type": "start",
+  "message0": "Start",
+  "nextStatement": null,
+  "colour": 65,
+  "tooltip": "",
+  "helpUrl": ""
+}]);
+
 // MOVE
 Blockly.defineBlocksWithJsonArray([{
   "type": "move",
@@ -95,6 +105,8 @@ Blockly.defineBlocksWithJsonArray([
       "type": "input_end_row"
     }
   ],
+  "previousStatement": null,
+  "nextStatement": null,
   "colour": 135,
   "tooltip": "Turn",
   "helpUrl": ""
@@ -104,31 +116,36 @@ Blockly.defineBlocksWithJsonArray([
 
 Blockly.defineBlocksWithJsonArray([
   {
-    type: 'wait_seconds',
-    message0: ' wait %1 seconds',
-    args0: [
+    "type": 'wait_seconds',
+    "message0": ' wait %1 seconds',
+    "args0": [
       {
-        type: 'field_number',
-        name: 'SECONDS',
-        min: 0,
-        max: 600,
-        value: 1,
+        "type": 'field_number',
+        "name": 'SECONDS',
+        "min": 0,
+        "max": 600,
+        "value": 1,
       },
     ],
-    previousStatement: null,
-    nextStatement: null,
-    colour: 135,
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 135,
   },
 ]);
+
+// Start Dummy
+javascript.javascriptGenerator.forBlock['start'] = function(block, generator) {
+  return "";
+};
 
 /**
  * Generator for wait block creates call to new method
  * <code>waitForSeconds()</code>.
  */
 javascript.javascriptGenerator.forBlock['wait_seconds'] = function (block) {
-  const seconds = Number(block.getFieldValue('SECONDS'));
-  const code = 'waitForSeconds(' + seconds + ');\n';
-  return code;
+    const seconds = Number(block.getFieldValue('SECONDS'));
+    const code = 'waitForSeconds(' + seconds + ');\n';
+    return code;
 };
 
 /**
@@ -136,24 +153,26 @@ javascript.javascriptGenerator.forBlock['wait_seconds'] = function (block) {
  * <code>waitForSeconds()</code>.
  */
 function initInterpreterWaitForSeconds(interpreter, globalObject) {
-  // Ensure function name does not conflict with variable names.
-  javascript.javascriptGenerator.addReservedWords('waitForSeconds');
+    // Ensure function name does not conflict with variable names.
+    javascript.javascriptGenerator.addReservedWords('waitForSeconds');
 
-  const wrapper = interpreter.createAsyncFunction(
-    function (timeInSeconds, callback) {
-      // Delay the call to the callback.
-      setTimeout(callback, timeInSeconds * 1000);
-    },
-  );
-  interpreter.setProperty(globalObject, 'waitForSeconds', wrapper);
+    const wrapper = interpreter.createAsyncFunction(
+        function (timeInSeconds, callback) {
+            // Delay the call to the callback.
+            setTimeout(callback, timeInSeconds * 1000);
+        },
+    );
+    interpreter.setProperty(globalObject, 'waitForSeconds', wrapper);
 }
 
 // MOVE Generator
 javascript.javascriptGenerator.forBlock['move'] = function(block, generator) {
-  var dropdown_name = block.getFieldValue('NAME');
-  var text_dist = block.getFieldValue('DIST');
+    var dropdown_name = block.getFieldValue('NAME');
+    var text_dist = block.getFieldValue('DIST');
 
-   return "alert("+ text_dist +");";
+    var wait = 'waitForSeconds(' + text_dist + ');\n';
+
+    return "alert("+ text_dist +"); " + wait;
 };
 
 

@@ -298,9 +298,25 @@
 						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" data-toggle="tab" id="tab5">
 							<div class="container-fluid">
 								<div class="row set-row ">
+									<div class="btn-group" role="group" aria-label="Blockly Bar">
 										<button id="run" type="button" class="btn btn-outline-info" onclick="runCode();">
-										<i class="far fa-play-circle"></i><div class="indicator-text">Run!</div>
+											<i class="far fa-play-circle"></i>
+											<div class="indicator-text">Run!</div>
 										</button>
+										<button id="stop" type="button" class="btn btn-outline-info" onclick="resetStepUi(false);">
+											<i class="far fa-stop-circle"></i>
+											<div class="indicator-text">Stop</div>
+										</button>
+
+										<button id="save" type="button" class="btn btn-outline-info" onclick="saveFile();">
+											<i class="far fa-save"></i>
+											<div class="indicator-text">Save</div>
+										</button>
+										<button id="save" type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#loadDialog">
+											<i class="fas fa-file-upload"></i>
+											<div class="indicator-text">Load</div>
+										</button>
+									</div>
 								</div>
 								<div class="row set-row ">
 									<div id="blocklyDiv" style="height: 600px; width: 1200px;"></div>
@@ -409,6 +425,32 @@
 		</div>
 	</div>
 
+	<!-- Load Dialog for Blockly -->
+	<!-- Modal -->
+	<div class="modal fade" id="loadDialog" tabindex="-1" role="dialog" aria-labelledby="loadDialogTitle" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="loadDialogLabel">Load file</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+			  <div class="input-group is-invalid">
+			    <div class="custom-file">
+			      <input type="file" class="custom-file-input" id="customFile" required>
+			      <label class="custom-file-label" for="customFile">Choose file...</label>
+			    </div>
+			  </div>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Cancel</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
 	<!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
@@ -424,6 +466,7 @@
     <script src="{{ url_for('static', filename='js/blockly/en.js') }}"></script>
 
     <!-- app code -->
+    <script src="{{ url_for('static', filename='js/automation_toolbox.js') }}"></script>
     <script src="{{ url_for('static', filename='js/automation_blocks.js') }}"></script>
     <script src="{{ url_for('static', filename='js/automation.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

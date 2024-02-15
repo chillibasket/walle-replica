@@ -14,4 +14,3 @@ SOUND_FOLDER    = os.path.join(BASEDIR, "static/sounds/") # Location of the fold
 ESPEAK_CMD      = ['espeak-ng','-v', 'en','-b', '1']      # ESpeak Command and Language
 RB_CMD          = ['rubberband', '-t', '1.2','-p','2','-c','6','-f','1.8','-q']  # Rubberband Command
 AUDIOPLAYER_CMD = ['pw-play']                             # Command for local audioplayer
-AUDIOMIXER_CMD  = ["amixer", "sset", "Master"]            # Audio mixer of your OS, leave empty on Mac or Windows

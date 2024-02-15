@@ -6,58 +6,35 @@
 // https://blockly-demo.appspot.com/static/demos/blockfactory/index.html?hl=de#pu44ft
 var workspace;
 var myInterpreter;
+var fileSelector;
 var runnerPid;
 
 function init_blocks() {
 
+    Blockly.Themes.DarkTheme = Blockly.Theme.defineTheme('dark', {
+        'base': Blockly.Themes.Zelos,
 
-    const toolbox = {
-        // There are two kinds of toolboxes. The simpler one is a flyout toolbox.
-        kind: 'flyoutToolbox',
-        // The contents is the blocks and other items that exist in your toolbox.
-        contents: [
-            {
-                kind: 'block',
-                type: 'move'
-            },
-            {
-                kind: 'block',
-                type: 'turn'
-            },
-            {
-                kind: 'block',
-                type: 'speak'
-            },
-            {
-                kind: 'block',
-                type: 'wait_seconds'
-            }
-            // You can add more blocks to this array.
-        ]
-    };
+        "componentStyles": {
+            "workspaceBackgroundColour": '#1e1e1e',
+            "toolboxBackgroundColour": 'blackBackground',
+            "toolboxForegroundColour": '#fff',
+            "flyoutBackgroundColour": '#252526',
+            "flyoutForegroundColour": '#ccc',
+            "flyoutOpacity": 1,
+            "scrollbarColour": '#797979',
+            "insertionMarkerColour": '#fff',
+            "insertionMarkerOpacity": 0.3,
+            "scrollbarOpacity": 0.4,
+            "cursorColour": '#d0d0d0',
+            "blackBackground": '#333'
+        },
+    });
 
     // Passes the injection div.
     workspace = Blockly.inject(
         document.getElementById('blocklyDiv'), {
             toolbox: toolbox,
-
-            theme: {
-                "base": Blockly.Themes.Classic,
-                "componentStyles": {
-                    "workspaceBackgroundColour": '#1e1e1e',
-                    "toolboxBackgroundColour": 'blackBackground',
-                    "toolboxForegroundColour": '#fff',
-                    "flyoutBackgroundColour": '#252526',
-                    "flyoutForegroundColour": '#ccc',
-                    "flyoutOpacity": 1,
-                    "scrollbarColour": '#797979',
-                    "insertionMarkerColour": '#fff',
-                    "insertionMarkerOpacity": 0.3,
-                    "scrollbarOpacity": 0.4,
-                    "cursorColour": '#d0d0d0',
-                    "blackBackground": '#333'
-                },
-            }
+            theme: Blockly.Themes.DarkTheme,
     });
 
     $("a[href='#tab5']").on('shown.bs.tab', function(e) {
@@ -67,14 +44,28 @@ function init_blocks() {
     javascript.javascriptGenerator.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
     javascript.javascriptGenerator.addReservedWords('highlightBlock');
 
+    // Display a startt
+    var startBlock = workspace.newBlock('start');
+    startBlock.initSvg();
+    startBlock.render();
+
     let myInterpreter = null;
     let runnerPid = 0;
 
     workspace.addChangeListener(function (event) {
         if (!event.isUiEvent) {
-        // Something changed.  Interpreter needs to be reloaded.
-        resetStepUi(true);
+            // Something changed.  Interpreter needs to be reloaded.
+            resetStepUi(true);
+            blockMoveMotor(0.0, 0.0);
         }
+    });
+
+    // Monitor the load file selector
+    fileSelector = document.getElementById('customFile');
+    fileSelector.addEventListener('change', (event) => {
+        var fileToLoad = event.target.files;
+        loadFile(fileToLoad[0]);
+        $('#loadDialog').modal('hide');
     });
 }
 
@@ -132,16 +123,18 @@ function initApi(interpreter, globalObject) {
     );
 }
 
+
 function highlightBlock(id) {
     workspace.highlightBlock(id);
 }
 
+
 function resetStepUi(clearOutput) {
     clearTimeout(runnerPid);
     workspace.highlightBlock(null);
-
     myInterpreter = null;
 }
+
 
 // Generate JavaScript code and run it.
 function runCode() {
@@ -188,4 +181,57 @@ function runCode() {
     }
 }
 
+// Send Motor XY commands via Blcok
+function blockMoveMotor(x,y) {
+    $.ajax({
+        url: "/motor",
+        type: "POST",
+        data: {"stickX": x, "stickY": y},
+        dataType: "json",
+        success: function(data){
+            if(data.status == "Error"){
+                showAlert(1, ' Error!', data.msg, 1);
+            }
+        },
+        error: function(error) {
+            showAlert(1, ' Error!', 'Unable to send movement command.', 1);
+        }
+    });
+}
 
+function saveFile()
+{
+    var pom = document.createElement('a');
+    var json = Blockly.serialization.workspaces.save(workspace);
+    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(json)));
+    pom.setAttribute('download', "wall-e.txt")
+
+    if (document.createEvent) {
+        var event = document.createEvent('MouseEvents');
+        event.initEvent('click', true, true);
+        pom.dispatchEvent(event);
+    }
+    else {
+        pom.click();
+    }
+}
+
+
+function loadFile(file) {
+    // Check if the file is a textfile
+    if (file.type && !file.type.startsWith('text/')) {
+        showAlert(1, 'File is not a textfile. ', file.type, 1);
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.addEventListener('load', (event) => {
+        Blockly.serialization.workspaces.load(JSON.parse(reader.result), workspace);
+    });
+
+    if (file) {
+        reader.readAsText(file);
+    }
+
+}
