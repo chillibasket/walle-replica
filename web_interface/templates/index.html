@@ -303,7 +303,7 @@
 											<i class="far fa-play-circle"></i>
 											<div class="indicator-text">Run!</div>
 										</button>
-										<button id="stop" type="button" class="btn btn-outline-info" onclick="resetStepUi(false);">
+										<button id="stop" type="button" class="btn btn-outline-info" onclick="stopCode()">
 											<i class="far fa-stop-circle"></i>
 											<div class="indicator-text">Stop</div>
 										</button>
@@ -394,7 +394,7 @@
 								</div>
 								<hr/>
 								<div class="row set-row">
-									<div class="col-xs-12 col-sm-4 set-text">MJPG Streamer</div>
+									<div class="col-xs-12 col-sm-4 set-text">Camera Streamer</div>
 									<div class="col-xs-12 col-sm-8">
 										<button id="conn-streamer" type="button" class="btn btn-outline-info" onclick="sendSettings('streamer',1)">Reactivate</button>
 									</div>
@@ -464,6 +464,7 @@
     <script src="{{ url_for('static', filename='js/blockly/blocks_compressed.js') }}"></script>
     <script src="{{ url_for('static', filename='js/blockly/javascript_compressed.js') }}"></script>
     <script src="{{ url_for('static', filename='js/blockly/en.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/blockly/field_angle.js') }}"></script>
 
     <!-- app code -->
     <script src="{{ url_for('static', filename='js/automation_toolbox.js') }}"></script>

@@ -218,41 +218,45 @@ const toolbox = {
       "kind": "category",
       "name": "Wall-E",
       "contents": [
-            {
-                "kind": "label",
-                "text": "Generic",
-                "web-class": "ioLabel"
-            },
-            {
-                "kind": 'block',
-                "type": 'start'
-            },
-            {
-                "kind": 'block',
-                "type": 'speak'
-            },
-            {
-                "kind": 'block',
-                "type": 'wait_seconds'
-            },
-            {
-                "kind": "label",
-                "text": "Movement",
-                "web-class": "ioLabel"
-            },
-            {
-                "kind": 'block',
-                "type": 'move'
-            },
-            {
-                "kind": 'block',
-                "type": 'turn'
-            },
-            {
-                "kind": "label",
-                "text": "Servo",
-                "web-class": "ioLabel"
-            }
+        {
+            "kind": "label",
+            "text": "Generic",
+            "web-class": "ioLabel"
+        },
+        {
+            "kind": 'block',
+            "type": 'start'
+        },
+        {
+            "kind": 'block',
+            "type": 'speak'
+        },
+        {
+            "kind": 'block',
+            "type": 'wait_seconds'
+        },
+        {
+            "kind": "label",
+            "text": "Movement",
+            "web-class": "ioLabel"
+        },
+        {
+            "kind": 'block',
+            "type": 'move'
+        },
+        {
+            "kind": 'block',
+            "type": 'turn'
+        },
+        {
+            "kind": "label",
+            "text": "Servo",
+            "web-class": "ioLabel"
+        },
+        {
+            "kind": "block",
+            "type": "servo",
+        }
       ]
     },
   ]

@@ -1,6 +1,3 @@
-// https://developers.google.com/blockly/guides/create-custom-blocks/blockly-developer-tools?hl=de
-// https://developers.google.com/blockly/guides/configure/web/toolbox?hl=de
-
 // Block Factory
 // https://blockly-demo.appspot.com/static/demos/blockfactory/index.html?hl=de#e693er
 // https://blockly-demo.appspot.com/static/demos/blockfactory/index.html?hl=de#pu44ft
@@ -12,7 +9,7 @@ var runnerPid;
 function init_blocks() {
 
     Blockly.Themes.DarkTheme = Blockly.Theme.defineTheme('dark', {
-        'base': Blockly.Themes.Zelos,
+        'base': Blockly.Themes.Classic,
 
         "componentStyles": {
             "workspaceBackgroundColour": '#1e1e1e',
@@ -35,6 +32,8 @@ function init_blocks() {
         document.getElementById('blocklyDiv'), {
             toolbox: toolbox,
             theme: Blockly.Themes.DarkTheme,
+            renderer: "zelos",
+            scrollbars: false
     });
 
     $("a[href='#tab5']").on('shown.bs.tab', function(e) {
@@ -44,7 +43,7 @@ function init_blocks() {
     javascript.javascriptGenerator.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
     javascript.javascriptGenerator.addReservedWords('highlightBlock');
 
-    // Display a startt
+    // Display a start
     var startBlock = workspace.newBlock('start');
     startBlock.initSvg();
     startBlock.render();
@@ -56,7 +55,6 @@ function init_blocks() {
         if (!event.isUiEvent) {
             // Something changed.  Interpreter needs to be reloaded.
             resetStepUi(true);
-            blockMoveMotor(0.0, 0.0);
         }
     });
 
@@ -67,6 +65,8 @@ function init_blocks() {
         loadFile(fileToLoad[0]);
         $('#loadDialog').modal('hide');
     });
+
+
 }
 
 
@@ -96,7 +96,7 @@ function initApi(interpreter, globalObject) {
     );
 
     // Add an API function for highlighting blocks.
-    const wrapper = function (id) {
+    const wrapperHighlight = function (id) {
         id = String(id || '');
         return highlightBlock(id);
     };
@@ -104,11 +104,34 @@ function initApi(interpreter, globalObject) {
     interpreter.setProperty(
         globalObject,
         'highlightBlock',
-        interpreter.createNativeFunction(wrapper),
+        interpreter.createNativeFunction(wrapperHighlight),
     );
 
-    // Add an API for the wait block.  See wait_block
-    initInterpreterWaitForSeconds(interpreter, globalObject);
+    // Add an API for waiting in milliseconds - needed to calculate movement speed
+    javascript.javascriptGenerator.addReservedWords('waitForMilliseconds');
+
+    const wrapperWaitMilliseconds = interpreter.createAsyncFunction(
+        function (timeInMilliseconds, callback) {
+            // Delay the call to the callback.
+            setTimeout(callback, timeInMilliseconds);
+        }
+    );
+
+    interpreter.setProperty(globalObject, 'timeInMilliseconds', wrapperWaitMilliseconds);
+
+
+    // Add an API for the wait block
+    javascript.javascriptGenerator.addReservedWords('waitForSeconds');
+
+    const wrapperWaitSeconds = interpreter.createAsyncFunction(
+        function (timeInSeconds, callback) {
+            // Delay the call to the callback.
+            setTimeout(callback, timeInSeconds * 1000);
+        }
+    );
+
+    interpreter.setProperty(globalObject, 'waitForSeconds', wrapperWaitSeconds);
+
 
     // Add API for TTS
     const wrapperTTS = function(text) {
@@ -181,6 +204,7 @@ function runCode() {
     }
 }
 
+
 // Send Motor XY commands via Blcok
 function blockMoveMotor(x,y) {
     $.ajax({
@@ -197,6 +221,11 @@ function blockMoveMotor(x,y) {
             showAlert(1, ' Error!', 'Unable to send movement command.', 1);
         }
     });
+}
+
+function stopCode() {
+    blockMoveMotor(0.0, 0.0);
+    resetStepUi(false);
 }
 
 function saveFile()
