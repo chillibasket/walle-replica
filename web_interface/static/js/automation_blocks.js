@@ -227,7 +227,7 @@ javascript.javascriptGenerator.forBlock['move'] = function(block, generator) {
   var wait = 'waitForSeconds(' + value_distance + ');\n';
   if (value_distance <= 0) return '';
 
-  var code = 'blockMoveMotor(' + dropdown_speed * dropdown_direction + ', ' + dropdown_speed * dropdown_direction + ');';
+  var code = 'blockMoveMotor( 0.0, ' + dropdown_speed * dropdown_direction + ');';
 
   return code + wait;
 };
