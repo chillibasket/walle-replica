@@ -38,6 +38,7 @@ function init_blocks() {
 
     $("a[href='#tab5']").on('shown.bs.tab', function(e) {
         Blockly.svgResize(workspace)
+        workspace.setTheme(Blockly.Themes.DarkTheme);
     });
 
     javascript.javascriptGenerator.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
@@ -107,19 +108,6 @@ function initApi(interpreter, globalObject) {
         interpreter.createNativeFunction(wrapperHighlight),
     );
 
-    // Add an API for waiting in milliseconds - needed to calculate movement speed
-    javascript.javascriptGenerator.addReservedWords('waitForMilliseconds');
-
-    const wrapperWaitMilliseconds = interpreter.createAsyncFunction(
-        function (timeInMilliseconds, callback) {
-            // Delay the call to the callback.
-            setTimeout(callback, timeInMilliseconds);
-        }
-    );
-
-    interpreter.setProperty(globalObject, 'timeInMilliseconds', wrapperWaitMilliseconds);
-
-
     // Add an API for the wait block
     javascript.javascriptGenerator.addReservedWords('waitForSeconds');
 
@@ -134,16 +122,13 @@ function initApi(interpreter, globalObject) {
 
 
     // Add API for TTS
-    const wrapperTTS = function(text) {
-        text = arguments.length ? text : '';
-        return playTTS(text);
-    };
-
-    interpreter.setProperty(
-        globalObject,
-        'playTTS',
-        interpreter.createNativeFunction(wrapperTTS),
+    const wrapperTTS = interpreter.createNativeFunction(function(text) {
+            text = arguments.length ? text : '';
+            return playTTS(text);
+        }
     );
+
+    interpreter.setProperty(globalObject, 'playTTS', wrapperTTS);
 
     // MoveMotor
     const wrapperMove = function(x,y) {
@@ -157,7 +142,15 @@ function initApi(interpreter, globalObject) {
         'blockMoveMotor',
         interpreter.createNativeFunction(wrapperMove),
     );
+
+    //  ServoControl
+    const wrapperServo = interpreter.createNativeFunction(function(item, servo, value) {
+            return blockServo(servo, value);
+        }
+    );
+    interpreter.setProperty(globalObject,'blockServo', wrapperServo);
 }
+
 
 
 function highlightBlock(id) {
@@ -185,13 +178,13 @@ function runCode() {
         // And then show generated code in an alert.
         // In a timeout to allow the outputArea.value to reset first.
         setTimeout(function () {
-            /*
+
             alert(
                 'Ready to execute the following code\n' +
                 '===================================\n' +
                 latestCode,
             );
-            */
+
 
             // Begin execution
             myInterpreter = new Interpreter(latestCode, initApi);
@@ -232,6 +225,28 @@ function blockMoveMotor(x,y) {
         },
         error: function(error) {
             showAlert(1, ' Error!', 'Unable to send movement command.', 1);
+        }
+    });
+}
+
+/*
+ * Send a manual servo control command
+ */
+function blockServo(servo, value) {
+    $.ajax({
+        url: "/servoControl",
+        type: "POST",
+        data: {"servo": servo, "value": value},
+        dataType: "json",
+        success: function(data){
+            // If a response is received from the python backend, but it contains an error
+            if(data.status == "Error"){
+                showAlert(1, 'Error!', data.msg, 0);
+            }
+        },
+        error: function(error) {
+            // If no response was recevied from the python backend, show an "unknown" error
+            showAlert(1, 'Unknown Error!', 'Unable to update servo position.', 1);
         }
     });
 }

@@ -71,7 +71,7 @@
 							<a class="nav-link tab-padding" href="#tab4" data-toggle="tab"><i class="fa fa-music"></i><div class="tab-text">Sounds</div></a>
 						</li>
 						<li class="nav-item col no-padding">
-							<a class="nav-link tab-padding" href="#tab5" data-toggle="tab"><i class="fa fa-puzzle-piece"></i><div class="tab-text">Automate</div></a>
+							<a class="nav-link tab-padding" href="#tab5" data-toggle="tab"><i class="fa fa-puzzle-piece"></i><div class="tab-text">Code</div></a>
 						</li>
 						<li class="nav-item col no-padding">
 							<a id="settings-tab" class="nav-link tab-padding" href="#tab6" data-toggle="tab"><i class="fa fa-tools"></i><div class="tab-text">Settings</div></a>
@@ -299,20 +299,20 @@
 							<div class="container-fluid">
 								<div class="row set-row ">
 									<div class="btn-group" role="group" aria-label="Blockly Bar">
-										<button id="run" type="button" class="btn btn-outline-info" onclick="runCode();">
+										<button id="run" type="button" class="btn btn-success" onclick="runCode();">
 											<i class="far fa-play-circle"></i>
 											<div class="indicator-text">Run!</div>
 										</button>
-										<button id="stop" type="button" class="btn btn-outline-info" onclick="stopCode()">
+										<button id="stop" type="button" class="btn btn-danger" onclick="stopCode()">
 											<i class="far fa-stop-circle"></i>
 											<div class="indicator-text">Stop</div>
 										</button>
 
-										<button id="save" type="button" class="btn btn-outline-info" onclick="saveFile();">
+										<button id="save" type="button" class="btn btn-primary" onclick="saveFile();">
 											<i class="far fa-save"></i>
 											<div class="indicator-text">Save</div>
 										</button>
-										<button id="save" type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#loadDialog">
+										<button id="save" type="button" class="btn btn-info" data-toggle="modal" data-target="#loadDialog">
 											<i class="fas fa-file-upload"></i>
 											<div class="indicator-text">Load</div>
 										</button>

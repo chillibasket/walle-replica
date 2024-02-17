@@ -18,110 +18,6 @@ Blockly.defineBlocksWithJsonArray([
   },
 ]);
 
-
-// Servo animations
-Blockly.defineBlocksWithJsonArray([
-
- {
-  "type": "servo",
-  "message0": "Animate %1 %2 %3 Servo Angle %4 %5",
-  "args0": [
-    {
-      "type": "input_dummy"
-    },
-    {
-      "type": "field_dropdown",
-      "name": "servo",
-      "options": [
-        [
-          "Head Rotation",
-          "head"
-        ],
-        [
-          "Neck Top",
-          "neck_t"
-        ],
-        [
-          "Neck Bottom",
-          "neck_b"
-        ],
-        [
-          "Arm Left",
-          "arm_l"
-        ],
-        [
-          "Arm Right",
-          "arm_r"
-        ],
-        [
-          "Eye Left",
-          "eye_l"
-        ],
-        [
-          "Eye Right",
-          "eye_r"
-        ]
-      ]
-    },
-    {
-      "type": "input_end_row"
-    },
-    {
-      "type": "field_angle",
-      "name": "angle",
-      "offset": 140,
-      "clockwise": true,
-      "displayMin": 0,
-      "displayMax": 360,
-      "minorTick": 15,
-      "majorTick": 45,
-      "min": 0,
-      "max": 100,
-      "precision": 10,
-      "value": 50,
-      "symbol": ""
-
-
-    },
-    {
-      "type": "input_end_row"
-    }
-  ],
-  "colour": 230,
-  "previousStatement": null,
-  "nextStatement": null,
-  "tooltip": "",
-  "helpUrl": ""
-}
-]);
-
-javascript.javascriptGenerator.forBlock['servo'] = function(block, generator) {
-  var dropdown_name = block.getFieldValue('NAME');
-  var value_name = generator.valueToCode(block, 'NAME', javascript.Order.ATOMIC);
-  // TODO: Assemble javascript into code variable.
-  var code = '...\n';
-  return code;
-};
-
-/**
- * Register the interpreter asynchronous function
- * <code>waitForSeconds()</code>.
- */
-/*
-function initInterpreterWaitForSeconds(interpreter, globalObject) {
-    // Ensure function name does not conflict with variable names.
-    javascript.javascriptGenerator.addReservedWords('waitForSeconds');
-
-    const wrapper = interpreter.createAsyncFunction(
-        function (timeInSeconds, callback) {
-            // Delay the call to the callback.
-            setTimeout(callback, timeInSeconds * 1000);
-        },
-    );
-    interpreter.setProperty(globalObject, 'waitForSeconds', wrapper);
-}
-*/
-
 /**
  * Generator for wait block creates call to new method
  * <code>waitForSeconds()</code>.
@@ -131,6 +27,95 @@ javascript.javascriptGenerator.forBlock['wait_seconds'] = function (block) {
     const code = 'waitForSeconds(' + seconds + ');\n';
     return code;
 };
+
+// Servo animations
+Blockly.defineBlocksWithJsonArray([
+  {
+    "type": "servo",
+    "message0": "Servo %1 %2 %3 Angle %4 %5",
+    "args0": [
+      {
+        "type": "input_dummy"
+      },
+      {
+        "type": "field_dropdown",
+        "name": "servo",
+        "options": [
+          [
+            "Head Rotation",
+            "head"
+          ],
+          [
+            "Neck Top",
+            "neck_t"
+          ],
+          [
+            "Neck Bottom",
+            "neck_b"
+          ],
+          [
+            "Arm Left",
+            "arm_l"
+          ],
+          [
+            "Arm Right",
+            "arm_r"
+          ],
+          [
+            "Eye Left",
+            "eye_l"
+          ],
+          [
+            "Eye Right",
+            "eye_r"
+          ]
+        ]
+      },
+      {
+        "type": "input_end_row"
+      },
+      {
+        "type": "field_angle",
+        "name": "angle",
+        "offset": 140,
+        "clockwise": true,
+        "displayMin": 0,
+        "displayMax": 360,
+        "minorTick": 15,
+        "majorTick": 45,
+        "min": 0,
+        "max": 100,
+        "precision": 10,
+        "value": 50,
+        "symbol": ""
+      },
+      {
+        "type": "input_end_row"
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 230,
+    "tooltip": "",
+    "helpUrl": ""
+  }
+]);
+
+javascript.javascriptGenerator.forBlock['servo'] = function(block, generator) {
+  var dropdown_servo = block.getFieldValue('servo');
+  var angle_angle = Number(block.getFieldValue('angle'));
+  var code = "";
+  //servoControl(item, servo, value);
+
+  if (dropdown_servo == 'head') {
+    code = "blockServo('G',"+ angle_angle +");\n";
+  }
+
+  else code = '\n';
+  return code;
+};
+
+
 
 //Start
 Blockly.defineBlocksWithJsonArray([{
@@ -159,7 +144,7 @@ Blockly.defineBlocksWithJsonArray([
 ]);
 // stop Dummy
 javascript.javascriptGenerator.forBlock['stop'] = function(block, generator) {
-    var code = 'blockMoveMotor(0.0, 0.0);';
+    var code = 'blockMoveMotor(0.0, 0.0);\n';
     return code;
 };
 
@@ -167,7 +152,7 @@ javascript.javascriptGenerator.forBlock['stop'] = function(block, generator) {
 Blockly.defineBlocksWithJsonArray([
 {
   "type": "move",
-  "message0": "Move %1 Direction %2 %3 %4 %5",
+  "message0": "Move %1 Direction %2 %3 Distance  %4 cm",
   "args0": [
     {
       "type": "input_end_row"
@@ -190,13 +175,8 @@ Blockly.defineBlocksWithJsonArray([
       "type": "input_end_row"
     },
     {
-      "type": "field_label_serializable",
-      "name": "distance",
-      "text": "Distance"
-    },
-    {
       "type": "input_value",
-      "name": "NAME",
+      "name": "distance",
       "check": "Number"
     }
   ],
@@ -210,14 +190,17 @@ Blockly.defineBlocksWithJsonArray([
 // MOVE Generator
 javascript.javascriptGenerator.forBlock['move'] = function(block, generator) {
   var dropdown_direction = Number(block.getFieldValue('direction'));
-  var value_distance = Number(generator.valueToCode(block, 'distance', javascript.Order.ATOMIC));
-
-  var wait = 'waitForSeconds(' + value_distance + ');\n';
+  var value_distance = generator.valueToCode(block, 'distance', javascript.Order.ATOMIC);
   if (value_distance <= 0) return '';
 
-  var code = 'blockMoveMotor( 0.0, ' + dropdown_speed * dropdown_direction + ');';
+  // 17 cm/s at 0.8
+  var speed =  17;
+  var motor_power = 0.8;
+  var code = 'blockMoveMotor( 0.0, ' + motor_power * dropdown_direction + ');\n';
+  var wait = 'waitForSeconds(' + value_distance / speed + ');\n';
+  var stop = 'blockMoveMotor( 0.0, 0.0);\n';
 
-  return code + wait;
+  return code + wait + stop;
 };
 
 // Speak
@@ -247,10 +230,9 @@ Blockly.defineBlocksWithJsonArray([
 ]);
 // Speech Generator
 javascript.javascriptGenerator.forBlock['speak'] = function(block, generator) {
-    var value_text = generator.valueToCode(block, 'text', javascript.Order.ATOMIC);
-    //var myvar = Blockly.JavaScript.variableDB_.getName(block.getFieldValue('MYVAR'), Blockly.Variables.NAME_TYPE);
-
-    return "playTTS(\"" + value_text + "\");";
+    var value_text = generator.valueToCode(block, 'text', javascript.Order.ATOMIC) || "''";
+    code = 'playTTS(' + value_text + ');\n';
+    return code;
 };
 
 
@@ -258,7 +240,7 @@ javascript.javascriptGenerator.forBlock['speak'] = function(block, generator) {
 Blockly.defineBlocksWithJsonArray([
 {
   "type": "turn",
-  "message0": "Turn %1 %2 %3 %4 %5",
+  "message0": "Turn %1 %2 %3",
   "args0": [
     {
       "type": "input_dummy"
@@ -287,16 +269,6 @@ Blockly.defineBlocksWithJsonArray([
     },
     {
       "type": "input_end_row"
-    },
-    {
-      "type": "field_label_serializable",
-      "name": "time",
-      "text": "Time"
-    },
-    {
-      "type": "input_value",
-      "name": "Time",
-      "check": "Number"
     }
   ],
   "previousStatement": null,
@@ -309,21 +281,29 @@ Blockly.defineBlocksWithJsonArray([
 
 javascript.javascriptGenerator.forBlock['turn'] = function(block, generator) {
   var dropdown_direction = block.getFieldValue('direction');
-  var field_time = block.getFieldValue('time');
-  var value_time = Number(generator.valueToCode(block, 'Time', javascript.Order.ATOMIC));
   var movement = 0.0;
-  var wait = 'waitForSeconds(' + value_time + ');\n';
+  var wait = 0.0;
 
-  if (value_time <= 0) return '';
+  if (dropdown_direction == "left_90") {
+    movement = 0.5;
+    wait = 'waitForSeconds(' + 1.8 + ');\n';
+  }
+  else if (dropdown_direction == "left_45") {
+    movement = 0.5;
+    wait = 'waitForSeconds(' + 0.9 + ');\n';
+  }
+  else if (dropdown_direction == "right_90") {
+    movement = -0.5;
+    wait = 'waitForSeconds(' + 1.8 + ');\n';
+  }
+  else if (dropdown_direction == "right_45") {
+    movement = -0.5;
+    wait = 'waitForSeconds(' + 0.9 + ');\n';
+  }
 
-
-  if (dropdown_direction == "left_90") movement = -0.5;
-  else if (dropdown_direction == "left_45") movement = -0.5;
-  else if (dropdown_direction == "right_90") movement = 0.5;
-  else if (dropdown_direction == "right_45") movement = 0.5;
-
-  var code = 'blockMoveMotor( ' + movement +', 0.0);';
-
-  return code + wait;
+  var code = 'blockMoveMotor( ' + movement +', 0.0);\n';
+  code += wait;
+  code += 'blockMoveMotor( 0.0, 0.0);\n';
+  return code;
 
 };
