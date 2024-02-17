@@ -144,6 +144,19 @@ function initApi(interpreter, globalObject) {
         'playTTS',
         interpreter.createNativeFunction(wrapperTTS),
     );
+
+    // MoveMotor
+    const wrapperMove = function(x,y) {
+        x = parseFloat(x);
+        y = parseFloat(y);
+        return blockMoveMotor(x,y);
+    };
+
+    interpreter.setProperty(
+        globalObject,
+        'blockMoveMotor',
+        interpreter.createNativeFunction(wrapperMove),
+    );
 }
 
 

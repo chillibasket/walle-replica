@@ -216,6 +216,16 @@ const toolbox = {
     },
     {
       "kind": "category",
+      "name": "Variables",
+      "custom": "VARIABLE_DYNAMIC"
+    },
+    {
+      "kind": "category",
+      "name": "Functions",
+      "custom": "PROCEDURE"
+    },
+    {
+      "kind": "category",
       "name": "Wall-E",
       "contents": [
         {
@@ -226,6 +236,10 @@ const toolbox = {
         {
             "kind": 'block',
             "type": 'start'
+        },
+        {
+            "kind": 'block',
+            "type": 'stop'
         },
         {
             "kind": 'block',
@@ -259,5 +273,6 @@ const toolbox = {
         }
       ]
     },
+
   ]
 };

@@ -1,29 +1,4 @@
-
-Blockly.defineBlocksWithJsonArray([
-  {
-    "type": 'test_field_angle',
-    "message0": 'servo: %1',
-    "args0": [
-      {
-        "type": 'field_angle',
-        "name": 'FIELDNAME',
-        "offset": 140,
-        "clockwise": true,
-        "displayMin": 0,
-        "displayMax": 360,
-        "minorTick": 15,
-        "majorTick": 45,
-        "min": 0,
-        "max": 100,
-        "precision": 10,
-        "value": 50,
-        "symbol": ""
-      },
-    ],
-    "colour": 230,
-  },
-]);
-
+// Wait Block
 Blockly.defineBlocksWithJsonArray([
   {
     "type": 'wait_seconds',
@@ -113,6 +88,8 @@ Blockly.defineBlocksWithJsonArray([
     }
   ],
   "colour": 230,
+  "previousStatement": null,
+  "nextStatement": null,
   "tooltip": "",
   "helpUrl": ""
 }
@@ -167,6 +144,23 @@ Blockly.defineBlocksWithJsonArray([{
 // Start Dummy
 javascript.javascriptGenerator.forBlock['start'] = function(block, generator) {
   return "";
+};
+
+// Stop
+Blockly.defineBlocksWithJsonArray([
+  {
+    "type": "stop",
+    "message0": "Stop",
+    "previousStatement": null,
+    "colour": 330,
+    "tooltip": "Stop",
+    "helpUrl": ""
+  }
+]);
+// stop Dummy
+javascript.javascriptGenerator.forBlock['stop'] = function(block, generator) {
+    var code = 'blockMoveMotor(0.0, 0.0);';
+    return code;
 };
 
 // MOVE
@@ -226,43 +220,48 @@ Blockly.defineBlocksWithJsonArray([{
 ]);
 // MOVE Generator
 javascript.javascriptGenerator.forBlock['move'] = function(block, generator) {
-  var dropdown_direction = parseFloat(block.getFieldValue('direction'));
-  var dropdown_speed = parseFloat(block.getFieldValue('speed'));
+  var dropdown_direction = Number(block.getFieldValue('direction'));
+  var dropdown_speed = Number(block.getFieldValue('speed'));
   var value_distance = Number(generator.valueToCode(block, 'distance', javascript.Order.ATOMIC));
 
   var wait = 'waitForSeconds(' + value_distance + ');\n';
   if (value_distance <= 0) return '';
 
-  var code = 'alert("WALL-E");';
+  var code = 'blockMoveMotor(' + dropdown_speed * dropdown_direction + ', ' + dropdown_speed * dropdown_direction + ');';
 
   return code + wait;
 };
 
 // Speak
 Blockly.defineBlocksWithJsonArray([
-    {
-      "type": "speak",
-      "message0": "Speak %1 %2",
-      "args0": [
-        {
-          "type": "input_dummy"
-        },
-        {
-          "type": "input_value",
-          "name": "text",
-          "check": "String"
-        }
-      ],
-      "previousStatement": null,
-      "nextStatement": null,
-      "colour": 230,
-      "tooltip": "Add Text block for speech",
-      "helpUrl": ""
-    }
+  {
+    "type": "speak",
+    "message0": "Speak %1 %2",
+    "args0": [
+      {
+        "type": "input_dummy"
+      },
+      {
+        "type": "input_value",
+        "name": "text",
+        "check": [
+          "String",
+          "Number"
+        ]
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 230,
+    "tooltip": "Add Text block for speech",
+    "helpUrl": ""
+  }
 ]);
 // Speech Generator
 javascript.javascriptGenerator.forBlock['speak'] = function(block, generator) {
     var value_text = generator.valueToCode(block, 'text', javascript.Order.ATOMIC);
+    //var myvar = Blockly.JavaScript.variableDB_.getName(block.getFieldValue('MYVAR'), Blockly.Variables.NAME_TYPE);
+
     return "playTTS(\"" + value_text + "\");";
 };
 
