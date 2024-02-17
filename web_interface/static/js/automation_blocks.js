@@ -164,9 +164,10 @@ javascript.javascriptGenerator.forBlock['stop'] = function(block, generator) {
 };
 
 // MOVE
-Blockly.defineBlocksWithJsonArray([{
+Blockly.defineBlocksWithJsonArray([
+{
   "type": "move",
-  "message0": "Move %1 Direction %2 %3 Speed %4 %5 Distance %6",
+  "message0": "Move %1 Direction %2 %3 %4 %5",
   "args0": [
     {
       "type": "input_end_row"
@@ -189,25 +190,13 @@ Blockly.defineBlocksWithJsonArray([{
       "type": "input_end_row"
     },
     {
-      "type": "field_dropdown",
-      "name": "speed",
-      "options": [
-        [
-          "Slow",
-          "0.3"
-        ],
-        [
-          "Fast",
-          "0.8"
-        ]
-      ]
-    },
-    {
-      "type": "input_end_row"
+      "type": "field_label_serializable",
+      "name": "distance",
+      "text": "Distance"
     },
     {
       "type": "input_value",
-      "name": "distance",
+      "name": "NAME",
       "check": "Number"
     }
   ],
@@ -221,7 +210,6 @@ Blockly.defineBlocksWithJsonArray([{
 // MOVE Generator
 javascript.javascriptGenerator.forBlock['move'] = function(block, generator) {
   var dropdown_direction = Number(block.getFieldValue('direction'));
-  var dropdown_speed = Number(block.getFieldValue('speed'));
   var value_distance = Number(generator.valueToCode(block, 'distance', javascript.Order.ATOMIC));
 
   var wait = 'waitForSeconds(' + value_distance + ');\n';
@@ -268,43 +256,74 @@ javascript.javascriptGenerator.forBlock['speak'] = function(block, generator) {
 
 //TURN
 Blockly.defineBlocksWithJsonArray([
-  {
-    "type": "turn",
-    "message0": "Turn %1 %2 %3",
-    "args0": [
-      {
-        "type": "input_dummy"
-      },
-      {
-        "type": "field_dropdown",
-        "name": "direction",
-        "options": [
-          [
-            "Left 90°",
-            "left_90"
-          ],
-          [
-            "Left 45°",
-            "left_45"
-          ],
-          [
-            "Right 90°",
-            "right_90"
-          ],
-          [
-            "RIght 45°",
-            "right_45"
-          ]
+{
+  "type": "turn",
+  "message0": "Turn %1 %2 %3 %4 %5",
+  "args0": [
+    {
+      "type": "input_dummy"
+    },
+    {
+      "type": "field_dropdown",
+      "name": "direction",
+      "options": [
+        [
+          "Left 90°",
+          "left_90"
+        ],
+        [
+          "Left 45°",
+          "left_45"
+        ],
+        [
+          "Right 90°",
+          "right_90"
+        ],
+        [
+          "RIght 45°",
+          "right_45"
         ]
-      },
-      {
-        "type": "input_end_row"
-      }
-    ],
-    "previousStatement": null,
-    "nextStatement": null,
-    "colour": 135,
-    "tooltip": "Turn",
-    "helpUrl": ""
-  }
+      ]
+    },
+    {
+      "type": "input_end_row"
+    },
+    {
+      "type": "field_label_serializable",
+      "name": "time",
+      "text": "Time"
+    },
+    {
+      "type": "input_value",
+      "name": "Time",
+      "check": "Number"
+    }
+  ],
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 135,
+  "tooltip": "Turn",
+  "helpUrl": ""
+}
 ]);
+
+javascript.javascriptGenerator.forBlock['turn'] = function(block, generator) {
+  var dropdown_direction = block.getFieldValue('direction');
+  var field_time = block.getFieldValue('time');
+  var value_time = Number(generator.valueToCode(block, 'Time', javascript.Order.ATOMIC));
+  var movement = 0.0;
+  var wait = 'waitForSeconds(' + value_time + ');\n';
+
+  if (value_time <= 0) return '';
+
+
+  if (dropdown_direction == "left_90") movement = -0.5;
+  else if (dropdown_direction == "left_45") movement = -0.5;
+  else if (dropdown_direction == "right_90") movement = 0.5;
+  else if (dropdown_direction == "right_45") movement = 0.5;
+
+  var code = 'blockMoveMotor( ' + movement +', 0.0);';
+
+  return code + wait;
+
+};
