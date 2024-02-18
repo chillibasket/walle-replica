@@ -250,6 +250,14 @@ const toolbox = {
             "type": 'wait_seconds'
         },
         {
+            "kind": "block",
+            "type": "math_number",
+        },
+        {
+            "kind": "block",
+            "type": "text"
+        },
+        {
             "kind": "label",
             "text": "Movement",
             "web-class": "ioLabel"
@@ -270,6 +278,10 @@ const toolbox = {
         {
             "kind": "block",
             "type": "servo",
+        },
+        {
+            "kind": "block",
+            "type": "presets",
         }
       ]
     },

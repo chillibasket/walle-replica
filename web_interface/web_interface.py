@@ -481,7 +481,7 @@ def audio():
 		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
 
 ##
-# Text to Speech on the Raspberry Pi - requires Espeak-NG and Rubberband
+# Text to Speech on the Raspberry Pi - requires Espeak-NG and optionally Rubberband
 #
 @app.route('/tts', methods=['POST'])
 def tts():
@@ -511,10 +511,15 @@ def tts():
 				                             stdout = subprocess.DEVNULL,
 				                             stderr = subprocess.DEVNULL)
 
-				# Shift pitch
-				p_rb = subprocess.run(rb_cmd + [infile.name,outfile.name],
-				                      stdout = subprocess.DEVNULL,
-				                      stderr = subprocess.DEVNULL)
+				if not rb_cmd:
+					outfile = infile
+
+				else:
+					# Shift pitch
+					p_rb = subprocess.run(rb_cmd + [infile.name,outfile.name],
+					                      stdout = subprocess.DEVNULL,
+					                      stderr = subprocess.DEVNULL)
+
 				# Play it
 				# Volume control only on linux via amixer
 				if sys.platform == "linux":

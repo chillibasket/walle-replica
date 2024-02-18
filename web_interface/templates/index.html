@@ -11,10 +11,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/latoFontFamily.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/mystyle.css') }}">
-    <!--
-    <link rel="stylesheet" href="../static/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="../static/css/mystyle.css">
-	-->
 	
 	<!-- FontAwesome Icons -->
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
@@ -307,12 +303,11 @@
 											<i class="far fa-stop-circle"></i>
 											<div class="indicator-text">Stop</div>
 										</button>
-
 										<button id="save" type="button" class="btn btn-primary" onclick="saveFile();">
 											<i class="far fa-save"></i>
 											<div class="indicator-text">Save</div>
 										</button>
-										<button id="save" type="button" class="btn btn-info" data-toggle="modal" data-target="#loadDialog">
+										<button id="load" type="button" class="btn btn-info" onclick="$('#customFile').click();">
 											<i class="fas fa-file-upload"></i>
 											<div class="indicator-text">Load</div>
 										</button>
@@ -425,31 +420,7 @@
 		</div>
 	</div>
 
-	<!-- Load Dialog for Blockly -->
-	<!-- Modal -->
-	<div class="modal fade" id="loadDialog" tabindex="-1" role="dialog" aria-labelledby="loadDialogTitle" aria-hidden="true">
-	  <div class="modal-dialog" role="document">
-	    <div class="modal-content">
-	      <div class="modal-header">
-	        <h5 class="modal-title" id="loadDialogLabel">Load file</h5>
-	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-	          <span aria-hidden="true">&times;</span>
-	        </button>
-	      </div>
-	      <div class="modal-body">
-			  <div class="input-group is-invalid">
-			    <div class="custom-file">
-			      <input type="file" class="custom-file-input" id="customFile" required>
-			      <label class="custom-file-label" for="customFile">Choose file...</label>
-			    </div>
-			  </div>
-	      </div>
-	      <div class="modal-footer">
-	        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Cancel</button>
-	      </div>
-	    </div>
-	  </div>
-	</div>
+
 
 	<!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -472,6 +443,8 @@
     <script src="{{ url_for('static', filename='js/automation.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
-	
+    <!-- load file element from the code tab -->
+	<input type="file" class="custom-file-input" id="customFile" hidden>
+
 </body>
 <footer></footer>

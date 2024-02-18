@@ -1,11 +1,17 @@
-// Block Factory
-// https://blockly-demo.appspot.com/static/demos/blockfactory/index.html?hl=de#e693er
-// https://blockly-demo.appspot.com/static/demos/blockfactory/index.html?hl=de#pu44ft
+/**
+ * Wall-e Robot Webinterface - Blockly Additions, things from the code tab
+ * dkrey, Feb 2024
+ */
+
+
 var workspace;
 var myInterpreter;
 var fileSelector;
 var runnerPid;
 
+/*
+ * Init Blockly
+ */
 function init_blocks() {
 
     Blockly.Themes.DarkTheme = Blockly.Theme.defineTheme('dark', {
@@ -32,8 +38,7 @@ function init_blocks() {
         document.getElementById('blocklyDiv'), {
             toolbox: toolbox,
             theme: Blockly.Themes.DarkTheme,
-            renderer: "zelos",
-            scrollbars: false
+            renderer: "zelos"
     });
 
     $("a[href='#tab5']").on('shown.bs.tab', function(e) {
@@ -60,18 +65,21 @@ function init_blocks() {
     });
 
     // Monitor the load file selector
+
     fileSelector = document.getElementById('customFile');
     fileSelector.addEventListener('change', (event) => {
         var fileToLoad = event.target.files;
-        loadFile(fileToLoad[0]);
-        $('#loadDialog').modal('hide');
+        if (fileToLoad[0] != null) loadFile(fileToLoad[0]);
     });
 
 
 }
 
 
-
+/*
+ * Create Wrapper functions for JS Interpreter,
+ * so the blocks can call external functions
+ */
 function initApi(interpreter, globalObject) {
     // Add an API function for the alert() block, generated for "text_print" blocks.
 
@@ -144,7 +152,7 @@ function initApi(interpreter, globalObject) {
     );
 
     //  ServoControl
-    const wrapperServo = interpreter.createNativeFunction(function(item, servo, value) {
+    const wrapperServo = interpreter.createNativeFunction(function(servo, value) {
             return blockServo(servo, value);
         }
     );
@@ -152,20 +160,25 @@ function initApi(interpreter, globalObject) {
 }
 
 
-
+/*
+ * Highlight the current block
+ */
 function highlightBlock(id) {
     workspace.highlightBlock(id);
 }
 
-
+/*
+ * Reset the block editor and stop code execution
+ */
 function resetStepUi(clearOutput) {
     clearTimeout(runnerPid);
     workspace.highlightBlock(null);
     myInterpreter = null;
 }
 
-
-// Generate JavaScript code and run it.
+/*
+ * Generate JavaScript code and run it.
+ */
 function runCode() {
     if (!myInterpreter) {
         // First statement of this code.
@@ -173,18 +186,17 @@ function runCode() {
         resetStepUi(true);
         const latestCode =
             javascript.javascriptGenerator.workspaceToCode(workspace);
-        //runButton.disabled = 'disabled';
 
         // And then show generated code in an alert.
         // In a timeout to allow the outputArea.value to reset first.
         setTimeout(function () {
-
+            /*
             alert(
                 'Ready to execute the following code\n' +
                 '===================================\n' +
                 latestCode,
             );
-
+            */
 
             // Begin execution
             myInterpreter = new Interpreter(latestCode, initApi);
@@ -211,7 +223,9 @@ function runCode() {
 }
 
 
-// Send Motor XY commands via Blcok
+/*
+ * Send Motor XY commands via Block
+ */
 function blockMoveMotor(x,y) {
     $.ajax({
         url: "/motor",
@@ -230,7 +244,7 @@ function blockMoveMotor(x,y) {
 }
 
 /*
- * Send a manual servo control command
+ * Send a manual servo control command via Block
  */
 function blockServo(servo, value) {
     $.ajax({
@@ -251,17 +265,27 @@ function blockServo(servo, value) {
     });
 }
 
+/*
+ * Stop the code executions and stop motors
+ */
 function stopCode() {
     blockMoveMotor(0.0, 0.0);
     resetStepUi(false);
 }
 
+/*
+ * Export Blockly code as JSON
+ */
 function saveFile()
 {
     var pom = document.createElement('a');
     var json = Blockly.serialization.workspaces.save(workspace);
+    var filename = window.prompt("Enter the file name.", "wall-e.txt");
+    if (filename === null || filename == "") return false;
+
     pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(json)));
-    pom.setAttribute('download', "wall-e.txt")
+    pom.setAttribute('download', filename)
+
 
     if (document.createEvent) {
         var event = document.createEvent('MouseEvents');
@@ -273,8 +297,11 @@ function saveFile()
     }
 }
 
-
+/*
+ * Import Blockly code as JSON
+ */
 function loadFile(file) {
+
     // Check if the file is a textfile
     if (file.type && !file.type.startsWith('text/')) {
         showAlert(1, 'File is not a textfile. ', file.type, 1);

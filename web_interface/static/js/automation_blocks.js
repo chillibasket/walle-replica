@@ -1,4 +1,11 @@
-// Wait Block
+/**
+ * Wall-e Robot Webinterface - Blockly Block definitions and code generators
+ * dkrey, Feb 2024
+ */
+
+/*
+ * Wait Block
+ */
 Blockly.defineBlocksWithJsonArray([
   {
     "type": 'wait_seconds',
@@ -18,9 +25,8 @@ Blockly.defineBlocksWithJsonArray([
   },
 ]);
 
-/**
- * Generator for wait block creates call to new method
- * <code>waitForSeconds()</code>.
+/*
+ * Generator for wait block
  */
 javascript.javascriptGenerator.forBlock['wait_seconds'] = function (block) {
     const seconds = Number(block.getFieldValue('SECONDS'));
@@ -28,7 +34,9 @@ javascript.javascriptGenerator.forBlock['wait_seconds'] = function (block) {
     return code;
 };
 
-// Servo animations
+/*
+ * Servo animations
+ */
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "servo",
@@ -43,31 +51,31 @@ Blockly.defineBlocksWithJsonArray([
         "options": [
           [
             "Head Rotation",
-            "head"
+            "G"
           ],
           [
             "Neck Top",
-            "neck_t"
+            "T"
           ],
           [
             "Neck Bottom",
-            "neck_b"
+            "B"
           ],
           [
             "Arm Left",
-            "arm_l"
+            "L"
           ],
           [
             "Arm Right",
-            "arm_r"
+            "R"
           ],
           [
             "Eye Left",
-            "eye_l"
+            "E"
           ],
           [
             "Eye Right",
-            "eye_r"
+            "U"
           ]
         ]
       },
@@ -101,23 +109,96 @@ Blockly.defineBlocksWithJsonArray([
   }
 ]);
 
+/*
+ * Servo animations code generator
+ */
 javascript.javascriptGenerator.forBlock['servo'] = function(block, generator) {
   var dropdown_servo = block.getFieldValue('servo');
   var angle_angle = Number(block.getFieldValue('angle'));
   var code = "";
-  //servoControl(item, servo, value);
-
-  if (dropdown_servo == 'head') {
-    code = "blockServo('G',"+ angle_angle +");\n";
-  }
-
-  else code = '\n';
+  code = "blockServo('" + dropdown_servo +"', "+ angle_angle +");\n";
   return code;
 };
 
+/*
+ * Servo presets
+ */
+Blockly.defineBlocksWithJsonArray([
+{
+    "type": "presets",
+    "message0": "Servo Presets %1 %2",
+    "args0": [
+      {
+        "type": "field_dropdown",
+        "name": "preset",
+        "options": [
+          [
+            "Head Up",
+            "f"
+          ],
+          [
+            "Head Down",
+            "h"
+          ],
+          [
+            "Head Neutral",
+            "g"
+          ],
+          [
+            "Arms Left",
+            "m"
+          ],
+          [
+            "Arms Right",
+            "b"
+          ],
+          [
+            "Arms Neutral",
+            "n"
+          ],
+          [
+            "Eyes Left",
+            "j"
+          ],
+          [
+            "Eyes Right",
+            "l"
+          ],
+          [
+            "Eyes Neutral",
+            "k"
+          ],
+          [
+            "Eyes Sad",
+            "i"
+          ]
+        ]
+      },
+      {
+        "type": "input_end_row"
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 230,
+    "tooltip": "",
+    "helpUrl": ""
+  }
+]);
 
+/*
+ * Servo presets code generator
+ */
+javascript.javascriptGenerator.forBlock['presets'] = function(block, generator) {
+  var dropdown_preset = block.getFieldValue('preset');
 
-//Start
+  code = "blockServo('" + dropdown_preset +"', 0);\n";
+  return code;
+};
+
+/*
+ * Start block, which doesn't do anything
+ */
 Blockly.defineBlocksWithJsonArray([{
   "type": "start",
   "message0": "Start",
@@ -126,12 +207,17 @@ Blockly.defineBlocksWithJsonArray([{
   "tooltip": "",
   "helpUrl": ""
 }]);
-// Start Dummy
+
+/*
+ * Start block dummy generator
+ */
 javascript.javascriptGenerator.forBlock['start'] = function(block, generator) {
   return "";
 };
 
-// Stop
+/*
+ * Stop block
+ */
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "stop",
@@ -142,13 +228,18 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": ""
   }
 ]);
-// stop Dummy
+
+/*
+ * Stop block generator
+ */
 javascript.javascriptGenerator.forBlock['stop'] = function(block, generator) {
     var code = 'blockMoveMotor(0.0, 0.0);\n';
     return code;
 };
 
-// MOVE
+/*
+ * Move block
+ */
 Blockly.defineBlocksWithJsonArray([
 {
   "type": "move",
@@ -187,14 +278,17 @@ Blockly.defineBlocksWithJsonArray([
   "helpUrl": ""
 }
 ]);
-// MOVE Generator
+
+/*
+ * Move block generator
+ * TODO: put speed into settings or config
+ */
 javascript.javascriptGenerator.forBlock['move'] = function(block, generator) {
   var dropdown_direction = Number(block.getFieldValue('direction'));
   var value_distance = generator.valueToCode(block, 'distance', javascript.Order.ATOMIC);
   if (value_distance <= 0) return '';
 
-  // 17 cm/s at 0.8
-  var speed =  17;
+  var speed =  17; // 17 cm/s at 0.8
   var motor_power = 0.8;
   var code = 'blockMoveMotor( 0.0, ' + motor_power * dropdown_direction + ');\n';
   var wait = 'waitForSeconds(' + value_distance / speed + ');\n';
@@ -203,7 +297,9 @@ javascript.javascriptGenerator.forBlock['move'] = function(block, generator) {
   return code + wait + stop;
 };
 
-// Speak
+/*
+ * Text to Speech block
+ */
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "speak",
@@ -228,7 +324,10 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": ""
   }
 ]);
-// Speech Generator
+
+/*
+ * Text to Speach generator
+ */
 javascript.javascriptGenerator.forBlock['speak'] = function(block, generator) {
     var value_text = generator.valueToCode(block, 'text', javascript.Order.ATOMIC) || "''";
     code = 'playTTS(' + value_text + ');\n';
@@ -236,7 +335,9 @@ javascript.javascriptGenerator.forBlock['speak'] = function(block, generator) {
 };
 
 
-//TURN
+/*
+ * Turn block
+ */
 Blockly.defineBlocksWithJsonArray([
 {
   "type": "turn",
@@ -279,6 +380,9 @@ Blockly.defineBlocksWithJsonArray([
 }
 ]);
 
+/*
+ * Turn block generator
+ */
 javascript.javascriptGenerator.forBlock['turn'] = function(block, generator) {
   var dropdown_direction = block.getFieldValue('direction');
   var movement = 0.0;
