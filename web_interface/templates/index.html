@@ -18,6 +18,17 @@
     <title>WALL-E Controller</title>
 </head>
 <body>
+
+	<!-- store all soundfile names in an array for later blockly execution-->
+	<script>
+		var audio_options = [];
+		{% for group in sounds|groupby(0) %}
+			{% for item in group.list %}
+				audio_options.push("{{ item[1] }}");
+			{% endfor %}
+		{% endfor %}
+
+	</script>
 	
 	<!-- Gamepad Information Overlay -->
 	<div class="modal fade" id="gamepad-info" tabindex="-1" role="dialog">

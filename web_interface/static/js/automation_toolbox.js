@@ -1,3 +1,7 @@
+/**
+ * Wall-e Robot Webinterface - Blockly Toolbox
+ * dkrey, Feb 2024
+ */
 const toolbox = {
   "kind": "categoryToolbox",
   "contents": [
@@ -244,6 +248,10 @@ const toolbox = {
         {
             "kind": 'block',
             "type": 'speak'
+        },
+        {
+            "kind": 'block',
+            "type": 'audioplayer'
         },
         {
             "kind": 'block',

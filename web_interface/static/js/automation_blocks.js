@@ -411,3 +411,55 @@ javascript.javascriptGenerator.forBlock['turn'] = function(block, generator) {
   return code;
 
 };
+
+
+/*
+ * Audio / Sound block
+ */
+Blockly.defineBlocksWithJsonArray([
+  {
+    "type": "audioplayer",
+    "message0": "Audio %1",
+    "args0": [
+      {
+        "type": "input_dummy",
+        "name": "AUDIOIN"
+      }
+    ],
+    "extensions": ["dynamic_menu_extension"],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 230,
+    "tooltip": "",
+    "helpUrl": ""
+  }
+]);
+
+/*
+ * Audio / Sound block dynamic dropdown from the script block in index.html
+ */
+Blockly.Extensions.register('dynamic_menu_extension',
+  function() {
+    this.getInput('AUDIOIN')
+      .appendField(new Blockly.FieldDropdown(
+        function() {
+          var options = [];
+          var now = Date.now();
+
+          for (let i = 0; i < audio_options.length; i++) {
+             option = audio_options[i].split("_");
+             options.push([option[1], audio_options[i]]);
+          }
+          return options;
+        }), 'audiofile');
+});
+
+/*
+ * Audio / Sound block generator
+ */
+javascript.javascriptGenerator.forBlock['audioplayer'] = function(block, generator) {
+    var dropdown_clip = block.getFieldValue('audiofile');
+
+    code = 'blockAudio("' + dropdown_clip + '");\n';
+    return code;
+};

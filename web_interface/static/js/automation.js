@@ -157,6 +157,14 @@ function initApi(interpreter, globalObject) {
         }
     );
     interpreter.setProperty(globalObject,'blockServo', wrapperServo);
+
+    //  Audioplayer
+    const wrapperAudio = interpreter.createNativeFunction(function(clip) {
+            return blockAudio(clip);
+        }
+    );
+    interpreter.setProperty(globalObject,'blockAudio', wrapperAudio);
+
 }
 
 
@@ -261,6 +269,29 @@ function blockServo(servo, value) {
         error: function(error) {
             // If no response was recevied from the python backend, show an "unknown" error
             showAlert(1, 'Unknown Error!', 'Unable to update servo position.', 1);
+        }
+    });
+}
+
+/*
+ * Send a manual servo control command via Block
+ */
+/*
+ * Play an audio clip from a blockly block
+ */
+function blockAudio(clip) {
+    $.ajax({
+        url: "/audio",
+        type: "POST",
+        data: {"clip": clip},
+        dataType: "json",
+
+        success: function(data){
+            // If a response is received from the python backend, but it contains an error
+            if(data.status == "Error") showAlert(1, 'Error!', data.msg, 1);
+        },
+        error: function(error) {
+            showAlert(1, 'Unknown Error!', 'Unable to play audio file.', 1);
         }
     });
 }
