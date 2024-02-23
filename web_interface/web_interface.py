@@ -216,8 +216,6 @@ def onoff_streamer():
 		if (result.returncode == 0):
 			streaming = 1
 			return 0
-		else:
-			return 1
 
 		# Turn on stream
 		subprocess.run(['sudo','systemctl', 'start' , "--quiet", "camera-streamer"])
