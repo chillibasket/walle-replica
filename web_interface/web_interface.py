@@ -301,7 +301,7 @@ def index():
 		# Clear the queue
 		queueLock.acquire()
 		while not workQueue.empty():
-			q.get()
+			workQueue.get()
 		queueLock.release()
 
 		# If user has selected for the Arduino to connect by default, do so now

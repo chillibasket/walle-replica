@@ -26,15 +26,15 @@ void displayLevel(int batlevel) {
 		u8g2.setDrawColor(1);
 		drawSun();
 
-		// Scale to 25%, as a LiPo should not be discharged lower than 20%
+		// Scale to 50% as the battery should not drop bellow that anyway
 		drawBatt10();
-		if (batlevel > 25) drawBatt20();
-		if (batlevel > 30) drawBatt30();
-		if (batlevel > 40) drawBatt40();
-		if (batlevel > 50) drawBatt50();
-		if (batlevel > 60) drawBatt60();
-		if (batlevel > 70) drawBatt70();
-		if (batlevel > 80) drawBatt80();
+		if (batlevel > 55) drawBatt20();
+		if (batlevel > 60) drawBatt30();
+		if (batlevel > 65) drawBatt40();
+		if (batlevel > 70) drawBatt50();
+		if (batlevel > 75) drawBatt60();
+		if (batlevel > 80) drawBatt70();
+		if (batlevel > 85) drawBatt80();
 		if (batlevel > 90) drawBatt90();
 		if (batlevel > 95) drawBatt100();
 	} while ( u8g2.nextPage() );
