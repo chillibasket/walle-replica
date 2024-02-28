@@ -37,6 +37,7 @@ function init_blocks() {
     workspace = Blockly.inject(
         document.getElementById('blocklyDiv'), {
             toolbox: toolbox,
+            media: media_path,
             theme: Blockly.Themes.DarkTheme,
             renderer: "zelos"
     });
