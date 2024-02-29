@@ -19,10 +19,18 @@
 </head>
 <body>
 
-	<!-- store all soundfile names in an array for later blockly execution-->
+	<!-- -->
 	<script>
+
 		var media_path = "{{ url_for('static', filename='js/blockly/media/') }}";
 
+		// values for the movement codeblocks
+		var code_motorpower = {{config['CODEBLOCK_MOTORPOWER']}};
+		var code_motorspeed = {{config['CODEBLOCK_MOTORSPEED']}};
+		var code_turnpower = {{config['CODEBLOCK_TURNPOWER']}};
+		var code_turntime = {{config['CODEBLOCK_TURNTIME']}};
+
+		// store all soundfile names in an array for later blockly execution
 		var audio_options = [];
 		{% for group in sounds|groupby(0) %}
 			{% for item in group.list %}

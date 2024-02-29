@@ -281,17 +281,14 @@ Blockly.defineBlocksWithJsonArray([
 
 /*
  * Move block generator
- * TODO: put speed into settings or config
  */
 javascript.javascriptGenerator.forBlock['move'] = function(block, generator) {
   var dropdown_direction = Number(block.getFieldValue('direction'));
   var value_distance = generator.valueToCode(block, 'distance', javascript.Order.ATOMIC);
   if (value_distance <= 0) return '';
 
-  var speed =  17; // 17 cm/s at 0.8
-  var motor_power = 0.8;
-  var code = 'blockMoveMotor( 0.0, ' + motor_power * dropdown_direction + ');\n';
-  var wait = 'waitForSeconds(' + value_distance / speed + ');\n';
+  var code = 'blockMoveMotor( 0.0, ' + code_motorpower * dropdown_direction + ');\n';
+  var wait = 'waitForSeconds(' + value_distance / code_motorspeed + ');\n';
   var stop = 'blockMoveMotor( 0.0, 0.0);\n';
 
   return code + wait + stop;
@@ -363,7 +360,7 @@ Blockly.defineBlocksWithJsonArray([
           "right_90"
         ],
         [
-          "RIght 45°",
+          "Right 45°",
           "right_45"
         ]
       ]
@@ -389,20 +386,20 @@ javascript.javascriptGenerator.forBlock['turn'] = function(block, generator) {
   var wait = 0.0;
 
   if (dropdown_direction == "left_90") {
-    movement = 0.5;
-    wait = 'waitForSeconds(' + 1.8 + ');\n';
+    movement = code_turnpower;
+    wait = 'waitForSeconds(' + code_turntime + ');\n';
   }
   else if (dropdown_direction == "left_45") {
-    movement = 0.5;
-    wait = 'waitForSeconds(' + 0.9 + ');\n';
+    movement = code_turnpower;
+    wait = 'waitForSeconds(' + code_turntime/2 + ');\n';
   }
   else if (dropdown_direction == "right_90") {
-    movement = -0.5;
-    wait = 'waitForSeconds(' + 1.8 + ');\n';
+    movement = -code_turnpower;
+    wait = 'waitForSeconds(' + code_turntime + ');\n';
   }
   else if (dropdown_direction == "right_45") {
-    movement = -0.5;
-    wait = 'waitForSeconds(' + 0.9 + ');\n';
+    movement = -code_turnpower;
+    wait = 'waitForSeconds(' + code_turntime/2 + ');\n';
   }
 
   var code = 'blockMoveMotor( ' + movement +', 0.0);\n';
