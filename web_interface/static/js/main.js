@@ -34,6 +34,12 @@ function sendSettings(type, value) {
 			return 0;
 		}
 	}
+	// If restart is requested, show a confirmation prompt
+	else if (type=="restart") {
+		if (!confirm("Are you sure you want to restart the web-interface?")) {
+			return 0;
+		}
+	}
 	
 	//alert(type + ", " + value);
 	// Send data to python app, so that it can be passed on
@@ -73,6 +79,9 @@ function sendSettings(type, value) {
 			// If no response was recevied from the python backend, show an "unknown" error
 			if (type == "shutdown") {
 				showAlert(0, 'Raspberry Pi is now shutting down!', 'The WALL-E web-interface is no longer active.', 1);
+			}
+			else if (type == "restart") {
+				showAlert(0, 'Interface restarts', 'The interface is restarting, please reload this page.', 1);
 			} else {
 				showAlert(1, 'Unknown Error!', 'Unable to update settings.', 1);
 			}
@@ -285,6 +294,47 @@ function playAudio(clip, time) {
 			return false;
 		}
 	});
+}
+
+
+/*
+ * Play Text-to-Speech
+ */
+function playTTS(text) {
+	$.ajax({
+		url: "/tts",
+		type: "POST",
+		data: {"text": text},
+		dataType: "json",
+		beforeSend: function(){
+			// Reset the audio progress bar
+			$('#audio-progress').stop();
+			$('#audio-progress').css('width', '0%').attr('aria-valuenow', 0);
+		},
+		success: function(data){
+			// If a response is received from the python backend, but it contains an error
+			if(data.status == "Error"){
+				$('#audio-progress').addClass('bg-danger');
+				$('#audio-progress').css("width", "0%").animate({width: 100+"%"}, 500);
+				showAlert(1, 'Error!', data.msg, 1);
+				return false;
+
+			// Otherwise set the progress bar to show the audio clip progress
+			} else {
+				$('#audio-progress').removeClass('bg-danger');
+				//$('#audio-progress').css("width", "0%").animate({width: 100+"%"}, data.time*1000);
+				return true;
+			}
+		},
+		error: function(error) {
+			// If no response was recevied from the python backend, show an "unknown" error
+			$('#audio-progress').addClass('bg-danger');
+			$('#audio-progress').css("width", "0%").animate({width: 100+"%"}, 500);
+			showAlert(1, 'Unknown Error!', 'Unable to play audio file.', 1);
+			return false;
+		}
+	});
+
 }
 
 
@@ -819,6 +869,18 @@ window.onload = function () {
 		useCssTransform: true,
 		updateText: document.getElementById('joytext')
 	});
+
+	// Add listener for the tts input field
+	$( "#tts_text" ).keypress(function( event ) {
+	  if ( event.which == 13 ) {
+	     playTTS($('#tts_text').val());
+	  }
+	});
+
+	// Load blockly
+	init_blocks();
+
+
 }
 
 
@@ -854,6 +916,7 @@ $(window).resize(function () {
 	var middleY = 40 + 30 + cw / 2;
 	
 	jsJoystick.updateDimensions(middleX, middleY, (cw/2), Math.round(cw/2) - pointer/2);
+
 });
 
 
@@ -931,3 +994,4 @@ $(document).ready(function () {
 	    }
 	});
 });
+

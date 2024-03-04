@@ -204,7 +204,7 @@ void setup() {
 		displayLevel(100);
 	#endif
 
-	Serial.println(F("Sartup complete; entering main loop"));
+	Serial.println(F("Startup complete; entering main loop"));
 }
 
 
