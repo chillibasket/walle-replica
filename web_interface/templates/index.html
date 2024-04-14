@@ -11,10 +11,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/latoFontFamily.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/mystyle.css') }}">
-    <!--
-    <link rel="stylesheet" href="../static/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="../static/css/mystyle.css">
-	-->
 	
 	<!-- FontAwesome Icons -->
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
@@ -22,6 +18,27 @@
     <title>WALL-E Controller</title>
 </head>
 <body>
+
+	<!-- -->
+	<script>
+
+		var media_path = "{{ url_for('static', filename='js/blockly/media/') }}";
+
+		// values for the movement codeblocks
+		var code_motorpower = {{config['CODEBLOCK_MOTORPOWER']}};
+		var code_motorspeed = {{config['CODEBLOCK_MOTORSPEED']}};
+		var code_turnpower = {{config['CODEBLOCK_TURNPOWER']}};
+		var code_turntime = {{config['CODEBLOCK_TURNTIME']}};
+
+		// store all soundfile names in an array for later blockly execution
+		var audio_options = [];
+		{% for group in sounds|groupby(0) %}
+			{% for item in group.list %}
+				audio_options.push("{{ item[1] }}");
+			{% endfor %}
+		{% endfor %}
+
+	</script>
 	
 	<!-- Gamepad Information Overlay -->
 	<div class="modal fade" id="gamepad-info" tabindex="-1" role="dialog">
@@ -71,7 +88,10 @@
 							<a class="nav-link tab-padding" href="#tab4" data-toggle="tab"><i class="fa fa-music"></i><div class="tab-text">Sounds</div></a>
 						</li>
 						<li class="nav-item col no-padding">
-							<a id="settings-tab" class="nav-link tab-padding" href="#tab5" data-toggle="tab"><i class="fa fa-tools"></i><div class="tab-text">Settings</div></a>
+							<a class="nav-link tab-padding" href="#tab5" data-toggle="tab"><i class="fa fa-puzzle-piece"></i><div class="tab-text">Code</div></a>
+						</li>
+						<li class="nav-item col no-padding">
+							<a id="settings-tab" class="nav-link tab-padding" href="#tab6" data-toggle="tab"><i class="fa fa-tools"></i><div class="tab-text">Settings</div></a>
 						</li>
 					</ul>
 
@@ -275,11 +295,54 @@
 										</div>
 									{% endfor %}
 								</div>
+								<!-- Text to Speech -->
+								<hr/>
+								<div class="row set-row ">
+									<div class="col-xs-12 set-text">&nbsp;Text-To-Speech</div>
+								</div>
+								<div class="row set-row">
+									<div class="input-group col-xs-12 col-sm-10">
+										<input type="text" class="form-control" id="tts_text">
+										<div class="input-group-append">
+											<button class="btn btn-outline-info" type="button" onclick="playTTS($('#tts_text').val())">Speak</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Automation -->
+						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" data-toggle="tab" id="tab5">
+							<div class="container-fluid">
+								<div class="row set-row ">
+									<div class="btn-group" role="group" aria-label="Blockly Bar">
+										<button id="run" type="button" class="btn btn-success" onclick="runCode();">
+											<i class="far fa-play-circle"></i>
+											<div class="indicator-text">Run!</div>
+										</button>
+										<button id="stop" type="button" class="btn btn-danger" onclick="stopCode()">
+											<i class="far fa-stop-circle"></i>
+											<div class="indicator-text">Stop</div>
+										</button>
+										<button id="save" type="button" class="btn btn-primary" onclick="saveFile();">
+											<i class="far fa-save"></i>
+											<div class="indicator-text">Save</div>
+										</button>
+										<button id="load" type="button" class="btn btn-info" onclick="$('#customFile').click();">
+											<i class="fas fa-file-upload"></i>
+											<div class="indicator-text">Load</div>
+										</button>
+									</div>
+								</div>
+								<div class="row set-row ">
+									<div id="blocklyDiv" style="height: 600px; width: 1200px;"></div>
+								</div>
+								<hr/>
 							</div>
 						</div>
 
 						<!-- Settings -->
-						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" id="tab5">
+						<div class="tab-pane scroll-pane col-sm-12 col-md-6 tabpane-padding" data-toggle="tab" id="tab6">
 							<div class="container-fluid">
 								<div class="row set-row d-none">
 									<div class="col-xs-12 col-sm-4 set-text">Sound Mode</div>
@@ -297,7 +360,7 @@
 								<div class="row set-row">
 									<div class="col-xs-12 col-sm-4 set-text">Sound Volume</div>
 									<div class="col-xs-12 col-sm-8">
-										<input id="volume" class="set-slide custom-range" type="range" min="0" max="10" step="1" value="5" onchange="sendSettings('volume',value)"/>
+										<input id="volume" class="set-slide custom-range" type="range" min="0" max="10" step="1" value="8" onchange="sendSettings('volume',value)"/>
 									</div>
 								</div>
 								<hr/>
@@ -347,9 +410,15 @@
 								</div>
 								<hr/>
 								<div class="row set-row">
-									<div class="col-xs-12 col-sm-4 set-text">MJPG Streamer</div>
+									<div class="col-xs-12 col-sm-4 set-text">Camera Streamer</div>
 									<div class="col-xs-12 col-sm-8">
 										<button id="conn-streamer" type="button" class="btn btn-outline-info" onclick="sendSettings('streamer',1)">Reactivate</button>
+									</div>
+								</div>
+								<div class="row set-row">
+									<div class="col-xs-12 col-sm-4 set-text">Restart Web-interface</div>
+									<div class="col-xs-12 col-sm-8">
+										<button id="restart" type="button" class="btn btn-outline-danger" onclick="sendSettings('restart',1)">Restart Interface</button>
 									</div>
 								</div>
 								<div class="row set-row">
@@ -372,20 +441,31 @@
 		</div>
 	</div>
 
+
+
 	<!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="{{ url_for('static', filename='js/jquery-3.3.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/joystick.js') }}"></script>
     <script src="{{ url_for('static', filename='js/joypad.min.js') }}"></script>
+    <!-- Blockly -->
+    <script src="{{ url_for('static', filename='js/blockly/acorn_interpreter.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/blockly/blockly_compressed.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/blockly/blocks_compressed.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/blockly/javascript_compressed.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/blockly/en.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/blockly/field_angle.js') }}"></script>
+
+    <!-- app code -->
+    <script src="{{ url_for('static', filename='js/automation_toolbox.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/automation_blocks.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/automation.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
-    <!--
-    <script src="../static/js/jquery-3.3.1.min.js"></script>
-    <script src="../static/js/bootstrap.bundle.min.js"></script>
-    <script src="../static/js/joystick.js"></script>
-    <script src="../static/js/main.js"></script>
-	-->
-	
+    <!-- load file element from the code tab -->
+	<input type="file" class="custom-file-input" id="customFile" hidden>
+
 </body>
 <footer></footer>
