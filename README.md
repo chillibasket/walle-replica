@@ -26,6 +26,8 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. Settings page, where motor parameters, sound volume, and video options can be modified.
 1. Gamepad support; on any modern browsers, you can use a connected Xbox of PlayStation controller to control the robot.
 1. A simple login page to prevent everyone from having access to the controls (note: this is not a full access control system, please don't use this web interface on untrusted/public networks)
+1. **[New]** Support for text-to-speech
+1. **[New]** Program robot actions using CodeBlocks drag and drop editor within the browser.
 
 ![](/images/wall-e_webinterface1.jpg)
 *Image of the web interface and robot*
@@ -68,9 +70,9 @@ The web interface is programmed in Python and uses *Flask* to generate a server.
 1. Open `wall-e_calibration.ino` in the Arduino IDE.
 1. Upload the sketch to the micro-controller, and open the serial monitor and set the baud rate to 115200.
 1. The sketch is used to calibrate the maximum and minimum PWM pulse lengths required to move each servo motor across its desired range of motion. The standard LOW and HIGH positions of each of the servos can be seen on diagrams [on my website](https://wired.chillibasket.com/3d-printed-wall-e/). 
-1. When starting the sketch and opening the serial monitor, the a message should appear after 2-3 seconds, saying that it is ready to calibrate the LOW position of the first servo motor (the head rotation).
+1. When starting the sketch and opening the serial monitor, a message should appear after 2-3 seconds, saying that it is ready to calibrate the LOW position of the first servo motor (the head rotation).
 1. Send the character 'a' and 'd' to move the motor backwards and forwards by -10 and +10. For finer control, use the characters 'z' and 'c' to move the motor by -1 and +1. 
-1. Once the motor is position in the correct position, send the character 'n' to proceed to the calibration step. It will move on to the HIGH position of the same servo, after which the process will repeat for each of the 7 servos in the robot.
+1. Once the motor is in the correct position, send the character 'n' to proceed to the calibration step. It will move on to the HIGH position of the same servo, after which the process will repeat for each of the 7 servos in the robot.
 1. When all joints are calibrated, the sketch will output an array containing the calibration values to the serial monitor.
 1. Copy the array, and paste it into [lines 144](https://github.com/chillibasket/walle-replica/blob/master/wall-e/wall-e.ino#L144) to 150 of the program *wall-e.ino*. The array should look similar to this:
     ```cpp
@@ -100,11 +102,11 @@ When using batteries to power the robot, it is important to keep track of how mu
 
 #### [e] oLed Display (Optional) (Contributed by: [hpkevertje](https://github.com/hpkevertje))
 It is possible to integrate a small oLED display which will show the battery level of the robot on the front battery indicator panel. This feature requires the battery level detection circuit in the previous section to be enabled, and the screen will update every time the battery level is calculated. This function uses the u8g2 display library in page mode; on the Arduino UNO you may get a warning that the memory usage is high, but this warning can be ignored. 
-1. To use the oLed display feature on the Arduino, connect an i2c oLed display on the i2c bus on the servo motor module (see diagram).
+1. To use the oLed display feature on the Arduino, connect an i2c oLed display to the i2c bus on the servo motor module (see diagram).
 1. Install the U8g2 library in the Arduino library manager:
     1. Go to Sketch -> Include Library -> Manage Libraries...
     1. Search for *U8gt*. The library publisher is "oliver".
-    1. Install latest version of the library.
+    1. Install the latest version of the library.
 1. Uncomment [line 74](https://github.com/chillibasket/walle-replica/blob/master/wall-e/wall-e.ino#L74) `#define OLED` in the main Arduino sketch *wall-e.ino*.
 1. If you are using a different display that is supported by the library, you can change the constructor on [line 78](https://github.com/chillibasket/walle-replica/blob/master/wall-e/wall-e.ino#L78) as documented on the [library reference page](https://github.com/olikraus/u8g2/wiki/u8g2setupcpp#constructor-reference). The default is for an SH1106_128X64_NONAME display.
 
@@ -117,7 +119,7 @@ It is possible to integrate a small oLED display which will show the battery lev
 #### [f] Adding your own Servo Animations (Optional)
 My code comes with two animations which replicate scenes from the movie; the eye movement Wall-E does when booting-up, and a sequence of motions as Wall-E inquisitively looks around. From version 2.7 of the code, I've now made it easier to add your own servo motor animations so that you can make your Wall-E do other movements...
 1. Open up the file `animations.ino`, which is located in the same folder as the main Arduino sketch. 
-1. Each animation command consists of the positions you want each of the servo motors to move to, and the amount of time the animation should wait until moving on to the next instruction.
+1. Each animation command consists of the positions you want all the servo motors to move to, and the amount of time the animation should wait until moving on to the next instruction.
 1. You can add a new animation by inserting an extra `case` section into the switch statement. You should slot your extra code into the space above the `default` section. For example:
     ```cpp
     case 3:
@@ -139,18 +141,24 @@ My code comes with two animations which replicate scenes from the movie; the eye
 
 ### 2. Raspberry Pi Web Server
 
+To save you from having to 
+
 #### [a] Basic Installation
-1. Setup the Raspberry Pi to run the latest version of Raspberry Pi OS (Raspbian) - Full. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.org/documentation/installation/installing-images/).
+1. Setup the Raspberry Pi to run the latest version of Raspberry Pi OS Desktop. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.com/documentation/computers/getting-started.html).
 1. Open the command line terminal on the Raspberry Pi.
 1. Ensure that the package list has been updated (this may take some time): `sudo apt update`
-1. Install *Flask* - this is a Python framework used to create web servers:
-    1. Ensure that pip is installed: `sudo apt install python3-pip`
-    1. Install Flask and its dependencies: `sudo pip3 install flask`
-1. (Optional) The *Full* version of Raspbian includes these packages by default, but if you are using a different OS (for example the *Lite* version), you will need to run these commands:
-    ```shell
-    sudo apt install git libsdl1.2 libsdl-mixer1.2
-    sudo pip3 install pygame pyserial
-    ```
+
+[!NOTE]
+> If you did not install the full version of the Raspberry Pi OS, run the following command to install all required dependencies:
+> 1. Install *Flask* - this is a Python framework used to create web servers:
+>    1. Ensure that pip is installed: `sudo apt install python3-pip`
+>    1. Install Flask and its dependencies: `sudo pip3 install flask`
+> 1. (Optional) The *Full* version of Raspbian includes these packages by default, but if you are using a different OS (for example the *Lite* version), you will need to run these commands:
+>    ```shell
+>    sudo apt install git libsdl1.2 libsdl-mixer1.2
+>    sudo pip3 install pygame pyserial
+>    ```
+
 1. Clone repository into the home directory of the Raspberry Pi:
     ```shell
     cd ~
@@ -181,183 +189,13 @@ My code comes with two animations which replicate scenes from the movie; the eye
 <br />
 
 #### [c] Adding a Camera Stream (Optional)
-1. If you are using the Official Raspberry Pi camera, you will first need to enable the camera in `sudo raspi-config`. In the config screen which appears, navigate to “Interface Options” > “Camera” > “Enable”.
-1. Install *mjpg-streamer* - this is used to stream the video to the webserver. The steps below are based on the instructions [described here](https://github.com/cncjs/cncjs/wiki/Setup-Guide:-Raspberry-Pi-%7C-MJPEG-Streamer-Install-&-Setup-&-FFMpeg-Recording) for the CNC JS project. To install the required libraries, run all of the following commands:
-    ```bash
-    # Update & Install Tools
-    sudo apt-get update -y
-    sudo apt-get upgrade -y
-    sudo apt-get install build-essential git imagemagick libv4l-dev libjpeg-dev cmake -y
 
-    # Clone Repo in /tmp
-    cd /tmp
-    git clone https://github.com/jacksonliam/mjpg-streamer.git
-    cd mjpg-streamer/mjpg-streamer-experimental
-
-    # Make
-    make
-    sudo make install
-    
-    ```
-1. Create a new script which will be used to start and stop the camera stream: `nano ~/mjpg-streamer.sh`
-1. Paste the following code into the script file; you can modify the settings frame rate, quality and resolution to suit the camera you are using:
-    ```bash
-    #!/bin/bash
-    # chmod +x mjpg-streamer.sh
-    # Crontab: @reboot /home/pi/mjpg-streamer/mjpg-streamer.sh start
-    # Crontab: @reboot /home/pi/mjpg-streamer/mjpg-streamer-experimental/mjpg-streamer.sh start
-
-    MJPG_STREAMER_BIN="/usr/local/bin/mjpg_streamer"  # "$(dirname $0)/mjpg_streamer"
-    MJPG_STREAMER_WWW="/usr/local/share/mjpg-streamer/www"
-    MJPG_STREAMER_LOG_FILE="${0%.*}.log"  # "$(dirname $0)/mjpg-streamer.log"
-    RUNNING_CHECK_INTERVAL="2" # how often to check to make sure the server is running (in seconds)
-    HANGING_CHECK_INTERVAL="3" # how often to check to make sure the server is not hanging (in seconds)
-
-    VIDEO_DEV="/dev/video0"
-    FRAME_RATE="5"
-    QUALITY="80"
-    RESOLUTION="1280x720"  # 160x120 176x144 320x240 352x288 424x240 432x240 640x360 640x480 800x448 800x600 960x544 1280x720 1920x1080 (QVGA, VGA, SVGA, WXGA)   #  lsusb -s 001:006 -v | egrep "Width|Height" # https://www.textfixer.com/tools/alphabetical-order.php  # v4l2-ctl --list-formats-ext  # Show Supported Video Formates
-    PORT="8080"
-    YUV="true"
-
-    ################INPUT_OPTIONS="-r ${RESOLUTION} -d ${VIDEO_DEV} -f ${FRAME_RATE} -q ${QUALITY} -pl 60hz"
-    INPUT_OPTIONS="-r ${RESOLUTION} -d ${VIDEO_DEV} -q ${QUALITY} -pl 60hz --every_frame 2"  # Limit Framerate with  "--every_frame ", ( mjpg_streamer --input "input_uvc.so --help" )
-
-
-    if [ "${YUV}" == "true" ]; then
-        INPUT_OPTIONS+=" -y"
-    fi
-
-    OUTPUT_OPTIONS="-p ${PORT} -w ${MJPG_STREAMER_WWW}"
-
-    # ==========================================================
-    function running() {
-        if ps aux | grep ${MJPG_STREAMER_BIN} | grep ${VIDEO_DEV} >/dev/null 2>&1; then
-            return 0
-
-        else
-            return 1
-
-        fi
-    }
-
-    function start() {
-        if running; then
-            echo "[$VIDEO_DEV] already started"
-            return 1
-        fi
-
-        export LD_LIBRARY_PATH="$(dirname $MJPG_STREAMER_BIN):."
-
-        echo "Starting: [$VIDEO_DEV] ${MJPG_STREAMER_BIN} -i \"input_uvc.so ${INPUT_OPTIONS}\" -o \"output_http.so ${OUTPUT_OPTIONS}\""
-        ${MJPG_STREAMER_BIN} -i "input_uvc.so ${INPUT_OPTIONS}" -o "output_http.so ${OUTPUT_OPTIONS}" >> ${MJPG_STREAMER_LOG_FILE} 2>&1 &
-
-        sleep 1
-
-        if running; then
-            if [ "$1" != "nocheck" ]; then
-                check_running & > /dev/null 2>&1 # start the running checking task
-                check_hanging & > /dev/null 2>&1 # start the hanging checking task
-            fi
-
-            echo "[$VIDEO_DEV] started"
-            return 0
-
-        else
-            echo "[$VIDEO_DEV] failed to start"
-            return 1
-
-        fi
-    }
-
-    function stop() {
-        if ! running; then
-            echo "[$VIDEO_DEV] not running"
-            return 1
-        fi
-
-        own_pid=$$
-
-        if [ "$1" != "nocheck" ]; then
-            # stop the script running check task
-            ps aux | grep $0 | grep start | tr -s ' ' | cut -d ' ' -f 2 | grep -v ${own_pid} | xargs -r kill
-            sleep 0.5
-        fi
-
-        # stop the server
-        ps aux | grep ${MJPG_STREAMER_BIN} | grep ${VIDEO_DEV} | tr -s ' ' | cut -d ' ' -f 2 | grep -v ${own_pid} | xargs -r kill
-
-        echo "[$VIDEO_DEV] stopped"
-        return 0
-    }
-
-    function check_running() {
-        echo "[$VIDEO_DEV] starting running check task" >> ${MJPG_STREAMER_LOG_FILE}
-
-        while true; do
-            sleep ${RUNNING_CHECK_INTERVAL}
-
-            if ! running; then
-                echo "[$VIDEO_DEV] server stopped, starting" >> ${MJPG_STREAMER_LOG_FILE}
-                start nocheck
-            fi
-        done
-    }
-
-    function check_hanging() {
-        echo "[$VIDEO_DEV] starting hanging check task" >> ${MJPG_STREAMER_LOG_FILE}
-
-        while true; do
-            sleep ${HANGING_CHECK_INTERVAL}
-
-            # treat the "error grabbing frames" case
-            if tail -n2 ${MJPG_STREAMER_LOG_FILE} | grep -i "error grabbing frames" > /dev/null; then
-                echo "[$VIDEO_DEV] server is hanging, killing" >> ${MJPG_STREAMER_LOG_FILE}
-                stop nocheck
-            fi
-        done
-    }
-
-    function help() {
-        echo "Usage: $0 [start|stop|restart|status]"
-        return 0
-    }
-
-    if [ "$1" == "start" ]; then
-        start && exit 0 || exit -1
-
-    elif [ "$1" == "stop" ]; then
-        stop && exit 0 || exit -1
-
-    elif [ "$1" == "restart" ]; then
-        stop && sleep 1
-        start && exit 0 || exit -1
-
-    elif [ "$1" == "status" ]; then
-        if running; then
-            echo "[$VIDEO_DEV] running"
-            exit 0
-
-        else
-            echo "[$VIDEO_DEV] stopped"
-            exit 1
-
-        fi
-
-    else
-        help
-
-    fi
-
-    ```
-1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
-1. Make sure that the manager script you created has the correct name and is in the correct directory: `/home/pi/mjpg-streamer.sh`. If you want the save the script in a different location, you need to update line 22 of *app.py*.
 1. To make the script executable by the web-server, run this command in the terminal: `chmod +x /home/pi/mjpg-streamer.sh`
 1. If you want the camera to automatically startup when you open the web-interface you can change line [32](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L32) of *app.py* to `autoStartCamera = True`
 
 <br />
 
-#### [d] Automatically start Server on Boot *(Optional, but recommended)*
+#### [d] Automatically start Server on Boot
 1. Create a `.service` file which is used to start the web interface: `nano ~/walle.service`
 1. Paste the following text into the file:
     ```text

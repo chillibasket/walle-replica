@@ -283,7 +283,6 @@ def index():
     usb_ports = [
         p.description
         for p in ports
-        # if 'ttyACM0' in p.description
     ]
 
     # Ensure that the preferred Arduino port is selected by default
@@ -690,5 +689,4 @@ def arduinoStatus():
 #
 if __name__ == '__main__':
 
-    # app.run()
     app.run(port=app.config['APP_PORT'], debug=app.config['APP_DEBUG'], host='0.0.0.0')
