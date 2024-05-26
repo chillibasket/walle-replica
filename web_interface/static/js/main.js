@@ -18,6 +18,7 @@ var moveHead = [50,50];
 var gamepadTimer;
 var gamePadActive = 0;
 var jsJoystick;
+var alertVisible = false
 
 // Timer to periodically check if Arduino has sent a message
 var arduinoTimer;
@@ -64,7 +65,7 @@ function sendSettings(type, value) {
 							$('#conn-streamer').html('End Stream');
 							$('#conn-streamer').removeClass('btn-outline-info');
 							$('#conn-streamer').addClass('btn-outline-danger');
-							$("#stream").attr("src","http:/" + "/" + window.location.hostname + ":8080/?action=stream");
+							$("#stream").attr("src","http:/" + "/" + window.location.hostname + ":8080/stream.mjpg");
 						} else if(data.streamer == "Offline"){
 							$('#conn-streamer').html('Reactivate');
 							$('#conn-streamer').addClass('btn-outline-info');
@@ -81,7 +82,7 @@ function sendSettings(type, value) {
 				showAlert(0, 'Raspberry Pi is now shutting down!', 'The WALL-E web-interface is no longer active.', 1);
 			}
 			else if (type == "restart") {
-				showAlert(0, 'Interface restarts', 'The interface is restarting, please reload this page.', 1);
+				showAlert(0, 'Success!', 'The interface is restarting, please reload this page.', 1);
 			} else {
 				showAlert(1, 'Unknown Error!', 'Unable to update settings.', 1);
 			}
@@ -555,14 +556,22 @@ function checkArduinoStatus() {
  * This function displays an alert message at the bottom of the screen
  */
 function showAlert(error, bold, content, fade) {
-	if (fade == 1) $('#alert-space').fadeOut(100);
+	if (fade == 1 && alertVisible) {
+		$('#alert-space').fadeOut(100);
+		alertVisible = false;
+	}
+	
 	var alertType = 'alert-success';
 	if (error == 1) alertType = 'alert-danger';
 	$('#alert-space').html('<div class="alert alert-dismissible ' + alertType + ' set-alert">\
 								<button type="button" class="close" data-dismiss="alert">&times;</button>\
 								<strong>' + bold + '</strong> ' + content + ' \
 							</div>');			
-	if (fade == 1) $('#alert-space').fadeIn(150);
+	if (!alertVisible) 
+	{
+		$('#alert-space').fadeIn(150);
+	}
+	
 	if (content == "Arduino not connected" && $('#conn-arduino').hasClass('btn-outline-danger')) {
 		updateSerialList(false);
 		$('#conn-arduino').html('Reconnect');
@@ -575,6 +584,17 @@ function showAlert(error, bold, content, fade) {
 		clearInterval(arduinoTimer);
 		console.log("Cleared arduino timer");
 	}
+	
+	alertVisible = true;
+	hideTime = 3000;
+	if (error) {
+		hideTime = 6000;
+	}
+	
+	setTimeout(function() {
+        $("#alert-space").fadeOut(1000);
+        alertVisible = false
+    }, hideTime);
 }
 
 

@@ -8,7 +8,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)      # Secret key us
 # VARIABLES WHICH YOU CAN MODIFY
 APP_PORT = 5000             # Port of the application
 APP_DEBUG = False           # Enable / Disable Python Server Debugging
-LOGIN_PASSWORD = "put_password_here"    # Password for web-interface
+LOGIN_PASSWORD = "1234"    # Password for web-interface
 ARDUINO_PORT = "ARDUINO"    # Default port which will be selected
 AUTOSTART_ARDUINO = True    # False = no auto connect, True = automatically try to connect to default port
 AUTOSTART_CAM = False       # False = no auto start, True = automatically start up the camera

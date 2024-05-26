@@ -37,7 +37,6 @@
 				audio_options.push("{{ item[1] }}");
 			{% endfor %}
 		{% endfor %}
-
 	</script>
 	
 	<!-- Gamepad Information Overlay -->
@@ -107,9 +106,11 @@
 								<div class="info-area text-white">
 									Status:
 								</div>
-								<a id="ardu-area" href="#conn-arduino" onclick="$('#settings-tab').trigger('click')" class="info-area{% if connected == 1 %} bg-success{% else %}bg-danger{% endif %} text-white" title="{% if connected == 1 %}Connected{% else %}Disconnected{% endif %}" data-toggle="tooltip" data-placement="top">
-									<i class="fa fa-robot"></i><div id="ardu-text" class="indicator-text">Arduino</div>
-								</a>
+								<span data-toggle="modal" data-target="">
+									<a id="ardu-area" href="#conn-arduino" onclick="$('#settings-tab').trigger('click')" class="info-area{% if connected == 1 %} bg-success{% else %} bg-danger{% endif %} text-white cursor-pointer" title="{% if connected == 1 %}Connected{% else %}Disconnected{% endif %}" data-toggle="tooltip" data-placement="top">
+										<i class="fa fa-robot"></i><div id="ardu-text" class="indicator-text">Arduino</div>
+									</a>
+								</span>
 								<span data-toggle="modal" data-target="#gamepad-info">
 									<a id="cont-area" class="info-area bg-danger text-white cursor-pointer" title="Disconnected" data-toggle="tooltip" data-placement="top">
 										<i class="fa fa-gamepad"></i><div id="cont-text" class="indicator-text">Gamepad</div>
@@ -337,7 +338,6 @@
 								<div class="row set-row ">
 									<div id="blocklyDiv" style="height: 600px; width: 1200px;"></div>
 								</div>
-								<hr/>
 							</div>
 						</div>
 
