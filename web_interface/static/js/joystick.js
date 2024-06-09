@@ -220,6 +220,7 @@ VirtualJoystick.prototype._updateValues = function(){
 											<button type="button" class="close" data-dismiss="alert">&times;</button>\
 											<strong>Error! </strong>' + data.msg + ' \
 										</div>');
+				$('#alert-space').fadeIn(100);
 			} else {
 				text.style.color = "#3498DB";
 			}
@@ -230,6 +231,7 @@ VirtualJoystick.prototype._updateValues = function(){
 										<button type="button" class="close" data-dismiss="alert">&times;</button>\
 										<strong>Unknown Error! </strong> Unable to send movement command. \
 									</div>');
+			$('#alert-space').fadeIn(100);
 		}
 	});
 

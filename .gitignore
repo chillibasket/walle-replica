@@ -1,0 +1,11 @@
+.__pycache__
+__pycache__
+.sublime.project
+.sublime-workspace
+.local_config.py
+web_interface/local_config.py
+web_interface/__pycache__/wsgi.cpython-311.pyc
+web_interface/__pycache__/web_interface.cpython-311.pyc
+walle-webinterface.sublime-workspace
+walle-webinterface.sublime-project
+__pycache__/wsgi.cpython-311.pyc

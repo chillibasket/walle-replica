@@ -5,614 +5,753 @@
 # @brief      Flask web-interface to control Wall-e robot
 # @author     Simon Bluett
 # @website    https://wired.chillibasket.com
-# @copyright  Copyright (C) 2021 - Distributed under MIT license
-# @version    1.5
-# @date       31st October 2021
+# @copyright  Copyright (C) 2021-2024 - Distributed under MIT license
+# @version    3.0
+# @date       9th June 2024
 #############################################
 
 from flask import Flask, request, session, redirect, url_for, jsonify, render_template
-import queue 		# for serial command queue
-import threading 	# for multiple threads
+
 import os
-import pygame		# for sound
-import serial 		# for Arduino serial access
+import sys
+from queue import Queue
+from threading import Event, Thread
+from serial import Serial
 import serial.tools.list_ports
-import subprocess 	# for shell commands
+import subprocess
 import time
+import tempfile
+from picamera2_stream import PiCameraStreamer
+import logging
+from waitress import serve
+
+
 app = Flask(__name__)
 
+# Load the configurations
+if os.path.isfile("local_config.py"):
+    app.config.from_pyfile("local_config.py")
+else:
+    app.config.from_pyfile("config.py")
 
-##### VARIABLES WHICH YOU CAN MODIFY #####
-loginPassword = "put_password_here"                                  # Password for web-interface
-arduinoPort = "ARDUINO"                                              # Default port which will be selected
-streamScript = "/home/pi/mjpg-streamer.sh"                           # Location of script used to start/stop video stream
-soundFolder = "/home/pi/walle-replica/web_interface/static/sounds/"  # Location of the folder containing all audio files
-app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)      # Secret key used for login session cookies
-autoStartArduino = False                                             # False = no auto connect, True = automatically try to connect to default port
-autoStartCamera = False                                              # False = no auto start, True = automatically start up the camera
-##########################################
+# Set up global variables
+volume: int = 8
+startup: bool = False
+camera: PiCameraStreamer = PiCameraStreamer()
 
+# Set up logging
+logger = logging.getLogger()
+stream_handler = logging.StreamHandler(sys.stdout)
 
-# Start sound mixer
-pygame.mixer.init()
+if app.config['APP_DEBUG']:
+    logger.setLevel(logging.DEBUG)
+    stream_handler.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
+    stream_handler.setLevel(logging.INFO)
 
-# Set up runtime variables and queues
-exitFlag = 0
-arduinoActive = 0
-streaming = 0
-volume = 5
-batteryLevel = -999
-queueLock = threading.Lock()
-workQueue = queue.Queue()
-threads = []
-initialStartup = False
+logger.addHandler(stream_handler)
 
 
-#############################################
-# Set up the multithreading stuff here
-#############################################
 
-##
-# Thread class used for managing communication with the Arduino
+###############################################################
 #
-class arduino (threading.Thread):
-
-	##
-	# Constructor
-	#
-	# @param  threadID  The thread identification number
-	# @param  name      Name of the thread
-	# @param  q         Queue containing the message to be sent
-	# @param  port      The serial port where the Arduino is connected
-	#
-	def __init__(self, threadID, name, q, port):
-		threading.Thread.__init__(self)
-		self.threadID = threadID
-		self.name = name
-		self.q = q
-		self.port = port
-
-
-	##
-	# Run the thread
-	#
-	def run(self):
-		print("Starting Arduino Thread", self.name)
-		process_data(self.name, self.q, self.port)
-		print("Exiting Arduino Thread", self.name)
-
-""" End of class: Arduino """
-
-
-##
-# Send data to the Arduino from a buffer queue
+# Arduino Device Class
 #
-# @param  threadName Name of the thread
-# @param  q          Queue containing the messages to be sent
-# @param  port       The serial port where the Arduino is connected
+###############################################################
+
+class ArduinoDevice:
+    """Class used for managing communication with the Arduino"""
+
+    # ---------------------------------------------------------
+    def __init__(self):
+        """
+        Constructor for Arduino serial communication thread class
+        :param port:     The serial port where the Arduino is connected
+        """
+        self.queue: Queue = Queue()
+        self.exit_flag: Event = Event()
+        self.port_name: str = ""
+        self.serial_port: Serial | None = None
+        self.serial_thread: Thread | None = None
+        self.battery_level: str | None = None
+        self.exit_flag.clear()
+
+    # ---------------------------------------------------------
+    def __del__(self):
+        """Destructor - ensures serial port is closed correctly"""
+        self.disconnect()
+
+    # ---------------------------------------------------------
+    def connect(self, port: str | int = "") -> bool:
+        """
+        Connect to the serial port
+        :param port: The port to connect to (leave blank to use previous port)
+        :return: True if connected successfully, False otherwise
+        """
+        try:
+            usb_ports = [
+                p.device for p in serial.tools.list_ports.comports()
+            ]
+
+            if type(port) is str and port == "":
+                port = self.port_name
+
+            if type(port) is int and port >= 0 and port < len(usb_ports):
+                port = usb_ports[port]
+
+            # Check port exists and we are not already connected
+            if ((not self.is_connected() or port != self.port_name) and port in usb_ports):
+                
+               # Ensure old port is properly disconnected first
+                self.disconnect() 
+
+                # Connect to the new port
+                self.serial_port = Serial(port, 115200)
+                self.serial_port.flushInput()
+                self.port_name = port
+
+                # Start the command handler in a background thread
+                self.exit_flag.clear()
+                self.serial_thread = Thread(target = self.__communication_thread)
+                self.serial_thread.start()
+
+        except Exception as ex:
+            logger.error(f'Serial connect error: {repr(ex)}')
+
+        return self.is_connected()
+
+    # ---------------------------------------------------------
+    def disconnect(self) -> bool:
+        """
+        Disconnect from the serial port
+        :return: True if disconnected successfully, False otherwise
+        """
+        try:
+            self.battery_level = None
+
+            if self.serial_thread is not None:
+                self.exit_flag.set()
+                self.serial_thread.join()
+                self.serial_thread = None
+
+            if self.serial_port is not None:
+                self.serial_port.close()
+                self.serial_port = None
+
+        except Exception as ex:
+            logger.error(f'Serial disconnect error: {repr(ex)}')
+
+        return (self.serial_thread is None and self.serial_port is None)
+
+    # ---------------------------------------------------------
+    def is_connected(self) -> bool:
+        """
+        Check if serial device is connected
+        :return: True if connected, False otherwise
+        """
+        return (self.serial_thread is not None and self.serial_thread.is_alive()
+             and self.serial_port is not None and self.serial_port.is_open)
+
+    # ---------------------------------------------------------
+    def send_command(self, command: str) -> bool:
+        """
+        Send a serial command
+        :param command: The command to be sent
+        :return: True if port is open and message has been added to queue
+        """
+        success = False
+
+        if self.is_connected():
+            self.queue.put(command)
+            success = True
+
+        return success
+
+    # ---------------------------------------------------------
+    def clear_queue(self):
+        """
+        Clear the serial send queue
+        """
+        while not queue.empty():
+            self.queue.get()
+
+    # ---------------------------------------------------------
+    def get_battery_level(self) -> str | None:
+        """
+        Get the robot battery level
+        :return: The battery level as a string, or None
+        """
+        return self.battery_level
+
+    # ---------------------------------------------------------
+    def __communication_thread(self):
+        """
+        Handle sending and receiving data with the serial device
+        """
+        dataString: str = ""
+        logger.info(f'Starting Arduino Thread ({self.port_name})')
+
+        # Keep this thread running until the exit_flag changes
+        while not self.exit_flag.is_set():
+            try:
+                # If there are any messages in the queue, send them
+                if not self.queue.empty():
+                    data = self.queue.get() + '\n'
+                    self.serial_port.write(data.encode())
+
+                # Read any incomming messages
+                while (self.serial_port.in_waiting > 0):
+                    data = self.serial_port.read()
+                    if (data.decode() == '\n' or data.decode() == '\r'):
+                        self.__parse_message(dataString)
+                        dataString = ""
+                    else:
+                        dataString += data.decode()
+
+            # If an error occured in the serial communication
+            except Exception as ex:
+                logger.error(f'Serial handler error: {repr(ex)}')
+                #exit_flag.set()
+
+            time.sleep(0.01)
+        
+        logger.info(f'Stopping Arduino Thread ({self.port_name})')
+
+    # ---------------------------------------------------------
+    def __parse_message(self, dataString: str):
+        """
+        Parse messages received from the connected device
+        :param dataString: String containing the serial message to be parsed
+        """
+        try:
+            # Battery level message
+            if "Battery" in dataString:
+                dataList = dataString.split('_')
+                if len(dataList) > 1 and dataList[1].isdigit():
+                    self.battery_level = dataList[1]
+
+        except Exception as ex:
+            logger.error(f'Error parsing message [{dataString}]: {repr(ex)}')
+
+# End of class: ArduinoDevice
+
+
+
+arduino: ArduinoDevice = ArduinoDevice()
+
+
+###############################################################
 #
-def process_data(threadName, q, port):
-	global exitFlag
-	
-	ser = serial.Serial(port,115200)
-	ser.flushInput()
-	dataString = ""
-
-	# Keep this thread running until the exitFlag changes
-	while not exitFlag:
-		try:
-			# If there are any messages in the queue, send them
-			queueLock.acquire()
-			if not workQueue.empty():
-				data = q.get() + '\n'
-				queueLock.release()
-				ser.write(data.encode())
-				print(data)
-			else:
-				queueLock.release()
-
-			# Read any incomming messages
-			while (ser.inWaiting() > 0):
-				data = ser.read()
-				if (data.decode() == '\n' or data.decode() == '\r'):
-					print(dataString)
-					parseArduinoMessage(dataString)
-					dataString = ""
-				else:
-					dataString += data.decode()
-
-			time.sleep(0.01)
-
-		# If an error occured in the Arduino Communication
-		except Exception as e: 
-			print(e)
-			exitFlag = 1
-	ser.close()
-
-
-##
-# Parse messages received from the Arduino
-#
-# @param  dataString  String containing the serial message to be parsed
-#
-def parseArduinoMessage(dataString):
-	global batteryLevel
-	
-	# Battery level message
-	if "Battery" in dataString:
-		dataList = dataString.split('_')
-		if len(dataList) > 1 and dataList[1].isdigit():
-			batteryLevel = dataList[1]
-
-
-##
-# Turn on/off the Arduino background communications thread
-#
-# @param  q    Queue object containing the messages to be sent
-# @param  port The serial port where the Arduino is connected
-#
-def onoff_arduino(q, portNum):
-	global arduinoActive
-	global exitFlag
-	global threads
-	global batteryLevel
-	
-	# Set up thread and connect to Arduino
-	if not arduinoActive:
-		exitFlag = 0
-
-		usb_ports = [
-			p.device
-			for p in serial.tools.list_ports.comports()
-		]
-		
-		thread = arduino(1, "Arduino", q, usb_ports[portNum])
-		thread.start()
-		threads.append(thread)
-
-		arduinoActive = 1
-
-	# Disconnect Arduino and exit thread
-	else:
-		exitFlag = 1
-		batteryLevel = -999
-
-		# Clear the queue
-		queueLock.acquire()
-		while not workQueue.empty():
-			q.get()
-		queueLock.release()
-
-		# Join any active threads up
-		for t in threads:
-			t.join()
-
-		threads = []
-		arduinoActive = 0
-
-	return 0
-
-
-##
-# Test whether the Arduino connection is still active
-#
-def test_arduino():
-	global arduinoActive
-	global exitFlag
-	global workQueue
-	
-	if arduinoActive and not exitFlag:
-		return 1
-	elif exitFlag and arduinoActive:
-		onoff_arduino(workQueue, 0)
-	else:
-		return 0
-
-
-##
-# Turn on/off the webcam MJPG Streamer
-#
-def onoff_streamer():
-	global streaming
-	
-	if not streaming:
-		# Turn on stream
-		subprocess.call([streamScript, 'start'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-		result = ""
-
-		# Check whether the stream is on or not
-		try:
-			result = subprocess.run([streamScript, 'status'], stdout=subprocess.PIPE).stdout.decode('utf-8')
-		except subprocess.CalledProcessError as e:
-			result = e.output.decode('utf-8')
-		print(result)
-		
-		if 'stopped' in result:
-			streaming = 0
-			return 1
-		else:
-			streaming = 1
-			return 0
-
-	else:
-		# Turn off stream
-		subprocess.call([streamScript, 'stop'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-		
-		streaming = 0
-		return 0
-
-
-#############################################
 # Flask Pages and Functions
-#############################################
-
-##
-# Show the main web-interface page
 #
+###############################################################
+
 @app.route('/')
 def index():
+    """
+    Show the main web-interface page
+    :return: Render HTML template for the webpage
+    """
+    if not session.get('active'):
+        return redirect(url_for('login'))
 
-	if session.get('active') != True:
-		return redirect(url_for('login'))
+    files = []
+    errors = []
 
-	# Get list of audio files
-	files = []
-	for item in sorted(os.listdir(soundFolder)):
-		if item.endswith(".ogg"):
-			audiofiles = os.path.splitext(os.path.basename(item))[0]
-			
-			# Set up default details
-			audiogroup = "Other"
-			audionames = audiofiles
-			audiotimes = 0
-			
-			# Get item details from name, and make sure they are valid
-			if len(audiofiles.split('_')) == 2:
-				if audiofiles.split('_')[1].isdigit():
-					audionames = audiofiles.split('_')[0]
-					audiotimes = float(audiofiles.split('_')[1])/1000.0
-				else:
-					audiogroup = audiofiles.split('_')[0]
-					audionames = audiofiles.split('_')[1]
-			elif len(audiofiles.split('_')) == 3:
-				audiogroup = audiofiles.split('_')[0]
-				audionames = audiofiles.split('_')[1]
-				if audiofiles.split('_')[2].isdigit():
-					audiotimes = float(audiofiles.split('_')[2])/1000.0
-			
-			# Add the details to the list
-			files.append((audiogroup,audiofiles,audionames,audiotimes))
-	
-	# Get list of connected USB devices
-	ports = serial.tools.list_ports.comports()
-	usb_ports = [
-		p.description
-		for p in serial.tools.list_ports.comports()
-		#if 'ttyACM0' in p.description
-	]
-	
-	# Ensure that the preferred Arduino port is selected by default
-	selectedPort = 0
-	for index, item in enumerate(usb_ports):
-		if arduinoPort in item:
-			selectedPort = index
-	
-	# Only automatically connect systems on startup
-	global initialStartup
-	if not initialStartup:
-		initialStartup = True
+    # Get list of audio files
+    try:
+        for item in sorted(os.listdir(app.config['SOUND_FOLDER'])):
+            if item.endswith(f".{app.config['SOUND_FORMAT']}"):
+                audiofiles = os.path.splitext(os.path.basename(item))[0]
 
-		# If user has selected for the Arduino to connect by default, do so now
-		if autoStartArduino and not test_arduino():
-			onoff_arduino(workQueue, selectedPort)
-			print("Started Arduino comms")
+                # Set up default details
+                audiogroup = "Other"
+                audionames = audiofiles
+                audiotimes = 0
 
-		# If user has selected for the camera stream to be active by default, turn it on now
-		if autoStartCamera and not streaming:
-			onoff_streamer()
-			print("Started camera stream")
+                audio_details = audiofiles.split('_')
 
-	return render_template('index.html',sounds=files,ports=usb_ports,portSelect=selectedPort,connected=arduinoActive,cameraActive=streaming)
+                # Get item details from name, and make sure they are valid
+                if len(audio_details) == 2:
+                    if audio_details[1].isdigit():
+                        audionames = audio_details[0]
+                        audiotimes = float(audio_details[1]) / 1000.0
+                    else:
+                        audiogroup = audio_details[0]
+                        audionames = audio_details[1]
+                elif len(audio_details) == 3:
+                    audiogroup = audio_details[0]
+                    audionames = audio_details[1]
+                    if audio_details[2].isdigit():
+                        audiotimes = float(audio_details[2]) / 1000.0
+
+                # Add the details to the list
+                files.append((audiogroup, audiofiles, audionames, audiotimes))
+
+    except Exception as ex:
+        errors.append(repr(ex))
+        logging.error(f'Failed to initialise audio files: {repr(ex)}')
+
+    # Get list of connected USB devices
+    ports = serial.tools.list_ports.comports()
+    usb_ports = [
+        p.description
+        for p in ports
+    ]
+
+    # Ensure that the preferred Arduino port is selected by default
+    selectedPort: int = 0
+    for index, item in enumerate(usb_ports):
+        if app.config['ARDUINO_PORT'] in item:
+            selectedPort = index
+            logger.info(f'Found serial port ({item}) index [{index}]')
+            break
+
+    # Automatically connect systems on startup
+    global startup
+    global arduino
+    global camera
+
+    if not startup:
+        startup = True
+
+        try:
+            # If user has selected for the Arduino to connect by default, do so now
+            if app.config['AUTOSTART_ARDUINO'] and selectedPort < len(usb_ports):
+                if arduino.connect(selectedPort):
+                    logging.info("Auto-start Complete: Arduino communication")
+                else:
+                    logging.warning("Auto-start Failed: Arduino communication")
+
+            # If user has selected for the camera stream to be active by default, turn it on now
+            if app.config['AUTOSTART_CAM'] and not camera.is_stream_active():
+                if camera.start_stream():
+                    logging.info("Auto-start Complete: Camera stream")
+                else:
+                    logging.warning("Auto-start Failed: Camera stream")
+
+        except Exception as ex:
+            errors.append(repr(ex))
+            logging.error(f'Auto-start Error: {repr(ex)}')
+
+    return render_template('index.html',
+                           sounds=files,
+                           ports=usb_ports,
+                           portSelect=selectedPort,
+                           connected=arduino.is_connected(),
+                           cameraActive=camera.is_stream_active(),
+                           errorMessages=errors)
 
 
-##
-# Show the Login page
-#
+# =============================================================
 @app.route('/login')
 def login():
-	if session.get('active') == True:
-		return redirect(url_for('index'))
-	else:
-		return render_template('login.html')
+    """
+    Show the Login page
+    :return: Render HTML template for login page
+    """
+    if session.get('active'):
+        return redirect(url_for('index'))
+    else:
+        return render_template('login.html', incorrectPassword=False)
 
-##
-# Check if the login password is correct
-#
-@app.route('/login_request', methods = ['POST'])
+
+# =============================================================
+@app.route('/login_request', methods=['POST'])
 def login_request():
-	password = request.form.get('password')
-	if password == loginPassword:
-		session['active'] = True
-		return redirect(url_for('index'))
-	return redirect(url_for('login'))
+    """
+    Check if the login password is correct
+    :return: Redirect to dashboard or login page
+    """
+    password = request.form.get('password')
+    if password == app.config['LOGIN_PASSWORD']:
+        session['active'] = True
+        return redirect(url_for('index'))
+    return render_template('login.html', incorrectPassword=True)
 
 
-##
-# Control the main movement motors
-#
+# =============================================================
 @app.route('/motor', methods=['POST'])
 def motor():
-	if session.get('active') != True:
-		return redirect(url_for('login'))
+    """
+    Control the main movement motors
+    :return: JSON response with success or error status
+    """
+    if not session.get('active'):
+        return redirect(url_for('login'))
 
-	stickX =  request.form.get('stickX')
-	stickY =  request.form.get('stickY')
+    global arduino
+    stickX = request.form.get('stickX')
+    stickY = request.form.get('stickY')
 
-	if stickX is not None and stickY is not None:
-		xVal = int(float(stickX)*100)
-		yVal = int(float(stickY)*100)
-		print("Motors:", xVal, ",", yVal)
+    if stickX is not None and stickY is not None:
+        xVal = int(float(stickX) * 100)
+        yVal = int(float(stickY) * 100)
 
-		if test_arduino() == 1:
-			queueLock.acquire()
-			workQueue.put("X" + str(xVal))
-			workQueue.put("Y" + str(yVal))
-			queueLock.release()
-			return jsonify({'status': 'OK' })
-		else:
-			return jsonify({'status': 'Error','msg':'Arduino not connected'})
-	else:
-		print("Error: unable to read POST data from motor command")
-		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
+        if arduino.is_connected():
+            arduino.send_command("X" + str(xVal))
+            arduino.send_command("Y" + str(yVal))
+            return jsonify({'status': 'OK'})
+        else:
+            return jsonify({'status': 'Error', 'msg': 'Arduino not connected'})
+    else:
+        return jsonify({'status': 'Error', 'msg': 'Unable to read POST data'})
 
 
-##
-# Update Settings
-#
+# =============================================================
 @app.route('/settings', methods=['POST'])
 def settings():
-	if session.get('active') != True:
-		return redirect(url_for('login'))
+    """
+    Update Settings
+    :return: JSON response with success or error status
+    """
+    if not session.get('active'):
+        return redirect(url_for('login'))
 
-	thing = request.form.get('type')
-	value = request.form.get('value')
+    global arduino
+    thing = request.form.get('type')
+    value = request.form.get('value')
 
-	if thing is not None and value is not None:
-		# Motor deadzone threshold
-		if thing == "motorOff":
-			print("Motor Offset:", value)
-			if test_arduino() == 1:
-				queueLock.acquire()
-				workQueue.put("O" + value)
-				queueLock.release()
-			else:
-				return jsonify({'status': 'Error','msg':'Arduino not connected'})
+    if thing is not None and value is not None:
+        # Motor deadzone threshold
+        if thing == "motorOff":
+            logging.info(f'Motor Offset: {value}')
+            if arduino.is_connected():
+                arduino.send_command("O" + value)
+            else:
+                return jsonify({'status': 'Error', 'msg': 'Arduino not connected'})
 
-		# Motor steering offset/trim
-		elif thing == "steerOff":
-			print("Steering Offset:", value)
-			if test_arduino() == 1:
-				queueLock.acquire()
-				workQueue.put("S" + value)
-				queueLock.release()
-			else:
-				return jsonify({'status': 'Error','msg':'Arduino not connected'})
+        # Motor steering offset/trim
+        elif thing == "steerOff":
+            logging.info(f'Steering Offset: {value}')
+            if arduino.is_connected():
+                arduino.send_command("S" + value)
+            else:
+                return jsonify({'status': 'Error', 'msg': 'Arduino not connected'})
 
-		# Automatic/manual animation mode
-		elif thing == "animeMode":
-			print("Animation Mode:", value)
-			if test_arduino() == 1:
-				queueLock.acquire()
-				workQueue.put("M" + value)
-				queueLock.release()
-			else:
-				return jsonify({'status': 'Error','msg':'Arduino not connected'})
+        # Automatic/manual animation mode
+        elif thing == "animeMode":
+            logging.info(f'Animation Mode: {value}')
+            if arduino.is_connected():
+                arduino.send_command("M" + value)
+            else:
+                return jsonify({'status': 'Error', 'msg': 'Arduino not connected'})
 
-		# Sound mode currently doesn't do anything
-		elif thing == "soundMode":
-			print("Sound Mode:", value)
+        # Sound mode currently doesn't do anything
+        # elif thing == "soundMode":
+            # logger.debug(f"Sound Mode: {value}")
 
-		# Change the sound effects volume
-		elif thing == "volume":
-			global volume
-			volume = int(value)
-			print("Change Volume:", value)
+        # Change the sound effects volume
+        elif thing == "volume":
+            global volume
+            volume = int(value)
 
-		# Turn on/off the webcam
-		elif thing == "streamer":
-			print("Turning on/off MJPG Streamer:", value)
-			if onoff_streamer() == 1:
-				return jsonify({'status': 'Error', 'msg': 'Unable to start the stream'})
+        # Turn on/off the webcam
+        elif thing == "streamer":
+            logging.info("Turning on/off MJPG Streamer")
+            global camera
+            result: int = 0
 
-			if streaming == 1:
-				return jsonify({'status': 'OK','streamer': 'Active'})
-			else:
-				return jsonify({'status': 'OK','streamer': 'Offline'})
+            if not camera.is_stream_active():
+                response, error = camera.start_stream()
+                if response:
+                    time.sleep(1) # Give time for the stream to start fully
+                    return jsonify({'status': 'OK', 'streamer': 'Active'})
+                else:
+                    return jsonify({'status': 'Error', 'msg': f'Unable to start stream: {error}'})
 
-		# Shut down the Raspberry Pi
-		elif thing == "shutdown":
-			print("Shutting down Raspberry Pi!", value)
-			result = subprocess.run(['sudo','nohup','shutdown','-h','now'], stdout=subprocess.PIPE).stdout.decode('utf-8')
-			return jsonify({'status': 'OK','msg': 'Raspberry Pi is shutting down'})
+            else:
+                if camera.stop_stream():
+                    return jsonify({'status': 'OK', 'streamer': 'Offline'})
+                else:
+                    return jsonify({'status': 'Error', 'msg': 'Unable to stop the stream'})
 
-		# Unknown command
-		else:
-			return jsonify({'status': 'Error','msg': 'Unable to read POST data'})
+        # Restart the web-interface
+        elif thing == "restart":
+            command = "sleep 5 && sudo systemctl restart --quiet walle"
+            subprocess.Popen(command, shell=True)
+            return redirect(url_for('login'))
 
-		return jsonify({'status': 'OK' })
-	else:
-		return jsonify({'status': 'Error','msg': 'Unable to read POST data'})
+        # Shut down the Raspberry Pi
+        elif thing == "shutdown":
+            logging.info("Shutting down Raspberry Pi!")
+            subprocess.run(['sudo', 'nohup', 'shutdown', '-h', 'now'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+            return jsonify({'status': 'OK', 'msg': 'Raspberry Pi is shutting down'})
+
+        # Unknown command
+        else:
+            return jsonify({'status': 'Error', 'msg': 'Unable to read POST data'})
+
+        return jsonify({'status': 'OK'})
+    else:
+        return jsonify({'status': 'Error', 'msg': 'Unable to read POST data'})
 
 
-##
-# Play an Audio clip on the Raspberry Pi
-#
+# =============================================================
 @app.route('/audio', methods=['POST'])
 def audio():
-	if session.get('active') != True:
-		return redirect(url_for('login'))
+    """
+    Play an Audio clip on the Raspberry Pi
+    :return: JSON response with success or error status
+    """
+    if not session.get('active'):
+        return redirect(url_for('login'))
 
-	clip =  request.form.get('clip')
-	if clip is not None:
-		clip = soundFolder + clip + ".ogg"
-		print("Play music clip:", clip)
-		pygame.mixer.music.load(clip)
-		pygame.mixer.music.set_volume(volume/10.0)
-		#start_time = time.time()
-		pygame.mixer.music.play()
-		#while pygame.mixer.music.get_busy() == True:
-		#	continue
-		#elapsed_time = time.time() - start_time
-		#print(elapsed_time)
-		return jsonify({'status': 'OK' })
-	else:
-		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
+    clip = request.form.get('clip')
+    if clip is not None:
+        clip = f"{app.config['SOUND_FOLDER']}{clip}.{app.config['SOUND_FORMAT']}"
+
+        # Volume control only on linux via amixer
+        if sys.platform == "linux":
+            audiomixer_cmd = ["amixer", "sset", "Master", "{}%".format(volume * 10)]
+            subprocess.run(audiomixer_cmd,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+
+        p = subprocess.Popen(app.config['AUDIOPLAYER_CMD'] + [clip],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+
+        if app.config['APP_DEBUG']:
+            p.wait()
+            if p.stderr is not None:
+                logger.error(p.stderr.readlines())
+            if p.stdout is not None:
+                logger.info(p.stdout.readlines())
+
+        return jsonify({'status': 'OK'})
+    else:
+        return jsonify({'status': 'Error', 'msg': 'Unable to read POST data'})
 
 
-##
-# Send an Animation command to the Arduino
-#
+# =============================================================
+@app.route('/tts', methods=['POST'])
+def tts():
+    """
+    Text to Speech on the Raspberry Pi
+    Requires Espeak-NG and optionally Rubberband
+    :return: JSON response with success or error status
+    """
+    if not session.get('active'):
+        return redirect(url_for('login'))
+
+    text = request.form.get('text')
+
+    # Shell commands
+    espeak_cmd = app.config['ESPEAK_CMD']
+    rb_cmd = app.config['RB_CMD']
+
+    # Don't react to empty strings
+    if text is not None and text != "":
+
+        infile = tempfile.NamedTemporaryFile()
+        outfile = tempfile.NamedTemporaryFile()
+
+        text_e = text.encode('utf8')
+        espeak_args = ['-w', infile.name, text_e]
+
+        try:
+            # Generate Speech
+            subprocess.run(espeak_cmd + espeak_args,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+
+            if not rb_cmd:
+                outfile = infile
+
+            else:
+                # Shift pitch
+                subprocess.run(rb_cmd + [infile.name, outfile.name],
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
+
+            # Volume control only on linux via amixer
+            if sys.platform == "linux":
+                audiomixer_cmd = ["amixer", "sset", "Master", "{}%".format(volume * 10)]
+                subprocess.run(audiomixer_cmd,
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
+
+            # Play it
+            subprocess.run(app.config['AUDIOPLAYER_CMD'] + [outfile.name],
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+
+        finally:
+            infile.close()
+            outfile.close()
+
+        return jsonify({'status': 'OK'})
+    else:
+        return jsonify({'status': 'Error', 'msg': 'Unable to read POST data'})
+
+
+# =============================================================
 @app.route('/animate', methods=['POST'])
 def animate():
-	if session.get('active') != True:
-		return redirect(url_for('login'))
+    """
+    Send an Animation command to the Arduino
+    :return: JSON response with success or error status
+    """
+    if not session.get('active'):
+        return redirect(url_for('login'))
 
-	clip = request.form.get('clip')
-	if clip is not None:
-		print("Animate:", clip)
+    global arduino
+    clip = request.form.get('clip')
 
-		if test_arduino() == 1:
-			queueLock.acquire()
-			workQueue.put("A" + clip)
-			queueLock.release()
-			return jsonify({'status': 'OK' })
-		else:
-			return jsonify({'status': 'Error','msg':'Arduino not connected'})
-	else:
-		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
+    if clip is not None:
+        logger.debug(f"Animate: {clip}")
 
-	
-##
-# Send a Servo Control command to the Arduino
-#
+        if arduino.is_connected():
+            arduino.send_command("A" + clip)
+            return jsonify({'status': 'OK'})
+        else:
+            return jsonify({'status': 'Error', 'msg': 'Arduino not connected'})
+    else:
+        return jsonify({'status': 'Error', 'msg': 'Unable to read POST data'})
+
+
+# =============================================================
 @app.route('/servoControl', methods=['POST'])
 def servoControl():
-	if session.get('active') != True:
-		return redirect(url_for('login'))
+    """
+    Send a Servo Control command to the Arduino
+    :return: JSON response with success or error status
+    """
+    if not session.get('active'):
+        return redirect(url_for('login'))
 
-	servo = request.form.get('servo')
-	value = request.form.get('value')
-	if servo is not None and value is not None:
-		print("servo:", servo)
-		print("value:", value)
-		
-		if test_arduino() == 1:
-			queueLock.acquire()
-			workQueue.put(servo + value)
-			queueLock.release()
-			return jsonify({'status': 'OK' })
-		else:
-			return jsonify({'status': 'Error','msg':'Arduino not connected'})
-	else:
-		return jsonify({'status': 'Error','msg':'Unable to read POST data'})
+    global arduino
+    servo = request.form.get('servo')
+    value = request.form.get('value')
+
+    if servo is not None and value is not None:
+        logger.debug(f"servo: {servo}")
+        logger.debug(f"value: {value}")
+
+        if arduino.is_connected():
+            arduino.send_command(servo + value)
+            return jsonify({'status': 'OK'})
+        else:
+            return jsonify({'status': 'Error', 'msg': 'Arduino not connected'})
+    else:
+        return jsonify({'status': 'Error', 'msg': 'Unable to read POST data'})
 
 
-##
-# Connect/Disconnect the Arduino Serial Port
-#
+# =============================================================
 @app.route('/arduinoConnect', methods=['POST'])
 def arduinoConnect():
-	if session.get('active') != True:
-		return redirect(url_for('login'))
-		
-	action = request.form.get('action')
-	
-	if action is not None:
-		# Update drop-down selection with list of connected USB devices
-		if action == "updateList":
-			print("Reload list of connected USB ports")
-			
-			# Get list of connected USB devices
-			ports = serial.tools.list_ports.comports()
-			usb_ports = [
-				p.description
-				for p in serial.tools.list_ports.comports()
-				#if 'ttyACM0' in p.description
-			]
-			
-			# Ensure that the preferred Arduino port is selected by default
-			selectedPort = 0
-			for index, item in enumerate(usb_ports):
-				if arduinoPort in item:
-					selectedPort = index
-					
-			return jsonify({'status': 'OK','ports':usb_ports,'portSelect':selectedPort})
-		
-		# If we want to connect/disconnect Arduino device
-		elif action == "reconnect":
-			
-			print("Reconnect to Arduino")
-			
-			if test_arduino():
-				onoff_arduino(workQueue, 0)
-				return jsonify({'status': 'OK','arduino': 'Disconnected'})
-				
-			else:	
-				port = request.form.get('port')
-				if port is not None and port.isdigit():
-					portNum = int(port)
-					# Test whether connection to the selected port is possible
-					usb_ports = [
-						p.device
-						for p in serial.tools.list_ports.comports()
-					]
-					if portNum >= 0 and portNum < len(usb_ports):
-						# Try opening and closing port to see if connection is possible
-						try:
-							ser = serial.Serial(usb_ports[portNum],115200)
-							if (ser.inWaiting() > 0):
-								ser.flushInput()
-							ser.close()
-							onoff_arduino(workQueue, portNum)
-							return jsonify({'status': 'OK','arduino': 'Connected'})
-						except:
-							return jsonify({'status': 'Error','msg':'Unable to connect to selected serial port'})
-					else:
-						return jsonify({'status': 'Error','msg':'Invalid serial port selected'})
-				else:
-					return jsonify({'status': 'Error','msg':'Unable to read [port] POST data'})
-		else:
-			return jsonify({'status': 'Error','msg':'Unable to read [action] POST data'})
-	else:
-		return jsonify({'status': 'Error','msg':'Unable to read [action] POST data'})
+    """
+    Connect/Disconnect the Arduino Serial Port
+    :return: JSON response with success or error status
+    """
+    if not session.get('active'):
+        return redirect(url_for('login'))
+
+    global arduino
+    action = request.form.get('action')
+
+    if action is not None:
+        # Update drop-down selection with list of connected USB devices
+        if action == "updateList":
+            logger.debug("Reload list of connected USB ports")
+
+            # Get list of connected USB devices
+            ports = serial.tools.list_ports.comports()
+            usb_ports = [p.description for p in ports]
+
+            # Ensure that the preferred Arduino port is selected by default
+            selectedPort = 0
+            for index, item in enumerate(usb_ports):
+                if app.config['ARDUINO_PORT'] in item:
+                    selectedPort = index
+                    break
+
+            return jsonify({'status': 'OK', 'ports': usb_ports, 'portSelect': selectedPort})
+
+        # If we want to connect/disconnect Arduino device
+        elif action == "reconnect":
+
+            logger.debug("Reconnect to Arduino")
+
+            if arduino.is_connected():
+                arduino.disconnect()
+                return jsonify({'status': 'OK', 'arduino': 'Disconnected'})
+
+            else:
+                port = request.form.get('port')
+
+                if port is not None and port.isdigit():
+                    portNum = int(port)
+
+                    # Test whether connection to the selected port is possible
+                    ports = serial.tools.list_ports.comports()
+                    usb_ports = [p.device for p in ports]
+
+                    if portNum >= 0 and portNum < len(usb_ports):
+                        # Try opening and closing port to see if connection is possible
+                        try:
+                            ser = serial.Serial(usb_ports[portNum], 115200)
+                            if (ser.inWaiting() > 0):
+                                ser.flushInput()
+                            ser.close()
+                            arduino.connect(usb_ports[portNum])
+                            return jsonify({'status': 'OK', 'arduino': 'Connected'})
+                        except:
+                            return jsonify({'status': 'Error', 'msg': 'Unable to connect to selected serial port'})
+                    else:
+                        return jsonify({'status': 'Error', 'msg': 'Invalid serial port selected'})
+                else:
+                    return jsonify({'status': 'Error', 'msg': 'Unable to read [port] POST data'})
+        else:
+            return jsonify({'status': 'Error', 'msg': 'Unable to read [action] POST data'})
+    else:
+        return jsonify({'status': 'Error', 'msg': 'Unable to read [action] POST data'})
 
 
-##
-# Update the Arduino Status
-#
-# @return JSON containing the current battery level
-#
+# =============================================================
 @app.route('/arduinoStatus', methods=['POST'])
 def arduinoStatus():
-	if session.get('active') != True:
-		return redirect(url_for('login'))
-		
-	action = request.form.get('type')
-	
-	if action is not None:
-		if action == "battery":
-			if test_arduino():
-				return jsonify({'status': 'OK','battery':batteryLevel})
-			else:
-				return jsonify({'status': 'Error','msg':'Arduino not connected'})
-	
-	return jsonify({'status': 'Error','msg':'Unable to read POST data'})
+    """
+    Update the Arduino Status
+    :return: JSON containing the current battery level, or an error
+    """
+
+    if not session.get('active'):
+        return redirect(url_for('login'))
+
+    global arduino
+    action = request.form.get('type')
+
+    if action is not None:
+        if action == "battery":
+            
+            battery_level = arduino.get_battery_level()
+
+            if arduino.is_connected():
+                if battery_level is not None:
+                    return jsonify({'status': 'OK', 'battery': battery_level})
+                else:
+                    return jsonify({'status': 'Info', 'msg': 'No battery level available'})
+            else:
+                return jsonify({'status': 'Error', 'msg': 'Arduino not connected'})
+
+    return jsonify({'status': 'Error', 'msg': 'Unable to read POST data'})
 
 
-##
+
+###############################################################
+#
 # Program start code, which initialises the web-interface
 #
-if __name__ == '__main__':
+###############################################################
 
-	#app.run()
-	app.run(debug=False, host='0.0.0.0')
+if __name__ == '__main__':
+    # Debug mode
+    if app.config['APP_DEBUG']:
+        app.run(port=app.config['APP_PORT'], debug=app.config['APP_DEBUG'], host='0.0.0.0')
+    
+    # Production mode
+    else:
+        serve(app, host='0.0.0.0', port=app.config['APP_PORT'])
