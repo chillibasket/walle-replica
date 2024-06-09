@@ -141,9 +141,15 @@ My code comes with two animations which replicate scenes from the movie; the eye
 
 ### 2. Raspberry Pi Web Server
 
-To save you from having to 
+#### [a] Hardware Setup
+1. Connect the power cable of the Raspberry Pi to the USB power output port on the 12V to 5V buck converter.
+2. Connect the USB data cable from the Arduino to the Raspberry Pi.
+3. If you have a Raspberry Pi camera, plug the ribbon cable into the CSI camera connector.
+4. For setup and installation, you can plug in a monitor into the HDMI port and a USB keyboard and mouse. 
+ 
+<br />
 
-#### [a] Basic Installation
+#### [b] Basic Installation
 1. Setup the Raspberry Pi to run the latest version of Raspberry Pi OS Desktop. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.com/documentation/computers/getting-started.html). Make sure that the Raspberry Pi is connected to the internet. 
 2. Open the "Terminal" command line on the Raspberry Pi.
 3. Clone repository into the home directory of the Raspberry Pi:
@@ -163,7 +169,7 @@ git clone https://github.com/chillibasket/walle-replica.git
 
 <br />
 
-4. Once you have finished editing the configurations, run the installation script which sets ups all the required libraries for you (note: this may take some time to complete):
+4. Once you have finished editing the configurations, run the installation script which sets ups all the required libraries for you (note - this may take some time to complete):
 ```shell
 cd ~/walle-replica
 chmod +x ./raspi-setup.sh
@@ -172,7 +178,7 @@ sudo ./raspi-setup.sh
 
 <br />
 
-#### [b] Using the Web Server
+#### [c] Using the Web Server
 1. If the installation completed successfully, the webserver should start automatically when the Raspberry Pi is powered on. This is done using a [Systemd service](https://learn.sparkfun.com/tutorials/how-to-run-a-raspberry-pi-program-on-startup/all#method-3-systemd). 
 1. On the Raspberry Pi you can view the web interface from the browser at http://localhost:5000
 1. To view the interface from a different computer on the same WiFi network, you first need to determine the current IP address of the Raspberry Pi on your network using the command: `hostname -I`
@@ -192,20 +198,20 @@ sudo ./raspi-setup.sh
 
 <br />
 
-#### [c] Controlling the Robot using Blocky (Contributed by: [dkrey](https://github.com/dkrey))
+#### [d] Controlling the Robot using Blocky (Contributed by: [dkrey](https://github.com/dkrey))
 Since version 3.0, a new tab has been added to the web interface where the robot can be controlled using a drag-and-drop scripting language. Simply drag the actions you want to perform from the left sidebar and drop them into the editor area. For example you can drive Wall-E, move the actuators, and play audio sounds. This is a great way for kids to learn the basics of programming while having fun!
 
 For the commands which drive the motors, you may need to tune the parameters at the bottom of the "config.py" file on lines [25](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L25) to [28](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L28) to make sure that the speed and turning amount is correct. 
 
 <br />
 
-#### [d] Adding a Camera Stream (Optional)
+#### [e] Adding a Camera Stream (Optional)
 
 The web server automatically supports any camera which connects to the CSI connector on the Raspberry Pi with a ribbon cable. Unfortunately USB web cameras are not supported by this system, but I hope to add support for them again in the future. 
 
 <br />
 
-#### [e] Adding new Sounds (Optional)
+#### [f] Adding new Sounds (Optional)
 1. By default the Raspberry should automatically select whether to output audio to the HDMI port or the headphone jack. However, you can ensure that it always uses the headphone jack with the following command: `amixer cset numid=3 1`
 1. Make sure that all the sound files you want to use are of type `*.wav`. Most music/sound editors should be able to convert the sound file to this format.
 1. Change the file name so that it has the following format: `[group name]_[file name]_[length in milliseconds].wav`. For example: `voice_eva_1200.wav`. In the web-interface, the audio files will be grouped using the "group name" and sorted alphabetically.
@@ -214,7 +220,7 @@ The web server automatically supports any camera which connects to the CSI conne
 
 <br />
 
-#### [f] Set up the Raspberry Pi as a WiFi hotspot *(Optional)*
+#### [g] Set up the Raspberry Pi as a WiFi hotspot *(Optional)*
 If you would like to control the robot outdoors or at conventions, there may not be any safe WiFi networks you can connect to. To overcome this issue the Raspberry Pi can broadcast its own WiFi network. You can then connect the computer/phone/tablet you are using to control the robot directly to this network.
 
 To set up the WiFi hotspot, we will use the [RaspAP project](https://raspap.com/) which takes care of all the configuration and tools to get the system working. The following instructions are based on their quick installation guide:
