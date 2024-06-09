@@ -145,7 +145,7 @@ My code comes with two animations which replicate scenes from the movie; the eye
 1. Connect the power cable of the Raspberry Pi to the USB power output port on the 12V to 5V buck converter.
 2. Connect the USB data cable from the Arduino to the Raspberry Pi.
 3. If you have a Raspberry Pi camera, plug the ribbon cable into the CSI camera connector.
-4. For setup and installation, you can plug in a monitor into the HDMI port and a USB keyboard and mouse. 
+4. For setup and installation, you can plug in a monitor into the HDMI port and a USB keyboard and mouse. Alternatively you can connect to and configure the Raspberry Pi from a different computer [using SSH](https://www.raspberrypi.com/documentation/computers/remote-access.html#ssh).
  
 <br />
 
@@ -169,7 +169,7 @@ git clone https://github.com/chillibasket/walle-replica.git
 
 <br />
 
-4. Once you have finished editing the configurations, run the installation script which sets ups all the required libraries for you (note - this may take some time to complete):
+4. Once you have finished editing the configurations, run the installation script which sets up all the required libraries for you (note - this may take some time to complete):
 ```shell
 cd ~/walle-replica
 chmod +x ./raspi-setup.sh
