@@ -144,33 +144,25 @@ My code comes with two animations which replicate scenes from the movie; the eye
 To save you from having to 
 
 #### [a] Basic Installation
-1. Setup the Raspberry Pi to run the latest version of Raspberry Pi OS Desktop. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.com/documentation/computers/getting-started.html).
-1. Open the command line terminal on the Raspberry Pi.
-1. Ensure that the package list has been updated (this may take some time): `sudo apt update`
+1. Setup the Raspberry Pi to run the latest version of Raspberry Pi OS Desktop. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.com/documentation/computers/getting-started.html). Make sure that the Raspberry Pi is connected to the internet. 
+1. Open the "Terminal" command line on the Raspberry Pi.
+1. Clone repository into the home directory of the Raspberry Pi:
+```shell
+cd ~
+git clone https://github.com/chillibasket/walle-replica.git
+```
+1. Run the installation script which sets ups all the required libraries for you (note: this may take some time to complete):
+```shell
+cd walle-replica
+chmod +x ./raspi-setup.sh
+sudo ./raspi-setup.sh
+```
 
 [!NOTE]
-> If you did not install the full version of the Raspberry Pi OS, run the following command to install all required dependencies:
-> 1. Install *Flask* - this is a Python framework used to create web servers:
->    1. Ensure that pip is installed: `sudo apt install python3-pip`
->    1. Install Flask and its dependencies: `sudo pip3 install flask`
-> 1. (Optional) The *Full* version of Raspbian includes these packages by default, but if you are using a different OS (for example the *Lite* version), you will need to run these commands:
->    ```shell
->    sudo apt install git libsdl1.2 libsdl-mixer1.2
->    sudo pip3 install pygame pyserial
->    ```
+> You can configure the web-interface settings by editing the "config.py" file:
+> 1. Open the config file: `nano ~/walle-replica/web_interface/config.py`
+> 1. On line [26](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L26) of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
 
-1. Clone repository into the home directory of the Raspberry Pi:
-    ```shell
-    cd ~
-    git clone https://github.com/chillibasket/walle-replica.git
-    ```
-1. Set the web server password:
-    1. Open *app.py*: `nano ~/walle-replica/web_interface/app.py` 
-    1. On line [26](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L26) of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
-1. (Optional) Change the default audio directory and location of the script used to start/stop the video stream.
-    1. If you followed the steps above exactly, there is no need to do this. However, if you want to move the web-interface files to a different directory on the Raspberry Pi, you will need to change the location where the program will look for the audio files.
-    1. On line [29](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L29) of *app.py*, type the directory where the audio files are located. Ensure that the directory location ends with a forward slash: `/`.
-    1. On line [28](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L28) of *app.py*, the location of the script used to start and stop the video camera stream can be modified.
 1. Connect to the Arduino/micro-controller:
     1. Plug the Arduino/micro-controller into the USB port of the Raspberry Pi.
     1. If you would like the serial port used by the Arduino to be selected by default in the web-interface, you can set a preferred serial port device in the code. Go to line [27](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L26) of *app.py* and replace the text "ARDUINO" with the name of your device. The name must match the one which appears in the drop-down menu in the "Settings" tab of the web-interface.
@@ -181,7 +173,7 @@ To save you from having to
 
 #### [b] Using the Web Server
 1. To determine the current IP address of the Raspberry Pi on your network, type the command: `hostname -I`
-1. To start the server: `python3 ~/walle-replica/web_interface/app.py`
+1. To start the server: `python3 ~/walle-replica/web_interface/web-interface.py`
 1. To access the web interface, open a browser on any computer/device on the same network and type in the IP address of the Raspberry Pi, follow by `:5000`. For example `192.168.1.10:5000`
 1. To stop the server press: `CTRL + C`
 1. To start controlling the robot, you first need to start serial communication with the Arduino. To do this, go to the `Settings` tab of the web-interface, select the correct serial port from the drop-down list and press on the `Reconnect` button.

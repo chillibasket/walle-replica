@@ -8,10 +8,10 @@ SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)      # Secret key us
 # VARIABLES WHICH YOU CAN MODIFY
 APP_PORT = 5000             # Port of the application
 APP_DEBUG = False           # Enable / Disable Python Server Debugging
-LOGIN_PASSWORD = "1234"    # Password for web-interface
+LOGIN_PASSWORD = "1234"     # Password for web-interface
 ARDUINO_PORT = "ARDUINO"    # Default port which will be selected
 AUTOSTART_ARDUINO = True    # False = no auto connect, True = automatically try to connect to default port
-AUTOSTART_CAM = False       # False = no auto start, True = automatically start up the camera
+AUTOSTART_CAM = True        # False = no auto start, True = automatically start up the camera
 SOUND_FOLDER = os.path.join(BASEDIR, "static/sounds/")  # Location of the folder containing all audio files
 ESPEAK_CMD = ['espeak-ng', '-v', 'en', '-b', '1']         # ESpeak Command and Language
 RB_CMD = ['rubberband', '-t', '1.2', '-p', '2', '-c', '6', '-f', '1.8', '-q']  # Rubberband for pitch shifting TTS
