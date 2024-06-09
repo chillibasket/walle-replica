@@ -172,7 +172,7 @@ git clone https://github.com/chillibasket/walle-replica.git
 4. Once you have finished editing the configurations, run the installation script which sets up all the required libraries for you (note - this may take some time to complete):
 ```shell
 cd ~/walle-replica
-chmod +x ./raspi-setup.sh
+sudo chmod +x ./raspi-setup.sh
 sudo ./raspi-setup.sh
 ```
 

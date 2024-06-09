@@ -26,6 +26,8 @@ import logging
 from waitress import serve
 
 
+app = Flask(__name__)
+
 # Load the configurations
 if os.path.isfile("local_config.py"):
     app.config.from_pyfile("local_config.py")
@@ -33,7 +35,6 @@ else:
     app.config.from_pyfile("config.py")
 
 # Set up global variables
-app = Flask(__name__)
 volume: int = 8
 startup: bool = False
 camera: PiCameraStreamer = PiCameraStreamer()
@@ -49,7 +50,7 @@ else:
     logger.setLevel(logging.INFO)
     stream_handler.setLevel(logging.INFO)
 
-logger.addHandler(handler)
+logger.addHandler(stream_handler)
 
 
 
