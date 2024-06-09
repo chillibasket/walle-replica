@@ -152,79 +152,64 @@ cd ~
 git clone https://github.com/chillibasket/walle-replica.git
 ```
 
+> [!TIP]
 > You can configure the web-interface settings by editing the "config.py" file:
 > 1. Open the config file: `nano ~/walle-replica/web_interface/config.py`
-> 1. On line [26](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L26) of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
+> 1. On line [14](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L14) you can change the password for the web interface. The default password is "walle"
+> 1. On line [15](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L15) the default serial port which is used to connect to the Arduino can be set. You can find a list of all the connected serial ports using the `dmseg | grep tty` command.
+> 1. On lines [16](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L16) and [17](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L17) you can configure whether the Arduino and camera should automatically connect when starting up the web server.
 
-1. Run the installation script which sets ups all the required libraries for you (note: this may take some time to complete):
+1. Once you have finished editing the configurations, run the installation script which sets ups all the required libraries for you (note: this may take some time to complete):
 ```shell
-cd walle-replica
+cd ~/walle-replica
 chmod +x ./raspi-setup.sh
 sudo ./raspi-setup.sh
 ```
 
-1. Connect to the Arduino/micro-controller:
-    1. Plug the Arduino/micro-controller into the USB port of the Raspberry Pi.
-    1. If you would like the serial port used by the Arduino to be selected by default in the web-interface, you can set a preferred serial port device in the code. Go to line [27](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L26) of *app.py* and replace the text "ARDUINO" with the name of your device. The name must match the one which appears in the drop-down menu in the "Settings" tab of the web-interface.
-    1. To make the interface automatically connect to the Arduino when it starts up, you can change line [31](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L31) to `autoStartArduino = True`
-    1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
-
 <br />
 
 #### [b] Using the Web Server
-1. To determine the current IP address of the Raspberry Pi on your network, type the command: `hostname -I`
-1. To start the server: `python3 ~/walle-replica/web_interface/web-interface.py`
+1. If the installation completed successfully, the webserver should start automatically when the Raspberry Pi is powered on. This is done using a [Systemd service](https://learn.sparkfun.com/tutorials/how-to-run-a-raspberry-pi-program-on-startup/all#method-3-systemd). 
+1. On the Raspberry Pi you can view the web interface from the browser at http://localhost:5000
+1. To view the interface from a different computer on the same WiFi network, you first need to determine the current IP address of the Raspberry Pi on your network using the command: `hostname -I`
 1. To access the web interface, open a browser on any computer/device on the same network and type in the IP address of the Raspberry Pi, follow by `:5000`. For example `192.168.1.10:5000`
-1. To stop the server press: `CTRL + C`
-1. To start controlling the robot, you first need to start serial communication with the Arduino. To do this, go to the `Settings` tab of the web-interface, select the correct serial port from the drop-down list and press on the `Reconnect` button.
+1. To start controlling the robot, you first need to make sure that the serial communication with the Arduino has started. To do this, go to the `Settings` tab of the web-interface, select the correct serial port from the drop-down list and press on the `Reconnect` button. If the configurations were set up correctly, this should happen automatically.
+
+> [!NOTE]
+> Here are some useful commands to control the web interface:
+> * To stop the automatic web interface service: `sudo systemd stop walle.service`
+> * To disable start on boot: `sudo systemd disable walle.service`
+> * To reenable start on boot: `sudo systemd enable walle.service`
+> * To start the service after it has been stopped: `sudo systemd start walle.service`
+> * View the status of the service and check for errors: `sudo systemd status walle.service`
+> * If you want to manually run the web server from the terminal, for example to check for errors: `python3 ~/walle-replica/web_interface/app.py`. You can then press `CTRL + C` to stop the web server again.
 
 <br />
 
-#### [c] Adding a Camera Stream (Optional)
+#### [c] Controlling the Robot using Blocky (Contributed by: [dkrey](https://github.com/dkrey))
+Since version 3.0, a new tab has been added to the web interface where the robot can be controlled using a drag-and-drop scripting language. Simply drag the actions you want to perform from the left sidebar and drop them into the editor area. For example you can drive Wall-E, move the actuators, and play audio sounds. This is a great way for kids to learn the basics of programming while having fun!
 
-1. To make the script executable by the web-server, run this command in the terminal: `chmod +x /home/pi/mjpg-streamer.sh`
-1. If you want the camera to automatically startup when you open the web-interface you can change line [32](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L32) of *app.py* to `autoStartCamera = True`
+For the commands which drive the motors, you may need to tune the parameters at the bottom of the "config.py" file on lines [25](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L25) to [28](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L28) to make sure that the speed and turning amount is correct. 
 
 <br />
 
-#### [d] Automatically start Server on Boot
-1. Create a `.service` file which is used to start the web interface: `nano ~/walle.service`
-1. Paste the following text into the file:
-    ```text
-    [Unit]
-    Description=Start Wall-E Web Interface
-    After=network.target
+#### [d] Adding a Camera Stream (Optional)
 
-    [Service]
-    WorkingDirectory=/home/pi/walle-replica/web_interface
-    ExecStart=/usr/bin/python3 app.py
-    Restart=always
-    StandardOutput=syslog
-    StandardError=syslog
-    SyslogIdentifier=walle
-    User=pi
-
-    [Install]
-    WantedBy=multi-user.target
-    ```
-1. Press `CTRL + O` to save and `CTRL + X` to exit the nano editor.
-1. Copy this file into the startup directory using the command: `sudo cp ~/walle.service /etc/systemd/system/walle.service`
-1. To enable auto-start, use the following command: `sudo systemctl enable walle.service`
-1. The web interface should now automatically start when the Raspberry Pi is turned on. You can also manually start and stop the service using the commands: `sudo systemctl start walle.service` and `sudo systemctl stop walle.service` 
+The web server automatically supports any camera which connects to the CSI connector on the Raspberry Pi with a ribbon cable. Unfortunately USB web cameras are not supported by this system, but I hope to add support for them again in the future. 
 
 <br />
 
 #### [e] Adding new Sounds (Optional)
 1. By default the Raspberry should automatically select whether to output audio to the HDMI port or the headphone jack. However, you can ensure that it always uses the headphone jack with the following command: `amixer cset numid=3 1`
-1. Make sure that all the sound files you want to use are of type `*.ogg`. Most music/sound editors should be able to convert the sound file to this format.
-1. Change the file name so that it has the following format: `[group name]_[file name]_[length in milliseconds].ogg`. For example: `voice_eva_1200.ogg`. In the web-interface, the audio files will be grouped using the "group name" and sorted alphabetically.
+1. Make sure that all the sound files you want to use are of type `*.wav`. Most music/sound editors should be able to convert the sound file to this format.
+1. Change the file name so that it has the following format: `[group name]_[file name]_[length in milliseconds].wav`. For example: `voice_eva_1200.wav`. In the web-interface, the audio files will be grouped using the "group name" and sorted alphabetically.
 1. Upload the sound file to Raspberry Pi in the following folder: `~/walle-replica/web_interface/static/sounds/`
 1. All the files should appear in the web interface when you reload the page. If the files do not appear, you may need to change the privileges required to access the folder: `sudo chmod -R 755 ~/walle-replica/web_interface/static/sounds`
 
 <br />
 
 #### [f] Set up the Raspberry Pi as a WiFi hotspot *(Optional)*
-If you would like to control the robot outdoors or at conventions, there may not be any safe WiFi networks you can connect to. To overcome this issue and eliminate the need for any external networking equipment, the Raspberry Pi can broadcast its own WiFi network. You can then connect the computer/phone/tablet you are using to control the robot directly to this network.
+If you would like to control the robot outdoors or at conventions, there may not be any safe WiFi networks you can connect to. To overcome this issue the Raspberry Pi can broadcast its own WiFi network. You can then connect the computer/phone/tablet you are using to control the robot directly to this network.
 
 To set up the WiFi hotspot, we will use the [RaspAP project](https://raspap.com/) which takes care of all the configuration and tools to get the system working. The following instructions are based on their quick installation guide:
 
@@ -232,7 +217,7 @@ To set up the WiFi hotspot, we will use the [RaspAP project](https://raspap.com/
     ```
     sudo apt-get update
     sudo apt-get dist-upgrade
-    sudo reboot
+    sudo reboot now
     ```
 1. Ensure that you have set the correct WiFi country in raspi-config’s Localisation Options: `sudo raspi-config`
 1. Run the quick installer: `curl -sL https://install.raspap.com | bash`
@@ -251,6 +236,12 @@ To set up the WiFi hotspot, we will use the [RaspAP project](https://raspap.com/
 
 
 ## Changelog
+
+#### 9th June 2024 (Version 3.0)
+1. Major revision of the Python code to implement best practices and make it more robust.
+1. Added text to speech and integrated blocky scripting into the web interface (thanks to [dkrey](https://github.com/dkrey) for contributing this).
+1. Switched the camera streamer to PiCamera2 since the old streamer no longer worked. 
+1. Implemented an installation script to make setup a lot faster and easier. 
 
 #### 31st October 2021 (Version 2.92)
 1. Added options in *app.py* to automatically connect to the Arduino and to start the camera stream when the web-interface is opened for the first time.
