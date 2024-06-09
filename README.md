@@ -151,17 +151,17 @@ To save you from having to
 cd ~
 git clone https://github.com/chillibasket/walle-replica.git
 ```
+
+> You can configure the web-interface settings by editing the "config.py" file:
+> 1. Open the config file: `nano ~/walle-replica/web_interface/config.py`
+> 1. On line [26](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L26) of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
+
 1. Run the installation script which sets ups all the required libraries for you (note: this may take some time to complete):
 ```shell
 cd walle-replica
 chmod +x ./raspi-setup.sh
 sudo ./raspi-setup.sh
 ```
-
-[!NOTE]
-> You can configure the web-interface settings by editing the "config.py" file:
-> 1. Open the config file: `nano ~/walle-replica/web_interface/config.py`
-> 1. On line [26](https://github.com/chillibasket/walle-replica/blob/master/web_interface/app.py#L26) of *app.py* where is says `put_password_here`, insert the password you want to use for the web interface.
 
 1. Connect to the Arduino/micro-controller:
     1. Plug the Arduino/micro-controller into the USB port of the Raspberry Pi.

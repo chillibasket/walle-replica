@@ -1,0 +1,16 @@
+[Unit]
+Description=Wall-E Web Interface
+After=multi-user.target network.target sound.target
+
+[Service]
+Type=simple
+WorkingDirectory=/path-to-directory/web_interface
+ExecStart=/usr/bin/python3 app.py
+KillSignal=SIGINT
+Restart=on-failure
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+User=username
+Group=username
+
+[Install]
+WantedBy=multi-user.target

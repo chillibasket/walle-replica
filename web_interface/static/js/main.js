@@ -512,7 +512,7 @@ function checkArduinoStatus() {
 		data: {"type": "battery"},
 		dataType: "json",
 		success: function(data){
-			if(data.status != "Error"){
+			if(data.status != "Error" && data.status != "Info"){
 				var batteryLevel = parseInt(data.battery);
 				if (batteryLevel != -999) {
 					if (batteryLevel < 0) batteryLevel = 0;
@@ -544,7 +544,7 @@ function checkArduinoStatus() {
 					$('#batt-area').addClass('d-none');
 				}
 				return true;
-			} else {
+			} else if (data.status == "Error") {
 				showAlert(1, 'Error!', data.msg, 1);
 			}
 		}

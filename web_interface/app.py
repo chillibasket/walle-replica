@@ -7,7 +7,7 @@
 # @website    https://wired.chillibasket.com
 # @copyright  Copyright (C) 2021-2024 - Distributed under MIT license
 # @version    2.0
-# @date       20th May 2024
+# @date       2nd June 2024
 #############################################
 
 from flask import Flask, request, session, redirect, url_for, jsonify, render_template
@@ -23,6 +23,7 @@ import time
 import tempfile
 from picamera2_stream import PiCameraStreamer
 import logging
+from waitress import serve
 
 
 # Set up global variables
@@ -72,13 +73,6 @@ class ArduinoDevice:
         self.disconnect()
 
     # ---------------------------------------------------------
-    def run(self):
-        """Run the thread"""
-        logger.info(f'Starting Arduino Thread ({self.name})')
-        self.__communication_thread()
-        logger.info(f'Stopping Arduino Thread ({self.name})')
-
-    # ---------------------------------------------------------
     def connect(self, port: str | int = "") -> bool:
         """
         Connect to the serial port
@@ -98,13 +92,14 @@ class ArduinoDevice:
 
             # Check port exists and we are not already connected
             if ((not self.is_connected() or port != self.port_name) and port in usb_ports):
-
+                
                # Ensure old port is properly disconnected first
                 self.disconnect() 
 
                 # Connect to the new port
                 self.serial_port = Serial(port, 115200)
                 self.serial_port.flushInput()
+                self.port_name = port
 
                 # Start the command handler in a background thread
                 self.exit_flag.clear()
@@ -146,7 +141,7 @@ class ArduinoDevice:
         :return: True if connected, False otherwise
         """
         return (self.serial_thread is not None and self.serial_thread.is_alive()
-            and self.serial_port is not None and self.serial_port.is_open)
+             and self.serial_port is not None and self.serial_port.is_open)
 
     # ---------------------------------------------------------
     def send_command(self, command: str) -> bool:
@@ -185,6 +180,7 @@ class ArduinoDevice:
         Handle sending and receiving data with the serial device
         """
         dataString: str = ""
+        logger.info(f'Starting Arduino Thread ({self.port_name})')
 
         # Keep this thread running until the exit_flag changes
         while not self.exit_flag.is_set():
@@ -209,6 +205,8 @@ class ArduinoDevice:
                 #exit_flag.set()
 
             time.sleep(0.01)
+        
+        logger.info(f'Stopping Arduino Thread ({self.port_name})')
 
     # ---------------------------------------------------------
     def __parse_message(self, dataString: str):
@@ -254,7 +252,7 @@ def index():
     # Get list of audio files
     try:
         for item in sorted(os.listdir(app.config['SOUND_FOLDER'])):
-            if item.endswith(".ogg"):
+            if item.endswith(f".{app.config['SOUND_FORMAT']}"):
                 audiofiles = os.path.splitext(os.path.basename(item))[0]
 
                 # Set up default details
@@ -492,7 +490,7 @@ def audio():
 
     clip = request.form.get('clip')
     if clip is not None:
-        clip = app.config['SOUND_FOLDER'] + clip + ".ogg"
+        clip = f"{app.config['SOUND_FOLDER']}{clip}.{app.config['SOUND_FORMAT']}"
 
         # Volume control only on linux via amixer
         if sys.platform == "linux":
@@ -501,10 +499,14 @@ def audio():
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
 
-        subprocess.Popen(app.config['AUDIOPLAYER_CMD'] + [clip],
-                         stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL)
-
+        p = subprocess.Popen(app.config['AUDIOPLAYER_CMD'] + [clip],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+        p.wait()
+        if p.stderr is not None:
+            print(p.stderr.readlines())
+        if p.stdout is not None:
+            print(p.stdout.readlines())
         return jsonify({'status': 'OK'})
     else:
         return jsonify({'status': 'Error', 'msg': 'Unable to read POST data'})
@@ -714,8 +716,11 @@ def arduinoStatus():
             
             battery_level = arduino.get_battery_level()
 
-            if arduino.is_connected() and battery_level is not None:
-                return jsonify({'status': 'OK', 'battery': battery_level})
+            if arduino.is_connected():
+                if battery_level is not None:
+                    return jsonify({'status': 'OK', 'battery': battery_level})
+                else:
+                    return jsonify({'status': 'Info', 'msg': 'No battery level available'})
             else:
                 return jsonify({'status': 'Error', 'msg': 'Arduino not connected'})
 
@@ -730,5 +735,10 @@ def arduinoStatus():
 ###############################################################
 
 if __name__ == '__main__':
-
-    app.run(port=app.config['APP_PORT'], debug=app.config['APP_DEBUG'], host='0.0.0.0')
+    # Debug mode
+    if app.config['APP_DEBUG']:
+        app.run(port=app.config['APP_PORT'], debug=app.config['APP_DEBUG'], host='0.0.0.0')
+    
+    # Production mode
+    else:
+        serve(app, host='0.0.0.0', port=app.config['APP_PORT'])
