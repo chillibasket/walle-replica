@@ -160,7 +160,7 @@ git clone https://github.com/chillibasket/walle-replica.git
 
 <br />
 
-> [!TIP]
+> [!NOTE]
 > You can configure the web-interface settings by editing the "config.py" file:
 > * Open the config file: `nano ~/walle-replica/web_interface/config.py`
 > * On line [14](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L14) you can change the password for the web interface. The default password is "walle"
@@ -187,7 +187,7 @@ sudo ./raspi-setup.sh
 
 <br />
 
-> [!NOTE]
+> [!TIP]
 > Here are some useful commands to control the web interface:
 > * To stop the automatic web interface service: `sudo systemd stop walle.service`
 > * To disable start on boot: `sudo systemd disable walle.service`

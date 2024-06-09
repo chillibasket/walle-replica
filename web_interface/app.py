@@ -6,8 +6,8 @@
 # @author     Simon Bluett
 # @website    https://wired.chillibasket.com
 # @copyright  Copyright (C) 2021-2024 - Distributed under MIT license
-# @version    2.0
-# @date       2nd June 2024
+# @version    3.0
+# @date       9th June 2024
 #############################################
 
 from flask import Flask, request, session, redirect, url_for, jsonify, render_template
@@ -26,22 +26,31 @@ import logging
 from waitress import serve
 
 
-# Set up global variables
-app = Flask(__name__)
-volume: int = 8
-startup: bool = False
-camera: PiCameraStreamer = PiCameraStreamer()
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.INFO)
-logger.addHandler(handler)
-
 # Load the configurations
 if os.path.isfile("local_config.py"):
     app.config.from_pyfile("local_config.py")
 else:
     app.config.from_pyfile("config.py")
+
+# Set up global variables
+app = Flask(__name__)
+volume: int = 8
+startup: bool = False
+camera: PiCameraStreamer = PiCameraStreamer()
+
+# Set up logging
+logger = logging.getLogger()
+stream_handler = logging.StreamHandler(sys.stdout)
+
+if app.config['APP_DEBUG']:
+    logger.setLevel(logging.DEBUG)
+    stream_handler.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
+    stream_handler.setLevel(logging.INFO)
+
+logger.addHandler(handler)
+
 
 
 ###############################################################
@@ -430,7 +439,7 @@ def settings():
 
         # Sound mode currently doesn't do anything
         # elif thing == "soundMode":
-            # print("Sound Mode:", value)
+            # logger.debug(f"Sound Mode: {value}")
 
         # Change the sound effects volume
         elif thing == "volume":
@@ -502,11 +511,14 @@ def audio():
         p = subprocess.Popen(app.config['AUDIOPLAYER_CMD'] + [clip],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
-        p.wait()
-        if p.stderr is not None:
-            print(p.stderr.readlines())
-        if p.stdout is not None:
-            print(p.stdout.readlines())
+
+        if app.config['APP_DEBUG']:
+            p.wait()
+            if p.stderr is not None:
+                logger.error(p.stderr.readlines())
+            if p.stdout is not None:
+                logger.info(p.stdout.readlines())
+
         return jsonify({'status': 'OK'})
     else:
         return jsonify({'status': 'Error', 'msg': 'Unable to read POST data'})
@@ -588,7 +600,7 @@ def animate():
     clip = request.form.get('clip')
 
     if clip is not None:
-        # print("Animate:", clip)
+        logger.debug(f"Animate: {clip}")
 
         if arduino.is_connected():
             arduino.send_command("A" + clip)
@@ -614,8 +626,8 @@ def servoControl():
     value = request.form.get('value')
 
     if servo is not None and value is not None:
-        # print("servo:", servo)
-        # print("value:", value)
+        logger.debug(f"servo: {servo}")
+        logger.debug(f"value: {value}")
 
         if arduino.is_connected():
             arduino.send_command(servo + value)
@@ -642,7 +654,7 @@ def arduinoConnect():
     if action is not None:
         # Update drop-down selection with list of connected USB devices
         if action == "updateList":
-            # print("Reload list of connected USB ports")
+            logger.debug("Reload list of connected USB ports")
 
             # Get list of connected USB devices
             ports = serial.tools.list_ports.comports()
@@ -660,7 +672,7 @@ def arduinoConnect():
         # If we want to connect/disconnect Arduino device
         elif action == "reconnect":
 
-            # print("Reconnect to Arduino")
+            logger.debug("Reconnect to Arduino")
 
             if arduino.is_connected():
                 arduino.disconnect()
