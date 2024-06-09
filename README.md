@@ -145,21 +145,25 @@ To save you from having to
 
 #### [a] Basic Installation
 1. Setup the Raspberry Pi to run the latest version of Raspberry Pi OS Desktop. The setup instructions can be found on the [Raspberry Pi website](https://www.raspberrypi.com/documentation/computers/getting-started.html). Make sure that the Raspberry Pi is connected to the internet. 
-1. Open the "Terminal" command line on the Raspberry Pi.
-1. Clone repository into the home directory of the Raspberry Pi:
+2. Open the "Terminal" command line on the Raspberry Pi.
+3. Clone repository into the home directory of the Raspberry Pi:
 ```shell
 cd ~
 git clone https://github.com/chillibasket/walle-replica.git
 ```
 
+<br />
+
 > [!TIP]
 > You can configure the web-interface settings by editing the "config.py" file:
-> 1. Open the config file: `nano ~/walle-replica/web_interface/config.py`
-> 1. On line [14](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L14) you can change the password for the web interface. The default password is "walle"
-> 1. On line [15](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L15) the default serial port which is used to connect to the Arduino can be set. You can find a list of all the connected serial ports using the `dmseg | grep tty` command.
-> 1. On lines [16](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L16) and [17](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L17) you can configure whether the Arduino and camera should automatically connect when starting up the web server.
+> * Open the config file: `nano ~/walle-replica/web_interface/config.py`
+> * On line [14](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L14) you can change the password for the web interface. The default password is "walle"
+> * On line [15](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L15) the default serial port which is used to connect to the Arduino can be set. You can find a list of all the connected serial ports using the `dmseg | grep tty` command.
+> * On lines [16](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L16) and [17](https://github.com/chillibasket/walle-replica/blob/master/web_interface/config.py#L17) you can configure whether the Arduino and camera should automatically connect when starting up the web server.
 
-1. Once you have finished editing the configurations, run the installation script which sets ups all the required libraries for you (note: this may take some time to complete):
+<br />
+
+4. Once you have finished editing the configurations, run the installation script which sets ups all the required libraries for you (note: this may take some time to complete):
 ```shell
 cd ~/walle-replica
 chmod +x ./raspi-setup.sh
@@ -174,6 +178,8 @@ sudo ./raspi-setup.sh
 1. To view the interface from a different computer on the same WiFi network, you first need to determine the current IP address of the Raspberry Pi on your network using the command: `hostname -I`
 1. To access the web interface, open a browser on any computer/device on the same network and type in the IP address of the Raspberry Pi, follow by `:5000`. For example `192.168.1.10:5000`
 1. To start controlling the robot, you first need to make sure that the serial communication with the Arduino has started. To do this, go to the `Settings` tab of the web-interface, select the correct serial port from the drop-down list and press on the `Reconnect` button. If the configurations were set up correctly, this should happen automatically.
+
+<br />
 
 > [!NOTE]
 > Here are some useful commands to control the web interface:
